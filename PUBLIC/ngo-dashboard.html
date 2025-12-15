@@ -1,0 +1,287 @@
+<!-- ngo-dashboard.html -->
+<style>
+/* Scoped styles for NGO dashboard */
+.ngo-dashboard {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+.ngo-dashboard .split-left {
+    flex: 0 0 40%;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #f0f0f0;
+    border-radius: 8px 0 0 8px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.ngo-dashboard .split-left img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.ngo-dashboard .split-right {
+    flex: 0 0 60%;
+    box-sizing: border-box;
+    background-color: #e0e0e0;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.ngo-dashboard .signup-container {
+    width: 100%;
+    max-width: 60vw;
+    background-color: white;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    height: 100vh;
+    box-sizing: border-box;
+}
+.ngo-dashboard .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.ngo-dashboard .header-logo {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.5em;
+    color: #f7b731;
+}
+.ngo-dashboard .header-signin {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9em;
+    color: #666;
+}
+.ngo-dashboard .header-signin a {
+    color: #f7b731;
+    text-decoration: none;
+    font-weight: 700;
+}
+.ngo-dashboard .signup-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 2.2em;
+    color: #f7b731;
+    margin-bottom: 10px;
+}
+.ngo-dashboard .signup-subheading {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1em;
+    color: #666;
+    margin-bottom: 30px;
+}
+.ngo-dashboard .signup-form { width: 100%; }
+.ngo-dashboard .form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+.ngo-dashboard .form-group {
+    flex: 1;
+    text-align: left;
+}
+.ngo-dashboard .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    color: #333;
+}
+.ngo-dashboard .text-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+.ngo-dashboard .text-input::placeholder { color: #aaa; }
+.ngo-dashboard .terms-checkbox {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    text-align: left;
+}
+.ngo-dashboard .terms-checkbox input {
+    margin-right: 10px;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+.ngo-dashboard .terms-checkbox label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9em;
+    color: #666;
+}
+.ngo-dashboard .terms-checkbox a {
+    color: #f7b731;
+    text-decoration: none;
+}
+.ngo-dashboard .signup-button {
+    background-color: #f7b731;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.1em;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    display: block;
+    box-sizing: border-box;
+}
+.ngo-dashboard .signup-button:hover {
+    background-color: #e0a32e;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+.ngo-dashboard .back-to-role-button {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 15px;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.1em;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    background-color: #e6a326;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.ngo-dashboard .back-to-role-button:hover {
+    background-color: #cf9022;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+.ngo-dashboard .social-signin { margin-top: 30px; }
+.ngo-dashboard .social-signin p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 15px;
+}
+.ngo-dashboard .social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+.ngo-dashboard .social-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: #666;
+    font-size: 1.2em;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    background: none;
+}
+.ngo-dashboard .social-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+}
+.ngo-dashboard .social-icon:hover {
+    background-color: #f7b731;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .ngo-dashboard {
+        flex-direction: column;
+        height: auto;
+    }
+    .ngo-dashboard .split-left {
+        display: none;
+    }
+    .ngo-dashboard .split-right {
+        flex: 0 0 100%;
+        border-radius: 0;
+    }
+    .ngo-dashboard .signup-container {
+        max-width: 100vw;
+        height: auto;
+        padding: 24px;
+    }
+    .ngo-dashboard .form-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .ngo-dashboard .signup-heading { font-size: 1.8em; }
+    .ngo-dashboard .signup-subheading { font-size: 0.95em; }
+    .ngo-dashboard .text-input { padding: 10px; }
+    .ngo-dashboard .signup-button,
+    .ngo-dashboard .back-to-role-button {
+        padding: 13px 20px;
+        font-size: 1em;
+    }
+    .ngo-dashboard .social-icons { gap: 12px; }
+    .ngo-dashboard .signup-container {
+        padding-left: 12px;
+        padding-right: 24px;
+        box-sizing: border-box;
+        max-width: 100vw;
+    }
+}
+</style>
+
+<div class="ngo-dashboard dashboard-split">
+    <div class="split-left">
+        <img src="images/Sign up.png" alt="Signup">
+    </div>
+    <div class="split-right">
+        <div class="signup-container">
+            <div class="header-section">
+                <div class="header-logo">vastrado</div>
+            </div>
+            <h2 class="signup-heading">NGOs Hub</h2>
+            <p class="signup-subheading">Collaborate on impactful social and environmental initiatives.</p>
+
+            <form class="signup-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ngo-email">Email Address</label>
+                        <input type="email" id="ngo-email" placeholder="Enter email address..." class="text-input">
+                    </div>
+                </div>
+                <div class="terms-checkbox">
+                    <input type="checkbox" id="ngo-terms">
+                    <label for="ngo-terms">I accept to the <a href="#">Terms and Conditions</a>, and I agree to the terms of <a href="#">Privacy Policy</a></label>
+                </div>
+                <a href="verify.html" class="signup-button">SIGN UP</a>
+                <a href="index.html" class="back-to-role-button">BACK TO ROLE</a>
+            </form>
+
+            <div class="social-signin">
+                <p>OR SIGN IN WITH:</p>
+                <div class="social-icons">
+                    <a href="#" class="social-icon twitter"><img src="images/twitter.png" alt="twitter"></a>
+                    <a href="#" class="social-icon facebook"><img src="images/facebook.png" alt="facebook"></a>
+                    <a href="#" class="social-icon google"><img src="images/google.png" alt="Google"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>

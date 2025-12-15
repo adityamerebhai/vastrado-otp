@@ -1,0 +1,258 @@
+<!-- verify.html -->
+<style>
+/* Scoped styles for verify dashboard */
+.verify-dashboard {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+.verify-dashboard .split-left {
+    flex: 0 0 40%;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #f0f0f0;
+    border-radius: 8px 0 0 8px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.verify-dashboard .split-left img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.verify-dashboard .split-right {
+    flex: 0 0 60%;
+    box-sizing: border-box;
+    background-color: #e0e0e0;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.verify-dashboard .verify-container {
+    width: 100%;
+    max-width: 60vw;
+    background-color: white;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    height: 100vh;
+    box-sizing: border-box;
+}
+.verify-dashboard .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.verify-dashboard .header-logo {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.5em;
+    color: #f7b731;
+}
+.verify-dashboard .verify-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 2.2em;
+    color: #f7b731;
+    margin-bottom: 10px;
+}
+.verify-dashboard .verify-subheading {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1em;
+    color: #666;
+    margin-bottom: 30px;
+}
+.verify-dashboard .otp-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.verify-dashboard .otp-input {
+    width: 48px;
+    height: 56px;
+    font-size: 1.4em;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: 'Montserrat', sans-serif;
+    box-sizing: border-box;
+}
+.verify-dashboard .verify-button {
+    background-color: #f7b731;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.1em;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    display: block;
+    box-sizing: border-box;
+}
+.verify-dashboard .verify-button:hover {
+    background-color: #e0a32e;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+.verify-dashboard .back-to-role-button {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 15px;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.1em;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    background-color: #e6a326;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.verify-dashboard .back-to-role-button:hover {
+    background-color: #cf9022;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+.verify-dashboard .social-signin { margin-top: 30px; }
+.verify-dashboard .social-signin p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 15px;
+}
+.verify-dashboard .social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+.verify-dashboard .social-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: #666;
+    font-size: 1.2em;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    background: none;
+}
+.verify-dashboard .social-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+}
+.verify-dashboard .social-icon:hover {
+    background-color: #f7b731;
+    color: white;
+}
+
+/* Tablet: prevent logo overlap and hide left image */
+@media (max-width: 1020px) {
+    .logo-container {
+        position: static;
+        text-align: center;
+        width: 100%;
+        margin: 12px 0 4px 0;
+    }
+    .vastrado-logo {
+        display: inline-block;
+        font-size: 1.8em;
+    }
+    .verify-dashboard {
+        flex-direction: column;
+        height: auto;
+    }
+    .verify-dashboard .split-left {
+        display: none;
+    }
+    .verify-dashboard .split-right {
+        flex: 0 0 100%;
+        border-radius: 0;
+    }
+    .verify-dashboard .verify-container {
+        max-width: 100vw;
+        height: auto;
+        padding: 24px;
+    }
+    .verify-dashboard .otp-container {
+        gap: 10px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .verify-dashboard .verify-heading { font-size: 1.8em; }
+    .verify-dashboard .verify-subheading { font-size: 0.95em; }
+    .verify-dashboard .otp-input {
+        width: 42px;
+        height: 50px;
+        font-size: 1.2em;
+    }
+    .verify-dashboard .verify-button,
+    .verify-dashboard .back-to-role-button {
+        padding: 13px 20px;
+        font-size: 1em;
+    }
+    .verify-dashboard .social-icons { gap: 12px; }
+    .verify-dashboard .verify-container {
+        padding-left: 12px;
+        padding-right: 24px;
+        box-sizing: border-box;
+        max-width: 100vw;
+    }
+}
+</style>
+
+<div class="verify-dashboard">
+    <div class="split-left">
+        <img src="images/Sign up.png" alt="Signup">
+    </div>
+    <div class="split-right">
+        <div class="verify-container">
+            <div class="header-section">
+                <div class="header-logo">vastrado</div>
+            </div>
+            <h2 class="verify-heading">Verify</h2>
+            <p class="verify-subheading">Enter the 6-digit code we sent to your email.</p>
+
+            <form class="verify-form">
+                <div class="otp-container">
+                    <input type="text" inputmode="numeric" maxlength="1" class="otp-input" aria-label="Digit 1">
+                    <input type="text" inputmode="numeric" maxlength="1" class="otp-input" aria-label="Digit 2">
+                    <input type="text" inputmode="numeric" maxlength="1" class="otp-input" aria-label="Digit 3">
+                    <input type="text" inputmode="numeric" maxlength="1" class="otp-input" aria-label="Digit 4">
+                    <input type="text" inputmode="numeric" maxlength="1" class="otp-input" aria-label="Digit 5">
+                    <input type="text" inputmode="numeric" maxlength="1" class="otp-input" aria-label="Digit 6">
+                </div>
+                <button type="button" class="verify-button" id="verifyBtn">VERIFY</button>
+                <a href="index.html" class="back-to-role-button">BACK TO ROLE</a>
+            </form>
+
+            <div class="social-signin">
+                <p>OR SIGN IN WITH:</p>
+                <div class="social-icons">
+                    <a href="#" class="social-icon twitter"><img src="images/twitter.png" alt="twitter"></a>
+                    <a href="#" class="social-icon facebook"><img src="images/facebook.png" alt="facebook"></a>
+                    <a href="#" class="social-icon google"><img src="images/google.png" alt="Google"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="verify.js"></script>

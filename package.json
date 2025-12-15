@@ -1,0 +1,11 @@
+{
+    "name": "NEW PROJECT",
+    "scripts": { "start": "node server.js" },
+    "dependencies": {
+      "express": "^4.19.2",
+      "nodemailer": "^6.9.11",
+      "cors": "^2.8.5",
+      "dotenv": "^16.3.1"
+    }
+  }
+  
