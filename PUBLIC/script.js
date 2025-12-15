@@ -5,27 +5,38 @@ const rightHalf = document.querySelector(".right-half");
 // ================= CARD CLICK + ANIMATION =================
 cards.forEach((clickedCard, clickedIndex) => {
   clickedCard.addEventListener("click", () => {
-    // Hide header elements
-    gsap.to(".vastrado-logo", {
-      x: -100,
-      opacity: 0,
-      duration: 0.5,
-      onComplete: el => el.target.style.display = "none"
-    });
 
-    gsap.to(".main-heading", {
-      y: -100,
-      opacity: 0,
-      duration: 0.5,
-      onComplete: el => el.target.style.display = "none"
-    });
+    const logo = document.querySelector(".vastrado-logo");
+    const heading = document.querySelector(".main-heading");
+    const subHeading = document.querySelector(".sub-heading");
 
-    gsap.to(".sub-heading", {
-      y: -100,
-      opacity: 0,
-      duration: 0.5,
-      onComplete: el => el.target.style.display = "none"
-    });
+    // Hide header elements safely
+    if (logo) {
+      gsap.to(logo, {
+        x: -100,
+        opacity: 0,
+        duration: 0.5,
+        onComplete: () => (logo.style.display = "none")
+      });
+    }
+
+    if (heading) {
+      gsap.to(heading, {
+        y: -100,
+        opacity: 0,
+        duration: 0.5,
+        onComplete: () => (heading.style.display = "none")
+      });
+    }
+
+    if (subHeading) {
+      gsap.to(subHeading, {
+        y: -100,
+        opacity: 0,
+        duration: 0.5,
+        onComplete: () => (subHeading.style.display = "none")
+      });
+    }
 
     // Animate cards out
     gsap.to(cards[0], { x: "-100vw", opacity: 0, duration: 0.8 });
@@ -73,24 +84,23 @@ function loadDashboard(index) {
         { opacity: 0, y: 50 },
         { opacity: 1, y: 0, duration: 0.8, stagger: 0.15 }
       );
-
-      const backButton = document.querySelector(".back-button");
-      if (backButton) {
-        backButton.addEventListener("click", () => location.reload());
-      }
     });
 }
 
 // ================= SEND OTP =================
 async function sendOTP() {
   const emailInput = document.getElementById("email");
-  if (!emailInput) return alert("Email input not found");
+  if (!emailInput) {
+    alert("Email input not found");
+    return;
+  }
 
   const email = emailInput.value.trim();
   const role = localStorage.getItem("role");
 
   if (!email || !role) {
-    return alert("Email or role missing");
+    alert("Email or role missing");
+    return;
   }
 
   localStorage.setItem("email", email);
