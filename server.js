@@ -2,15 +2,24 @@ require("dotenv").config();
 const express = require("express");
 const nodemailer = require("nodemailer");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static("PUBLIC"));
+
+// ✅ SERVE STATIC FILES CORRECTLY (RAILWAY SAFE)
+app.use(express.static(path.join(__dirname, "PUBLIC")));
+
+// ✅ FORCE ROOT (/) TO LOAD index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "PUBLIC", "index.html"));
+});
 
 let otpStore = {}; // email → { otp, role, expiry }
 
-// Gmail transporter
+// ================= MAIL TRANSPORT =================
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -19,7 +28,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Generate 6-digit OTP
+// ================= OTP GENERATOR =================
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000);
 }
@@ -29,7 +38,6 @@ app.post("/send-otp", async (req, res) => {
   console.log("🔥 /send-otp API CALLED");
 
   const { email, role } = req.body;
-  console.log("EMAIL:", email, "ROLE:", role);
 
   if (!email || !role) {
     console.log("❌ Missing email or role");
@@ -42,7 +50,7 @@ app.post("/send-otp", async (req, res) => {
   otpStore[email] = {
     otp,
     role,
-    expiry: Date.now() + 5 * 60 * 1000 // 5 minutes
+    expiry: Date.now() + 5 * 60 * 1000
   };
 
   try {
@@ -66,12 +74,10 @@ app.post("/verify-otp", (req, res) => {
   console.log("🔐 /verify-otp API CALLED");
 
   const { email, otp } = req.body;
-  console.log("VERIFY EMAIL:", email, "OTP:", otp);
-
   const data = otpStore[email];
 
   if (!data) {
-    console.log("❌ No OTP found for email");
+    console.log("❌ No OTP found");
     return res.json({ success: false });
   }
 
@@ -81,8 +87,8 @@ app.post("/verify-otp", (req, res) => {
   }
 
   if (Number(otp) === data.otp) {
-    console.log("✅ OTP verified");
     delete otpStore[email];
+    console.log("✅ OTP verified");
     return res.json({ success: true, role: data.role });
   }
 
@@ -91,6 +97,7 @@ app.post("/verify-otp", (req, res) => {
 });
 
 // ================= START SERVER =================
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
 });
