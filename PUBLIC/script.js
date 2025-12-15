@@ -2,51 +2,31 @@
 const cards = document.querySelectorAll(".card");
 const rightHalf = document.querySelector(".right-half");
 
+let isAnimating = false;
+
 // ================= CARD CLICK + ANIMATION =================
-cards.forEach((clickedCard, clickedIndex) => {
-  clickedCard.addEventListener("click", () => {
+cards.forEach((card, index) => {
+  card.addEventListener("click", () => {
+    if (isAnimating) return;
+    isAnimating = true;
 
     const logo = document.querySelector(".vastrado-logo");
     const heading = document.querySelector(".main-heading");
     const subHeading = document.querySelector(".sub-heading");
 
-    // Hide header elements safely
-    if (logo) {
-      gsap.to(logo, {
-        x: -100,
-        opacity: 0,
-        duration: 0.5,
-        onComplete: () => (logo.style.display = "none")
-      });
-    }
+    if (logo) gsap.to(logo, { x: -100, opacity: 0, duration: 0.4 });
+    if (heading) gsap.to(heading, { y: -100, opacity: 0, duration: 0.4 });
+    if (subHeading) gsap.to(subHeading, { y: -100, opacity: 0, duration: 0.4 });
 
-    if (heading) {
-      gsap.to(heading, {
-        y: -100,
+    cards.forEach((c, i) => {
+      gsap.to(c, {
+        x: i < 2 ? "-100vw" : "100vw",
         opacity: 0,
-        duration: 0.5,
-        onComplete: () => (heading.style.display = "none")
+        duration: 0.7,
+        onComplete: i === cards.length - 1
+          ? () => loadDashboard(index)
+          : null
       });
-    }
-
-    if (subHeading) {
-      gsap.to(subHeading, {
-        y: -100,
-        opacity: 0,
-        duration: 0.5,
-        onComplete: () => (subHeading.style.display = "none")
-      });
-    }
-
-    // Animate cards out
-    gsap.to(cards[0], { x: "-100vw", opacity: 0, duration: 0.8 });
-    gsap.to(cards[1], { x: "-100vw", opacity: 0, duration: 0.8 });
-    gsap.to(cards[2], { x: "100vw", opacity: 0, duration: 0.8 });
-    gsap.to(cards[3], {
-      x: "100vw",
-      opacity: 0,
-      duration: 0.8,
-      onComplete: () => loadDashboard(clickedIndex)
     });
   });
 });
@@ -56,24 +36,14 @@ function loadDashboard(index) {
   let dashboardFile = "";
   let role = "";
 
-  if (index === 0) {
-    dashboardFile = "buyer-dashboard.html";
-    role = "buyer";
-  } else if (index === 1) {
-    dashboardFile = "seller-dashboard.html";
-    role = "seller";
-  } else if (index === 2) {
-    dashboardFile = "ngo-dashboard.html";
-    role = "ngo";
-  } else if (index === 3) {
-    dashboardFile = "donation-dashboard.html";
-    role = "donation";
-  }
+  if (index === 0) { dashboardFile = "buyer-dashboard.html"; role = "buyer"; }
+  if (index === 1) { dashboardFile = "seller-dashboard.html"; role = "seller"; }
+  if (index === 2) { dashboardFile = "ngo-dashboard.html"; role = "ngo"; }
+  if (index === 3) { dashboardFile = "donation-dashboard.html"; role = "donation"; }
 
-  // Save role globally
+  // ✅ ROLE IS STORED HERE (VERY IMPORTANT)
   localStorage.setItem("role", role);
 
-  // Load dashboard HTML
   fetch(dashboardFile)
     .then(res => res.text())
     .then(html => {
@@ -81,28 +51,32 @@ function loadDashboard(index) {
 
       gsap.fromTo(
         rightHalf.children,
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 0.8, stagger: 0.15 }
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 }
       );
+
+      // ✅ Attach signup button AFTER HTML load
+      const signupBtn = document.getElementById("signupBtn");
+      if (signupBtn) signupBtn.addEventListener("click", sendOTP);
     });
 }
 
 // ================= SEND OTP =================
 async function sendOTP() {
   const emailInput = document.getElementById("email");
-  if (!emailInput) {
-    alert("Email input not found");
+  const role = localStorage.getItem("role");
+
+  if (!emailInput || !emailInput.value.trim()) {
+    alert("Enter email");
+    return;
+  }
+
+  if (!role) {
+    alert("Role missing");
     return;
   }
 
   const email = emailInput.value.trim();
-  const role = localStorage.getItem("role");
-
-  if (!email || !role) {
-    alert("Email or role missing");
-    return;
-  }
-
   localStorage.setItem("email", email);
 
   try {
@@ -113,7 +87,6 @@ async function sendOTP() {
     });
 
     const data = await res.json();
-
     if (data.success) {
       window.location.href = "verify.html";
     } else {

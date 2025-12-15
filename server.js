@@ -1,32 +1,25 @@
 require("dotenv").config();
 const express = require("express");
-const nodemailer = require("nodemailer");
 const cors = require("cors");
 const path = require("path");
+const { Resend } = require("resend");
 
 const app = express();
 
+// ================= MIDDLEWARE =================
 app.use(cors());
 app.use(express.json());
-
-// ✅ SERVE STATIC FILES CORRECTLY (RAILWAY SAFE)
 app.use(express.static(path.join(__dirname, "PUBLIC")));
 
-// ✅ FORCE ROOT (/) TO LOAD index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "PUBLIC", "index.html"));
 });
 
-let otpStore = {}; // email → { otp, role, expiry }
+// ================= RESEND =================
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ================= MAIL TRANSPORT =================
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// ================= OTP STORE =================
+let otpStore = {};
 
 // ================= OTP GENERATOR =================
 function generateOTP() {
@@ -35,17 +28,13 @@ function generateOTP() {
 
 // ================= SEND OTP =================
 app.post("/send-otp", async (req, res) => {
-  console.log("🔥 /send-otp API CALLED");
-
   const { email, role } = req.body;
 
   if (!email || !role) {
-    console.log("❌ Missing email or role");
     return res.json({ success: false });
   }
 
   const otp = generateOTP();
-  console.log("OTP GENERATED:", otp);
 
   otpStore[email] = {
     otp,
@@ -54,50 +43,42 @@ app.post("/send-otp", async (req, res) => {
   };
 
   try {
-    await transporter.sendMail({
-      from: `"Vastrado" <${process.env.EMAIL}>`,
+    await resend.emails.send({
+      from: "Vastrado <onboarding@resend.dev>",
       to: email,
       subject: "Your Vastrado OTP",
       html: `<h2>Your OTP: ${otp}</h2><p>Valid for 5 minutes</p>`
     });
 
-    console.log("✅ OTP email sent");
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ Email error:", err);
+    console.error(err);
     res.json({ success: false });
   }
 });
 
 // ================= VERIFY OTP =================
 app.post("/verify-otp", (req, res) => {
-  console.log("🔐 /verify-otp API CALLED");
-
   const { email, otp } = req.body;
   const data = otpStore[email];
 
-  if (!data) {
-    console.log("❌ No OTP found");
-    return res.json({ success: false });
-  }
+  if (!data) return res.json({ success: false });
 
   if (Date.now() > data.expiry) {
-    console.log("❌ OTP expired");
+    delete otpStore[email];
     return res.json({ success: false });
   }
 
   if (Number(otp) === data.otp) {
     delete otpStore[email];
-    console.log("✅ OTP verified");
     return res.json({ success: true, role: data.role });
   }
 
-  console.log("❌ OTP mismatch");
   res.json({ success: false });
 });
 
-// ================= START SERVER =================
+// ================= START =================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+  console.log("🚀 Server running on port", PORT);
 });
