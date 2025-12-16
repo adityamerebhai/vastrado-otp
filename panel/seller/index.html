@@ -15,9 +15,15 @@
             <div class="brand">Vastrado</div>
             <div class="top-actions">
                 <button class="ghost-btn" aria-label="Notifications">🔔</button>
-                <div class="profile">
+                <div class="profile" id="profileDropdown">
                     <span class="avatar" id="avatar">S</span>
                     <span class="profile-name" id="profileName">Seller</span>
+                    <div class="profile-dropdown" id="profileDropdownMenu" style="display: none;">
+                        <button class="dropdown-item" id="logoutBtn">
+                            <span>🚪</span>
+                            <span>Log Out</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -26,7 +32,6 @@
             <aside class="sidebar">
                 <nav class="menu">
                     <button class="menu-item active" data-section="profile">👤 Profile</button>
-                    <button class="menu-item" data-section="upload">🧺 Upload Cloth</button>
                     <button class="menu-item" data-section="listings">📦 My Listings</button>
                     <button class="menu-item" data-section="orders">🧾 Orders</button>
                     <button class="menu-item" data-section="settings">⚙️ Settings</button>
@@ -34,65 +39,191 @@
             </aside>
 
             <main class="content">
-                <section class="stats-grid">
-                    <article class="card stat-card">
-                        <p class="stat-label">Listings</p>
-                        <h2 class="stat-value">24</h2>
-                        <p class="stat-sub">+4 this week</p>
-                    </article>
-                    <article class="card stat-card">
-                        <p class="stat-label">Sales</p>
-                        <h2 class="stat-value">112</h2>
-                        <p class="stat-sub">+12 this month</p>
-                    </article>
-                    <article class="card stat-card">
-                        <p class="stat-label">Pending</p>
-                        <h2 class="stat-value">5</h2>
-                        <p class="stat-sub">Awaiting approval</p>
-                    </article>
-                </section>
+                <div class="content-section" data-section="profile">
+                    <section class="stats-grid">
+                        <article class="card stat-card">
+                            <p class="stat-label">Listings</p>
+                            <h2 class="stat-value" id="listingsCount">0</h2>
+                            <p class="stat-sub">Total items listed</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">Sales</p>
+                            <h2 class="stat-value" id="salesCount">0</h2>
+                            <p class="stat-sub">Total sales</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">Pending</p>
+                            <h2 class="stat-value" id="pendingCount">0</h2>
+                            <p class="stat-sub">Awaiting approval</p>
+                        </article>
+                    </section>
 
-                <section class="upload-highlight card">
-                    <div>
-                        <p class="muted">Quick action</p>
-                        <h3>Upload your cloth for resell</h3>
-                        <p class="subtext">Add photos, set price, and publish to your storefront.</p>
-                    </div>
-                    <button class="upload-btn" id="uploadAction" aria-label="Upload cloth">+</button>
-                </section>
-
-                <section class="card list-placeholder">
-                    <h3>Recent Orders</h3>
-                    <p class="muted">No orders to show yet. Once customers buy, you’ll see them here.</p>
-                </section>
-
-                <section class="card settings-card">
-                    <div class="settings-header">
-                        <h3>Settings</h3>
-                        <p class="muted">Personalize your workspace.</p>
-                    </div>
-                    <div class="setting-row">
+                    <section class="upload-highlight card">
                         <div>
-                            <p class="setting-label">Theme</p>
-                            <p class="muted small">Choose your preferred look.</p>
+                            <p class="muted">Quick action</p>
+                            <h3>Upload your cloth for resell</h3>
+                            <p class="subtext">Add photos, set price, and publish to your storefront.</p>
                         </div>
-                        <div class="theme-pills" id="themePills">
-                            <button class="pill" data-theme="light">Light</button>
-                            <button class="pill" data-theme="grey">Grey</button>
-                            <button class="pill" data-theme="dark">Dark</button>
+                        <button class="upload-btn" id="uploadAction" aria-label="Upload cloth">+</button>
+                    </section>
+
+                    <section class="card list-placeholder">
+                        <h3>Recent Orders</h3>
+                        <p class="muted">No orders to show yet. Once customers buy, you'll see them here.</p>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="upload" style="display: none;">
+                    <section class="card upload-form-card" id="uploadFormCard" style="display: none;">
+                        <div class="form-header">
+                            <h3>Upload Your Cloth</h3>
+                            <button class="close-form-btn" id="closeFormBtn" aria-label="Close form">×</button>
+                        </div>
+                        <form class="upload-form" id="uploadForm">
+                            <div class="form-group">
+                                <label for="photos">Upload Photos</label>
+                                <div class="file-upload-area" id="fileUploadArea">
+                                    <input type="file" id="photos" name="photos" accept="image/*" multiple style="display: none;">
+                                    <div class="file-upload-content">
+                                        <span class="upload-icon">📷</span>
+                                        <p class="upload-text">Click to browse or drag and drop</p>
+                                        <p class="upload-hint">Supports JPG, PNG, GIF (Max 10MB per image)</p>
+                                    </div>
+                                    <div class="file-preview" id="filePreview"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="fabricType">Fabric Type</label>
+                                    <select id="fabricType" name="fabricType" class="form-input" required>
+                                        <option value="">Select fabric type</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="polyester">Polyester</option>
+                                        <option value="silk">Silk</option>
+                                        <option value="wool">Wool</option>
+                                        <option value="linen">Linen</option>
+                                        <option value="denim">Denim</option>
+                                        <option value="leather">Leather</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="expectedCost">Expected Cost (₹)</label>
+                                    <input type="number" id="expectedCost" name="expectedCost" class="form-input" placeholder="Enter expected cost in rupees" min="0" step="0.01" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clothCondition">Cloth Condition</label>
+                                    <select id="clothCondition" name="clothCondition" class="form-input" required>
+                                        <option value="">Select condition</option>
+                                        <option value="new">New</option>
+                                        <option value="like-new">Like New</option>
+                                        <option value="good">Good</option>
+                                        <option value="fair">Fair</option>
+                                        <option value="poor">Poor</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="phoneNumber">Phone Number</label>
+                                    <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="Enter phone number" required>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
+                                <button type="submit" class="submit-btn">Submit</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="listings" style="display: none;">
+                    <section class="card listings-container">
+                        <h3>My Listings</h3>
+                        <p class="muted">Manage your clothing listings.</p>
+                        <div class="listings-grid" id="listingsGrid">
+                            <!-- Uploaded items will be displayed here -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Detail Modal -->
+                <div class="modal-overlay" id="detailModal" style="display: none;">
+                    <div class="modal-content">
+                        <button class="modal-close" id="closeModal">×</button>
+                        <div class="modal-body" id="modalBody">
+                            <!-- Details will be shown here -->
                         </div>
                     </div>
-                    <div class="setting-row">
-                        <div>
-                            <p class="setting-label">Notifications</p>
-                            <p class="muted small">Stay updated about orders.</p>
+                </div>
+
+                <!-- Delete Confirmation Modal -->
+                <div class="modal-overlay" id="deleteConfirmModal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="confirm-icon">⚠️</div>
+                        <h3 class="confirm-title">Remove Listing</h3>
+                        <p class="confirm-message">Are you sure you want to remove this listing? This action cannot be undone.</p>
+                        <div class="confirm-actions">
+                            <button class="confirm-btn cancel-confirm-btn" id="cancelDeleteBtn">Cancel</button>
+                            <button class="confirm-btn delete-confirm-btn" id="confirmDeleteBtn">Remove</button>
                         </div>
-                        <label class="toggle">
-                            <input type="checkbox" id="notifyToggle" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
                     </div>
-                </section>
+                </div>
+
+                <!-- Logout Confirmation Modal -->
+                <div class="modal-overlay" id="logoutConfirmModal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="confirm-icon">🚪</div>
+                        <h3 class="confirm-title">Log Out</h3>
+                        <p class="confirm-message">Are you sure you want to log out? All your session data will be cleared.</p>
+                        <div class="confirm-actions">
+                            <button class="confirm-btn cancel-confirm-btn" id="cancelLogoutBtn">Cancel</button>
+                            <button class="confirm-btn delete-confirm-btn" id="confirmLogoutBtn">Log Out</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section" data-section="orders" style="display: none;">
+                    <section class="card list-placeholder">
+                        <h3>Recent Orders</h3>
+                        <p class="muted">No orders to show yet. Once customers buy, you'll see them here.</p>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="settings" style="display: none;">
+                    <section class="card settings-card">
+                        <div class="settings-header">
+                            <h3>Settings</h3>
+                            <p class="muted">Personalize your workspace.</p>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Theme</p>
+                                <p class="muted small">Choose your preferred look.</p>
+                            </div>
+                            <div class="theme-pills" id="themePills">
+                                <button class="pill" data-theme="light">Light</button>
+                                <button class="pill" data-theme="grey">Grey</button>
+                                <button class="pill" data-theme="dark">Dark</button>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Notifications</p>
+                                <p class="muted small">Stay updated about orders.</p>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="notifyToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </section>
+                </div>
             </main>
         </div>
     </div>
