@@ -16,8 +16,8 @@
             <div class="top-actions">
                 <button class="ghost-btn" aria-label="Notifications">🔔</button>
                 <div class="profile">
-                    <span class="avatar">S</span>
-                    <span class="profile-name">Seller</span>
+                    <span class="avatar" id="avatar">S</span>
+                    <span class="profile-name" id="profileName">Seller</span>
                 </div>
             </div>
         </header>
@@ -64,6 +64,34 @@
                 <section class="card list-placeholder">
                     <h3>Recent Orders</h3>
                     <p class="muted">No orders to show yet. Once customers buy, you’ll see them here.</p>
+                </section>
+
+                <section class="card settings-card">
+                    <div class="settings-header">
+                        <h3>Settings</h3>
+                        <p class="muted">Personalize your workspace.</p>
+                    </div>
+                    <div class="setting-row">
+                        <div>
+                            <p class="setting-label">Theme</p>
+                            <p class="muted small">Choose your preferred look.</p>
+                        </div>
+                        <div class="theme-pills" id="themePills">
+                            <button class="pill" data-theme="light">Light</button>
+                            <button class="pill" data-theme="grey">Grey</button>
+                            <button class="pill" data-theme="dark">Dark</button>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div>
+                            <p class="setting-label">Notifications</p>
+                            <p class="muted small">Stay updated about orders.</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="notifyToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </section>
             </main>
         </div>
