@@ -23,7 +23,6 @@
 
     const data = await res.json();
 
-    // ================= ORIGINAL BLOCK (DO NOT TOUCH LOGIC) =================
     if (data.success) {
 
       // ✅ PROFILE ADDITION (SAFE)
@@ -37,11 +36,21 @@
         localStorage.setItem("loggedIn", "true");
       }
 
-      // ✅ ORIGINAL REDIRECTS (UNCHANGED)
-      if (data.role === "buyer") location.href = "buyer-dashboard.html";
-      if (data.role === "seller") location.href = "seller-dashboard.html";
-      if (data.role === "ngo") location.href = "ngo-dashboard.html";
-      if (data.role === "donation") location.href = "donation-dashboard.html";
+      // ✅ Redirect based on role (prefer panel if available)
+      const role = data.role || localStorage.getItem("role");
+      const panelMap = {
+        buyer: "/panel/buyer/index.html",
+        seller: "/panel/seller/index.html",
+        ngo: "/panel/ngo/index.html",
+        donation: "/panel/donation/index.html"
+      };
+      if (role && panelMap[role]) {
+        location.href = panelMap[role];
+      } else if (role) {
+        location.href = `${role}-dashboard.html`;
+      } else {
+        location.href = "index.html";
+      }
 
     } else {
       alert("Invalid or expired OTP");

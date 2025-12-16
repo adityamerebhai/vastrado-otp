@@ -62,10 +62,16 @@ function loadDashboard(index) {
 }
 
 // ================= SEND OTP =================
-async function sendOTP() {
+async function sendOTP(roleParam) {
   const emailInput = document.getElementById("email");
   const usernameInput = document.getElementById("username"); // ✅ ADDED
-  const role = localStorage.getItem("role");
+  const storedRole = localStorage.getItem("role");
+  const role = roleParam || storedRole;
+
+  // Persist role if passed explicitly
+  if (roleParam) {
+    localStorage.setItem("role", roleParam);
+  }
 
   if (!usernameInput || !usernameInput.value.trim()) {
     alert("Enter username");

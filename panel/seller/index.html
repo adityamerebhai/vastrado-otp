@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Dashboard | Vastrado</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">Vastrado</div>
+            <div class="top-actions">
+                <button class="ghost-btn" aria-label="Notifications">🔔</button>
+                <div class="profile">
+                    <span class="avatar">S</span>
+                    <span class="profile-name">Seller</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="layout">
+            <aside class="sidebar">
+                <nav class="menu">
+                    <button class="menu-item active" data-section="profile">👤 Profile</button>
+                    <button class="menu-item" data-section="upload">🧺 Upload Cloth</button>
+                    <button class="menu-item" data-section="listings">📦 My Listings</button>
+                    <button class="menu-item" data-section="orders">🧾 Orders</button>
+                    <button class="menu-item" data-section="settings">⚙️ Settings</button>
+                </nav>
+            </aside>
+
+            <main class="content">
+                <section class="stats-grid">
+                    <article class="card stat-card">
+                        <p class="stat-label">Listings</p>
+                        <h2 class="stat-value">24</h2>
+                        <p class="stat-sub">+4 this week</p>
+                    </article>
+                    <article class="card stat-card">
+                        <p class="stat-label">Sales</p>
+                        <h2 class="stat-value">112</h2>
+                        <p class="stat-sub">+12 this month</p>
+                    </article>
+                    <article class="card stat-card">
+                        <p class="stat-label">Pending</p>
+                        <h2 class="stat-value">5</h2>
+                        <p class="stat-sub">Awaiting approval</p>
+                    </article>
+                </section>
+
+                <section class="upload-highlight card">
+                    <div>
+                        <p class="muted">Quick action</p>
+                        <h3>Upload your cloth for resell</h3>
+                        <p class="subtext">Add photos, set price, and publish to your storefront.</p>
+                    </div>
+                    <button class="upload-btn" id="uploadAction" aria-label="Upload cloth">+</button>
+                </section>
+
+                <section class="card list-placeholder">
+                    <h3>Recent Orders</h3>
+                    <p class="muted">No orders to show yet. Once customers buy, you’ll see them here.</p>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
