@@ -84,20 +84,28 @@ app.listen(PORT, () => {
 });
 
 
-// ================= PROFILE STORE (PROTOTYPE) =================
-let profiles = {}; 
-// email -> { username, role }
-app.post("/create-profile", (req, res) => {
-  const { email, username, role } = req.body;
+// ================= PROFILE (USERNAME ONLY – PROTOTYPE) =================
 
-  if (!email || !username || !role) {
-    return res.json({ success: false });
+// In-memory store (resets if server restarts – OK for prototype)
+const profiles = {}; // username -> { username, createdAt }
+
+app.post("/create-profile", (req, res) => {
+  const { username } = req.body;
+
+  if (!username) {
+    return res.json({ success: false, message: "Username required" });
   }
 
-  profiles[email] = {
+  // Optional: prevent duplicate usernames
+  if (profiles[username]) {
+    return res.json({ success: false, message: "Username already exists" });
+  }
+
+  profiles[username] = {
     username,
-    role
+    createdAt: Date.now()
   };
 
+  console.log("👤 Profile created:", username);
   res.json({ success: true });
 });
