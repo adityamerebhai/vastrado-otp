@@ -41,7 +41,7 @@ function loadDashboard(index) {
   if (index === 2) { dashboardFile = "ngo-dashboard.html"; role = "ngo"; }
   if (index === 3) { dashboardFile = "donation-dashboard.html"; role = "donation"; }
 
-  // ✅ ROLE IS STORED HERE (VERY IMPORTANT)
+  // ✅ STORE ROLE
   localStorage.setItem("role", role);
 
   fetch(dashboardFile)
@@ -64,7 +64,13 @@ function loadDashboard(index) {
 // ================= SEND OTP =================
 async function sendOTP() {
   const emailInput = document.getElementById("email");
+  const usernameInput = document.getElementById("username"); // ✅ ADDED
   const role = localStorage.getItem("role");
+
+  if (!usernameInput || !usernameInput.value.trim()) {
+    alert("Enter username");
+    return;
+  }
 
   if (!emailInput || !emailInput.value.trim()) {
     alert("Enter email");
@@ -76,14 +82,18 @@ async function sendOTP() {
     return;
   }
 
+  const username = usernameInput.value.trim();
   const email = emailInput.value.trim();
+
+  // ✅ SAVE FOR VERIFY.JS
+  localStorage.setItem("username", username);
   localStorage.setItem("email", email);
 
   try {
     const res = await fetch("/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role })
+      body: JSON.stringify({ email, role }) // 🔒 OTP CODE UNCHANGED
     });
 
     const data = await res.json();
