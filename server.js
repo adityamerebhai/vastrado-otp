@@ -82,3 +82,22 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("🚀 Server running on port", PORT);
 });
+
+
+// ================= PROFILE STORE (PROTOTYPE) =================
+let profiles = {}; 
+// email -> { username, role }
+app.post("/create-profile", (req, res) => {
+  const { email, username, role } = req.body;
+
+  if (!email || !username || !role) {
+    return res.json({ success: false });
+  }
+
+  profiles[email] = {
+    username,
+    role
+  };
+
+  res.json({ success: true });
+});
