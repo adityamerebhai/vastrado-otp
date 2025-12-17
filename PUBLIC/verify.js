@@ -4,6 +4,99 @@
 
   if (!inputs.length || !verifyBtn) return;
 
+  // =====================
+  // OTP Input Handling - Auto cursor movement & Paste support
+  // =====================
+  
+  inputs.forEach((input, index) => {
+    // Focus first input on page load
+    if (index === 0) {
+      input.focus();
+    }
+
+    // Handle input - move to next on valid digit
+    input.addEventListener("input", (e) => {
+      const value = e.target.value;
+      
+      // Only allow digits
+      if (!/^\d*$/.test(value)) {
+        e.target.value = value.replace(/\D/g, '');
+        return;
+      }
+
+      // If user typed a digit, move to next input
+      if (value.length === 1 && index < inputs.length - 1) {
+        inputs[index + 1].focus();
+      }
+    });
+
+    // Handle keydown for backspace navigation
+    input.addEventListener("keydown", (e) => {
+      // Backspace - move to previous input if current is empty
+      if (e.key === "Backspace") {
+        if (input.value === "" && index > 0) {
+          inputs[index - 1].focus();
+          inputs[index - 1].value = "";
+        }
+      }
+      
+      // Arrow Left - move to previous input
+      if (e.key === "ArrowLeft" && index > 0) {
+        e.preventDefault();
+        inputs[index - 1].focus();
+      }
+      
+      // Arrow Right - move to next input
+      if (e.key === "ArrowRight" && index < inputs.length - 1) {
+        e.preventDefault();
+        inputs[index + 1].focus();
+      }
+
+      // Enter key - trigger verify
+      if (e.key === "Enter") {
+        e.preventDefault();
+        verifyBtn.click();
+      }
+    });
+
+    // Handle paste - distribute digits across all inputs
+    input.addEventListener("paste", (e) => {
+      e.preventDefault();
+      const pastedData = (e.clipboardData || window.clipboardData).getData("text");
+      
+      // Extract only digits from pasted content
+      const digits = pastedData.replace(/\D/g, '').slice(0, 6);
+      
+      if (digits.length > 0) {
+        // Fill inputs starting from the first one
+        digits.split('').forEach((digit, i) => {
+          if (i < inputs.length) {
+            inputs[i].value = digit;
+          }
+        });
+        
+        // Focus the next empty input or the last one
+        const nextEmptyIndex = Math.min(digits.length, inputs.length - 1);
+        inputs[nextEmptyIndex].focus();
+      }
+    });
+
+    // Select all text on focus for easy replacement
+    input.addEventListener("focus", () => {
+      input.select();
+    });
+
+    // Prevent non-numeric input
+    input.addEventListener("keypress", (e) => {
+      if (!/\d/.test(e.key) && e.key !== "Backspace" && e.key !== "Tab" && e.key !== "Enter") {
+        e.preventDefault();
+      }
+    });
+  });
+
+  // =====================
+  // Verify Button Click Handler
+  // =====================
   verifyBtn.addEventListener("click", async () => {
     let otp = "";
     inputs.forEach(i => otp += i.value);
