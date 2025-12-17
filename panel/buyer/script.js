@@ -39,6 +39,16 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
         if (targetSection === 'notifications') {
           displayNotifications();
         }
+        
+        // Load payments when payments section is shown
+        if (targetSection === 'payments') {
+          displayBuyerPayments();
+        }
+        
+        // Load orders when orders section is shown
+        if (targetSection === 'orders') {
+          displayBuyerOrders();
+        }
       } else {
         section.style.display = 'none';
       }
@@ -293,6 +303,7 @@ function showProductDetails(product) {
       </div>
     </div>
     <button class="chat-seller-btn" id="chatWithSellerBtn">💬 Chat with ${sellerName}</button>
+    <button class="buy-product-btn" id="buyProductBtn">🛒 Buy Now - ₹${product.expectedCost || '0'}</button>
   `;
 
   // Add chat button handler
@@ -301,6 +312,15 @@ function showProductDetails(product) {
     chatBtn.addEventListener('click', () => {
       modal.style.display = 'none';
       startChatWithSeller(sellerName, product.id);
+    });
+  }
+
+  // Add buy button handler
+  const buyBtn = document.getElementById('buyProductBtn');
+  if (buyBtn) {
+    buyBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+      openPaymentModal(product);
     });
   }
 
@@ -846,6 +866,281 @@ function checkNotifications() {
 setInterval(checkNotifications, 2000);
 
 // =====================
+// Payment Functionality
+// =====================
+let currentPaymentProduct = null;
+let paymentScreenshotData = null;
+
+function openPaymentModal(product) {
+  currentPaymentProduct = product;
+  paymentScreenshotData = null;
+  
+  const modal = document.getElementById('paymentModal');
+  const productInfo = document.getElementById('paymentProductInfo');
+  const submitBtn = document.getElementById('submitPaymentBtn');
+  const preview = document.getElementById('paymentPreview');
+  const dropzone = document.getElementById('paymentDropzone');
+  
+  if (!modal || !productInfo) return;
+  
+  // Reset state
+  if (submitBtn) submitBtn.disabled = true;
+  if (preview) preview.style.display = 'none';
+  if (dropzone) dropzone.style.display = 'block';
+  
+  const mainImage = product.photos && product.photos.length > 0 ? product.photos[0] : '';
+  const sellerName = product.sellerUsername || 'Unknown Seller';
+  
+  productInfo.innerHTML = `
+    <img src="${mainImage}" alt="Product" class="payment-product-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'80\\' height=\\'80\\'/%3E%3C/svg%3E'">
+    <div class="payment-product-details">
+      <h4>${product.fabricType || 'Item'}</h4>
+      <p>Seller: ${sellerName}</p>
+      <p>Condition: ${product.clothCondition || 'N/A'}</p>
+      <p class="payment-amount">₹${product.expectedCost || '0'}</p>
+    </div>
+  `;
+  
+  modal.style.display = 'flex';
+}
+
+// Payment modal elements
+const paymentModal = document.getElementById('paymentModal');
+const closePaymentModal = document.getElementById('closePaymentModal');
+const paymentDropzone = document.getElementById('paymentDropzone');
+const paymentScreenshotInput = document.getElementById('paymentScreenshot');
+const paymentPreview = document.getElementById('paymentPreview');
+const paymentPreviewImg = document.getElementById('paymentPreviewImg');
+const removePaymentImg = document.getElementById('removePaymentImg');
+const submitPaymentBtn = document.getElementById('submitPaymentBtn');
+
+if (closePaymentModal) {
+  closePaymentModal.addEventListener('click', () => {
+    if (paymentModal) paymentModal.style.display = 'none';
+    currentPaymentProduct = null;
+    paymentScreenshotData = null;
+  });
+}
+
+if (paymentModal) {
+  paymentModal.addEventListener('click', (e) => {
+    if (e.target === paymentModal) {
+      paymentModal.style.display = 'none';
+      currentPaymentProduct = null;
+      paymentScreenshotData = null;
+    }
+  });
+}
+
+if (paymentDropzone && paymentScreenshotInput) {
+  paymentDropzone.addEventListener('click', () => {
+    paymentScreenshotInput.click();
+  });
+  
+  paymentDropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    paymentDropzone.style.borderColor = 'var(--primary)';
+    paymentDropzone.style.background = 'var(--accent)';
+  });
+  
+  paymentDropzone.addEventListener('dragleave', () => {
+    paymentDropzone.style.borderColor = '';
+    paymentDropzone.style.background = '';
+  });
+  
+  paymentDropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    paymentDropzone.style.borderColor = '';
+    paymentDropzone.style.background = '';
+    
+    if (e.dataTransfer.files.length > 0) {
+      handlePaymentScreenshot(e.dataTransfer.files[0]);
+    }
+  });
+  
+  paymentScreenshotInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handlePaymentScreenshot(e.target.files[0]);
+    }
+  });
+}
+
+function handlePaymentScreenshot(file) {
+  if (!file.type.startsWith('image/')) {
+    alert('Please upload an image file');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    paymentScreenshotData = e.target.result;
+    
+    if (paymentPreviewImg) {
+      paymentPreviewImg.src = paymentScreenshotData;
+    }
+    if (paymentPreview) {
+      paymentPreview.style.display = 'block';
+    }
+    if (paymentDropzone) {
+      paymentDropzone.style.display = 'none';
+    }
+    if (submitPaymentBtn) {
+      submitPaymentBtn.disabled = false;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+if (removePaymentImg) {
+  removePaymentImg.addEventListener('click', () => {
+    paymentScreenshotData = null;
+    if (paymentPreview) paymentPreview.style.display = 'none';
+    if (paymentDropzone) paymentDropzone.style.display = 'block';
+    if (submitPaymentBtn) submitPaymentBtn.disabled = true;
+    if (paymentScreenshotInput) paymentScreenshotInput.value = '';
+  });
+}
+
+if (submitPaymentBtn) {
+  submitPaymentBtn.addEventListener('click', () => {
+    if (!currentPaymentProduct || !paymentScreenshotData) return;
+    
+    submitPayment();
+  });
+}
+
+function submitPayment() {
+  const buyerUsername = localStorage.getItem('username') || 'Buyer';
+  
+  const payment = {
+    id: Date.now(),
+    productId: currentPaymentProduct.id,
+    product: currentPaymentProduct,
+    buyer: buyerUsername,
+    seller: currentPaymentProduct.sellerUsername || 'Unknown Seller',
+    amount: currentPaymentProduct.expectedCost || '0',
+    screenshot: paymentScreenshotData,
+    status: 'pending',
+    timestamp: new Date().toISOString()
+  };
+  
+  // Save to payments list
+  let payments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  payments.push(payment);
+  localStorage.setItem('vastradoPayments', JSON.stringify(payments));
+  
+  // Close modal
+  if (paymentModal) paymentModal.style.display = 'none';
+  currentPaymentProduct = null;
+  paymentScreenshotData = null;
+  
+  // Show success message
+  alert('Payment submitted! Waiting for seller confirmation.');
+  
+  // Switch to payments section
+  const paymentsMenuItem = document.querySelector('.menu-item[data-section="payments"]');
+  if (paymentsMenuItem) {
+    paymentsMenuItem.click();
+  }
+}
+
+function getBuyerPayments() {
+  const buyerUsername = localStorage.getItem('username');
+  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  return allPayments.filter(p => p.buyer === buyerUsername);
+}
+
+function displayBuyerPayments() {
+  const paymentsList = document.getElementById('buyerPaymentsList');
+  if (!paymentsList) return;
+  
+  const payments = getBuyerPayments();
+  
+  if (payments.length === 0) {
+    paymentsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No payments yet. Buy a product to see your payments here.</p>';
+    return;
+  }
+  
+  // Sort by newest first
+  payments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  paymentsList.innerHTML = payments.map(payment => {
+    const mainImage = payment.product.photos && payment.product.photos.length > 0 ? payment.product.photos[0] : '';
+    const statusClass = payment.status;
+    
+    return `
+      <div class="payment-item ${statusClass}">
+        <img src="${mainImage}" alt="Product" class="payment-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'60\\' height=\\'60\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'60\\' height=\\'60\\'/%3E%3C/svg%3E'">
+        <div class="payment-item-info">
+          <p class="payment-item-title">${payment.product.fabricType || 'Item'}</p>
+          <p class="payment-item-seller">Seller: ${payment.seller}</p>
+        </div>
+        <div class="payment-item-amount">₹${payment.amount}</div>
+        <span class="payment-status ${statusClass}">${payment.status}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function getBuyerOrders() {
+  const buyerUsername = localStorage.getItem('username');
+  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  return allPayments.filter(p => p.buyer === buyerUsername && p.status === 'confirmed');
+}
+
+function displayBuyerOrders() {
+  const ordersGrid = document.getElementById('buyerOrdersList');
+  if (!ordersGrid) return;
+  
+  const orders = getBuyerOrders();
+  
+  if (orders.length === 0) {
+    ordersGrid.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No orders yet. Once you make a purchase, you\'ll see them here.</p>';
+    return;
+  }
+  
+  // Sort by newest first
+  orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  ordersGrid.innerHTML = orders.map(order => {
+    const mainImage = order.product.photos && order.product.photos.length > 0 ? order.product.photos[0] : '';
+    const date = new Date(order.timestamp).toLocaleDateString();
+    
+    return `
+      <div class="order-item" data-id="${order.id}">
+        <img src="${mainImage}" alt="Product" class="order-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'80\\' height=\\'80\\'/%3E%3C/svg%3E'">
+        <div class="order-item-info">
+          <p class="order-item-title">${order.product.fabricType || 'Item'}</p>
+          <p class="order-item-seller">Seller: ${order.seller}</p>
+          <p class="order-item-date">Ordered: ${date}</p>
+          <span class="order-confirmed-badge">✓ Confirmed</span>
+        </div>
+        <div class="order-item-amount">₹${order.amount}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Check for payment status updates
+function checkPaymentUpdates() {
+  const paymentBadge = document.getElementById('paymentBadge');
+  const payments = getBuyerPayments();
+  const pendingCount = payments.filter(p => p.status === 'pending').length;
+  
+  if (paymentBadge) {
+    if (pendingCount > 0) {
+      paymentBadge.style.display = 'inline-flex';
+      paymentBadge.textContent = pendingCount;
+    } else {
+      paymentBadge.style.display = 'none';
+    }
+  }
+}
+
+// Check payment updates every 2 seconds
+setInterval(checkPaymentUpdates, 2000);
+
+// =====================
 // Initialize: show profile section by default
 // =====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -867,5 +1162,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Display notifications
   displayNotifications();
+  
+  // Check for payment updates
+  checkPaymentUpdates();
 });
 

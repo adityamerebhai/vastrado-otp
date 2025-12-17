@@ -1404,3 +1404,308 @@ select.form-input {
     margin-left: 6px;
 }
 
+/* ===================== */
+/* Payment Styles */
+/* ===================== */
+.payment-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: #27ae60;
+    color: white;
+    border-radius: 9px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 6px;
+}
+
+.payments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.payment-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--menu-bg);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.payment-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
+}
+
+.payment-item.pending {
+    border-left-color: #f39c12;
+}
+
+.payment-item.confirmed {
+    border-left-color: #27ae60;
+}
+
+.payment-item-image {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
+.payment-item-info {
+    flex: 1;
+}
+
+.payment-item-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.payment-item-buyer {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.payment-item-amount {
+    font-weight: 700;
+    color: var(--primary-strong);
+    font-size: 1.1rem;
+}
+
+.payment-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.payment-status.pending {
+    background: rgba(243, 156, 18, 0.15);
+    color: #f39c12;
+}
+
+.payment-status.confirmed {
+    background: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+}
+
+/* Payment Detail Modal */
+.payment-detail-modal {
+    max-width: 600px;
+    width: 90%;
+}
+
+.payment-detail-body {
+    padding: 24px;
+}
+
+.payment-detail-body h2 {
+    margin-bottom: 20px;
+    color: var(--text);
+}
+
+.payment-detail-section {
+    margin-bottom: 24px;
+}
+
+.payment-detail-section h4 {
+    margin-bottom: 12px;
+    color: var(--text);
+}
+
+.payment-product-card {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: var(--menu-bg);
+    border-radius: var(--radius);
+}
+
+.payment-product-card img {
+    width: 100px;
+    height: 100px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
+.payment-product-card-info {
+    flex: 1;
+}
+
+.payment-product-card-info h5 {
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.payment-product-card-info p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.payment-amount-display {
+    font-weight: 700;
+    color: var(--primary-strong);
+    font-size: 1.3rem;
+}
+
+.payment-screenshot-container {
+    text-align: center;
+}
+
+.payment-screenshot {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: var(--radius);
+    border: 2px solid var(--border-color);
+}
+
+.buyer-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--menu-bg);
+    border-radius: var(--radius);
+}
+
+.buyer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.buyer-name {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.payment-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.confirm-payment-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: none;
+    background: #27ae60;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.confirm-payment-btn:hover {
+    background: #219a52;
+    transform: translateY(-2px);
+}
+
+.reject-payment-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 2px solid #e74c3c;
+    background: transparent;
+    color: #e74c3c;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.reject-payment-btn:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+/* Orders/Sales list in seller */
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.order-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: var(--menu-bg);
+    border-radius: var(--radius);
+    border-left: 4px solid #27ae60;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.order-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
+}
+
+.order-item-image {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
+.order-item-info {
+    flex: 1;
+}
+
+.order-item-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.order-item-buyer {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.order-item-date {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.order-item-amount {
+    font-weight: 700;
+    color: var(--primary-strong);
+    font-size: 1.1rem;
+    text-align: right;
+}
+
+.sale-confirmed-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+

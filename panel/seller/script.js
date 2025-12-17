@@ -34,6 +34,16 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
         if (targetSection === 'notifications') {
           displayNotifications();
         }
+        
+        // Load payments when payments section is shown
+        if (targetSection === 'payments') {
+          displaySellerPayments();
+        }
+        
+        // Load orders when orders section is shown
+        if (targetSection === 'orders') {
+          displaySellerOrders();
+        }
       } else {
         section.style.display = 'none';
       }
@@ -194,6 +204,13 @@ function saveItem(item) {
 function updateStats() {
   const items = getStoredItems();
   const listingsCount = items.length;
+  const sellerUsername = localStorage.getItem('username');
+  
+  // Get payments for this seller
+  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  const sellerPayments = allPayments.filter(p => p.seller === sellerUsername);
+  const salesCount = sellerPayments.filter(p => p.status === 'confirmed').length;
+  const pendingCount = sellerPayments.filter(p => p.status === 'pending').length;
   
   const listingsCountEl = document.getElementById('listingsCount');
   const salesCountEl = document.getElementById('salesCount');
@@ -203,10 +220,10 @@ function updateStats() {
     listingsCountEl.textContent = listingsCount;
   }
   if (salesCountEl) {
-    salesCountEl.textContent = '0';
+    salesCountEl.textContent = salesCount;
   }
   if (pendingCountEl) {
-    pendingCountEl.textContent = '0';
+    pendingCountEl.textContent = pendingCount;
   }
 }
 
@@ -932,6 +949,243 @@ function checkNotifications() {
 setInterval(checkNotifications, 2000);
 
 // =====================
+// Payment Functionality
+// =====================
+let currentPaymentToReview = null;
+
+function getSellerPayments() {
+  const sellerUsername = localStorage.getItem('username');
+  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  return allPayments.filter(p => p.seller === sellerUsername);
+}
+
+function displaySellerPayments() {
+  const paymentsList = document.getElementById('sellerPaymentsList');
+  if (!paymentsList) return;
+  
+  const payments = getSellerPayments().filter(p => p.status === 'pending');
+  
+  if (payments.length === 0) {
+    paymentsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No pending payments.</p>';
+    return;
+  }
+  
+  // Sort by newest first
+  payments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  paymentsList.innerHTML = payments.map(payment => {
+    const mainImage = payment.product.photos && payment.product.photos.length > 0 ? payment.product.photos[0] : '';
+    
+    return `
+      <div class="payment-item pending" data-id="${payment.id}">
+        <img src="${mainImage}" alt="Product" class="payment-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'60\\' height=\\'60\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'60\\' height=\\'60\\'/%3E%3C/svg%3E'">
+        <div class="payment-item-info">
+          <p class="payment-item-title">${payment.product.fabricType || 'Item'}</p>
+          <p class="payment-item-buyer">Buyer: ${payment.buyer}</p>
+        </div>
+        <div class="payment-item-amount">₹${payment.amount}</div>
+        <span class="payment-status pending">Pending</span>
+      </div>
+    `;
+  }).join('');
+  
+  // Add click handlers
+  paymentsList.querySelectorAll('.payment-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const paymentId = parseInt(item.dataset.id);
+      showPaymentDetails(paymentId);
+    });
+  });
+}
+
+function showPaymentDetails(paymentId) {
+  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  const payment = allPayments.find(p => p.id === paymentId);
+  
+  if (!payment) return;
+  
+  currentPaymentToReview = payment;
+  
+  const modal = document.getElementById('paymentDetailModal');
+  const modalBody = document.getElementById('paymentDetailBody');
+  
+  if (!modal || !modalBody) return;
+  
+  const mainImage = payment.product.photos && payment.product.photos.length > 0 ? payment.product.photos[0] : '';
+  
+  modalBody.innerHTML = `
+    <h2>Payment Review</h2>
+    
+    <div class="payment-detail-section">
+      <h4>Buyer Information</h4>
+      <div class="buyer-info">
+        <div class="buyer-avatar">${payment.buyer.charAt(0).toUpperCase()}</div>
+        <span class="buyer-name">${payment.buyer}</span>
+      </div>
+    </div>
+    
+    <div class="payment-detail-section">
+      <h4>Product Details</h4>
+      <div class="payment-product-card">
+        <img src="${mainImage}" alt="Product" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'100\\' height=\\'100\\'/%3E%3C/svg%3E'">
+        <div class="payment-product-card-info">
+          <h5>${payment.product.fabricType || 'Item'}</h5>
+          <p>Condition: ${payment.product.clothCondition || 'N/A'}</p>
+          <p class="payment-amount-display">₹${payment.amount}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="payment-detail-section">
+      <h4>Payment Screenshot</h4>
+      <div class="payment-screenshot-container">
+        <img src="${payment.screenshot}" alt="Payment Screenshot" class="payment-screenshot">
+      </div>
+    </div>
+    
+    <div class="payment-actions">
+      <button class="confirm-payment-btn" id="confirmPaymentBtn">✓ Confirm Payment</button>
+      <button class="reject-payment-btn" id="rejectPaymentBtn">✕ Reject</button>
+    </div>
+  `;
+  
+  // Add button handlers
+  const confirmBtn = document.getElementById('confirmPaymentBtn');
+  const rejectBtn = document.getElementById('rejectPaymentBtn');
+  
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', () => {
+      confirmPayment(paymentId);
+    });
+  }
+  
+  if (rejectBtn) {
+    rejectBtn.addEventListener('click', () => {
+      rejectPayment(paymentId);
+    });
+  }
+  
+  modal.style.display = 'flex';
+}
+
+function confirmPayment(paymentId) {
+  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  
+  allPayments = allPayments.map(p => {
+    if (p.id === paymentId) {
+      return { ...p, status: 'confirmed', confirmedAt: new Date().toISOString() };
+    }
+    return p;
+  });
+  
+  localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
+  
+  // Close modal
+  const modal = document.getElementById('paymentDetailModal');
+  if (modal) modal.style.display = 'none';
+  
+  // Update display
+  displaySellerPayments();
+  updateStats();
+  
+  // Show success
+  alert('Payment confirmed! The sale has been recorded.');
+}
+
+function rejectPayment(paymentId) {
+  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  
+  allPayments = allPayments.map(p => {
+    if (p.id === paymentId) {
+      return { ...p, status: 'rejected', rejectedAt: new Date().toISOString() };
+    }
+    return p;
+  });
+  
+  localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
+  
+  // Close modal
+  const modal = document.getElementById('paymentDetailModal');
+  if (modal) modal.style.display = 'none';
+  
+  // Update display
+  displaySellerPayments();
+  updateStats();
+}
+
+function displaySellerOrders() {
+  const ordersList = document.getElementById('sellerOrdersList');
+  if (!ordersList) return;
+  
+  const payments = getSellerPayments().filter(p => p.status === 'confirmed');
+  
+  if (payments.length === 0) {
+    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed sales yet.</p>';
+    return;
+  }
+  
+  // Sort by newest first
+  payments.sort((a, b) => new Date(b.confirmedAt || b.timestamp) - new Date(a.confirmedAt || a.timestamp));
+  
+  ordersList.innerHTML = payments.map(order => {
+    const mainImage = order.product.photos && order.product.photos.length > 0 ? order.product.photos[0] : '';
+    const date = new Date(order.confirmedAt || order.timestamp).toLocaleDateString();
+    
+    return `
+      <div class="order-item">
+        <img src="${mainImage}" alt="Product" class="order-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'80\\' height=\\'80\\'/%3E%3C/svg%3E'">
+        <div class="order-item-info">
+          <p class="order-item-title">${order.product.fabricType || 'Item'}</p>
+          <p class="order-item-buyer">Buyer: ${order.buyer}</p>
+          <p class="order-item-date">Sold: ${date}</p>
+          <span class="sale-confirmed-badge">✓ Sale Complete</span>
+        </div>
+        <div class="order-item-amount">₹${order.amount}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Payment detail modal close handlers
+const paymentDetailModal = document.getElementById('paymentDetailModal');
+const closePaymentDetailModal = document.getElementById('closePaymentDetailModal');
+
+if (closePaymentDetailModal) {
+  closePaymentDetailModal.addEventListener('click', () => {
+    if (paymentDetailModal) paymentDetailModal.style.display = 'none';
+    currentPaymentToReview = null;
+  });
+}
+
+if (paymentDetailModal) {
+  paymentDetailModal.addEventListener('click', (e) => {
+    if (e.target === paymentDetailModal) {
+      paymentDetailModal.style.display = 'none';
+      currentPaymentToReview = null;
+    }
+  });
+}
+
+// Check for payment updates
+function checkPaymentUpdates() {
+  const paymentBadge = document.getElementById('paymentBadge');
+  const payments = getSellerPayments();
+  const pendingCount = payments.filter(p => p.status === 'pending').length;
+  
+  if (paymentBadge) {
+    if (pendingCount > 0) {
+      paymentBadge.style.display = 'inline-flex';
+      paymentBadge.textContent = pendingCount;
+    } else {
+      paymentBadge.style.display = 'none';
+    }
+  }
+}
+
+// Check payment updates every 2 seconds
+setInterval(checkPaymentUpdates, 2000);
+
+// =====================
 // Initialize: show profile section by default and load listings
 // =====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -956,5 +1210,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Display notifications
   displayNotifications();
+  
+  // Check for payment updates
+  checkPaymentUpdates();
 });
 
