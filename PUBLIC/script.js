@@ -63,9 +63,18 @@ function loadDashboard(role) {
         { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 }
       );
 
-      // ✅ Attach signup button AFTER HTML load
-      const signupBtn = document.getElementById("signupBtn");
-      if (signupBtn) signupBtn.addEventListener("click", sendOTP);
+      // ✅ Attach signup button AFTER HTML load - find by class
+      const signupBtn = rightHalf.querySelector(".signup-button");
+      if (signupBtn) {
+        console.log("Found signup button, attaching click handler");
+        signupBtn.addEventListener("click", function(e) {
+          e.preventDefault();
+          console.log("Signup button clicked via attached handler");
+          sendOTP();
+        });
+      } else {
+        console.log("Signup button not found!");
+      }
     });
 }
 
