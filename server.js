@@ -31,8 +31,11 @@ function generateOTP() {
 app.post("/send-otp", async (req, res) => {
   const { email, role } = req.body;
 
+  console.log("📧 Send OTP request:", { email, role });
+
   if (!email || !role) {
-    return res.json({ success: false });
+    console.log("❌ Missing email or role");
+    return res.json({ success: false, error: "Missing email or role" });
   }
 
   const otp = generateOTP();
@@ -43,6 +46,9 @@ app.post("/send-otp", async (req, res) => {
     expiry: Date.now() + 5 * 60 * 1000
   };
 
+  console.log("✅ OTP stored for", email, "- Role:", role, "- OTP:", otp);
+  console.log("📦 Current otpStore keys:", Object.keys(otpStore));
+
   try {
     await resend.emails.send({
       from: "Vastrado <onboarding@resend.dev>",
@@ -51,31 +57,44 @@ app.post("/send-otp", async (req, res) => {
       html: `<h2>Your OTP: ${otp}</h2><p>Valid for 5 minutes</p>`
     });
 
+    console.log("📬 Email sent successfully to", email);
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.json({ success: false });
+    console.error("❌ Email send error:", err);
+    res.json({ success: false, error: "Email send failed" });
   }
 });
 
 // ================= VERIFY OTP =================
 app.post("/verify-otp", (req, res) => {
   const { email, otp } = req.body;
+  
+  console.log("🔐 Verify OTP request:", { email, otp });
+  console.log("📦 Current otpStore keys:", Object.keys(otpStore));
+  
   const data = otpStore[email];
 
-  if (!data) return res.json({ success: false });
+  if (!data) {
+    console.log("❌ No OTP found for email:", email);
+    return res.json({ success: false, error: "No OTP found for this email" });
+  }
+
+  console.log("📋 Stored data for", email, ":", { storedOTP: data.otp, role: data.role, expiry: new Date(data.expiry).toISOString() });
 
   if (Date.now() > data.expiry) {
+    console.log("❌ OTP expired for", email);
     delete otpStore[email];
-    return res.json({ success: false });
+    return res.json({ success: false, error: "OTP expired" });
   }
 
   if (Number(otp) === data.otp) {
+    console.log("✅ OTP verified successfully for", email, "- Role:", data.role);
     delete otpStore[email];
     return res.json({ success: true, role: data.role });
   }
 
-  res.json({ success: false });
+  console.log("❌ OTP mismatch for", email, "- Entered:", otp, "Expected:", data.otp);
+  res.json({ success: false, error: "Invalid OTP" });
 });
 
 // ================= START =================

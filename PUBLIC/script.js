@@ -10,6 +10,10 @@ cards.forEach((card, index) => {
     if (isAnimating) return;
     isAnimating = true;
 
+    // Get role directly from data attribute
+    const clickedRole = card.dataset.role;
+    console.log("Card clicked, role:", clickedRole);
+
     const logo = document.querySelector(".vastrado-logo");
     const heading = document.querySelector(".main-heading");
     const subHeading = document.querySelector(".sub-heading");
@@ -24,7 +28,7 @@ cards.forEach((card, index) => {
         opacity: 0,
         duration: 0.7,
         onComplete: i === cards.length - 1
-          ? () => loadDashboard(index)
+          ? () => loadDashboard(clickedRole)
           : null
       });
     });
@@ -32,14 +36,18 @@ cards.forEach((card, index) => {
 });
 
 // ================= LOAD DASHBOARD =================
-function loadDashboard(index) {
-  let dashboardFile = "";
-  let role = "";
+function loadDashboard(role) {
+  // Get dashboard file based on role
+  const dashboardFiles = {
+    buyer: "buyer-dashboard.html",
+    seller: "seller-dashboard.html",
+    ngo: "ngo-dashboard.html",
+    donation: "donation-dashboard.html"
+  };
 
-  if (index === 0) { dashboardFile = "buyer-dashboard.html"; role = "buyer"; }
-  if (index === 1) { dashboardFile = "seller-dashboard.html"; role = "seller"; }
-  if (index === 2) { dashboardFile = "ngo-dashboard.html"; role = "ngo"; }
-  if (index === 3) { dashboardFile = "donation-dashboard.html"; role = "donation"; }
+  const dashboardFile = dashboardFiles[role] || "buyer-dashboard.html";
+  
+  console.log("Loading dashboard for role:", role, "File:", dashboardFile);
 
   // ✅ STORE ROLE
   localStorage.setItem("role", role);
@@ -64,9 +72,11 @@ function loadDashboard(index) {
 // ================= SEND OTP =================
 async function sendOTP(roleParam) {
   const emailInput = document.getElementById("email");
-  const usernameInput = document.getElementById("username"); // ✅ ADDED
+  const usernameInput = document.getElementById("username");
   const storedRole = localStorage.getItem("role");
   const role = roleParam || storedRole;
+
+  console.log("sendOTP called - Role from param:", roleParam, "Role from storage:", storedRole, "Final role:", role);
 
   // Persist role if passed explicitly
   if (roleParam) {
@@ -84,12 +94,14 @@ async function sendOTP(roleParam) {
   }
 
   if (!role) {
-    alert("Role missing");
+    alert("Role missing - please go back and select a role");
     return;
   }
 
   const username = usernameInput.value.trim();
   const email = emailInput.value.trim();
+
+  console.log("Sending OTP for:", { email, username, role });
 
   // ✅ SAVE FOR VERIFY.JS
   localStorage.setItem("username", username);
@@ -99,17 +111,25 @@ async function sendOTP(roleParam) {
     const res = await fetch("/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role }) // 🔒 OTP CODE UNCHANGED
+      body: JSON.stringify({ email, role })
     });
 
     const data = await res.json();
+    console.log("Send OTP response:", data);
+    
     if (data.success) {
+      console.log("OTP sent successfully, redirecting to verify.html");
+      console.log("localStorage state:", {
+        email: localStorage.getItem("email"),
+        username: localStorage.getItem("username"),
+        role: localStorage.getItem("role")
+      });
       window.location.href = "verify.html";
     } else {
-      alert("OTP send failed");
+      alert("OTP send failed - please try again");
     }
   } catch (err) {
-    console.error(err);
-    alert("Server error");
+    console.error("sendOTP error:", err);
+    alert("Server error - please try again");
   }
 }

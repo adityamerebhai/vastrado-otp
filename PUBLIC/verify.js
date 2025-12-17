@@ -107,46 +107,60 @@
     }
 
     const email = localStorage.getItem("email");
+    const role = localStorage.getItem("role");
 
-    const res = await fetch("/verify-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp })
-    });
+    // Debug: log what's being sent
+    console.log("Verifying OTP:", { email, otp, role });
 
-    const data = await res.json();
+    if (!email) {
+      alert("Email not found. Please go back and sign up again.");
+      return;
+    }
 
-    if (data.success) {
+    try {
+      const res = await fetch("/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp })
+      });
 
-      // ✅ PROFILE ADDITION (SAFE)
-      const username = localStorage.getItem("username");
-      if (username) {
-        await fetch("/create-profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username })
-        });
-        localStorage.setItem("loggedIn", "true");
-      }
+      const data = await res.json();
+      console.log("Server response:", data);
 
-      // ✅ Redirect based on role (prefer panel if available)
-      const role = data.role || localStorage.getItem("role");
-      const panelMap = {
-        buyer: "/panel/buyer/index.html",
-        seller: "/panel/seller/index.html",
-        ngo: "/panel/ngo/index.html",
-        donation: "/panel/donation/index.html"
-      };
-      if (role && panelMap[role]) {
-        location.href = panelMap[role];
-      } else if (role) {
-        location.href = `${role}-dashboard.html`;
+      if (data.success) {
+        // ✅ PROFILE ADDITION (SAFE)
+        const username = localStorage.getItem("username");
+        if (username) {
+          await fetch("/create-profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username })
+          });
+          localStorage.setItem("loggedIn", "true");
+        }
+
+        // ✅ Redirect based on role (prefer panel if available)
+        const redirectRole = data.role || localStorage.getItem("role");
+        const panelMap = {
+          buyer: "/panel/buyer/index.html",
+          seller: "/panel/seller/index.html",
+          ngo: "/panel/ngo/index.html",
+          donation: "/panel/donation/index.html"
+        };
+        if (redirectRole && panelMap[redirectRole]) {
+          location.href = panelMap[redirectRole];
+        } else if (redirectRole) {
+          location.href = `${redirectRole}-dashboard.html`;
+        } else {
+          location.href = "index.html";
+        }
+
       } else {
-        location.href = "index.html";
+        alert("Invalid or expired OTP. The server may have restarted. Please go back and request a new OTP.");
       }
-
-    } else {
-      alert("Invalid or expired OTP");
+    } catch (err) {
+      console.error("Verification error:", err);
+      alert("Server error. Please try again.");
     }
   });
 })();
