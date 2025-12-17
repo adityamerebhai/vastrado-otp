@@ -1175,16 +1175,21 @@ function displayBuyerOrders() {
 }
 
 // Check for payment status updates
-let lastBuyerPaymentState = '';
+let lastBuyerPaymentHash = '';
+
+function getPaymentHash() {
+  const payments = getBuyerPayments();
+  // Create a hash from all payment IDs and their statuses
+  return payments.map(p => `${p.id}:${p.status}`).sort().join(',');
+}
 
 function checkPaymentUpdates() {
   const paymentBadge = document.getElementById('paymentBadge');
   const payments = getBuyerPayments();
   const pendingCount = payments.filter(p => p.status === 'pending').length;
-  const confirmedCount = payments.filter(p => p.status === 'confirmed').length;
   
-  // Create a state string to detect changes
-  const currentState = `${pendingCount}-${confirmedCount}`;
+  // Create a hash to detect any changes in payments
+  const currentHash = getPaymentHash();
   
   if (paymentBadge) {
     if (pendingCount > 0) {
@@ -1195,24 +1200,18 @@ function checkPaymentUpdates() {
     }
   }
   
-  // If state changed, refresh displays
-  if (currentState !== lastBuyerPaymentState) {
-    lastBuyerPaymentState = currentState;
+  // If payment data changed, refresh everything
+  if (currentHash !== lastBuyerPaymentHash) {
+    lastBuyerPaymentHash = currentHash;
     
-    // Update stats
+    // Update stats on profile
     updateStats();
     
-    // Refresh payments list if payments section is visible
-    const paymentsSection = document.querySelector('.content-section[data-section="payments"]');
-    if (paymentsSection && paymentsSection.style.display !== 'none') {
-      displayBuyerPayments();
-    }
+    // Always refresh payments list
+    displayBuyerPayments();
     
-    // Refresh orders list if orders section is visible
-    const ordersSection = document.querySelector('.content-section[data-section="orders"]');
-    if (ordersSection && ordersSection.style.display !== 'none') {
-      displayBuyerOrders();
-    }
+    // Always refresh orders list
+    displayBuyerOrders();
   }
 }
 
