@@ -29,6 +29,11 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
         if (targetSection === 'chat') {
           loadChatList();
         }
+        
+        // Load notifications when notifications section is shown
+        if (targetSection === 'notifications') {
+          displayNotifications();
+        }
       } else {
         section.style.display = 'none';
       }
@@ -652,7 +657,17 @@ function loadChatList() {
 function openChatWith(otherUsername) {
   currentChatPartner = otherUsername;
   localStorage.setItem('currentChatPartner', otherUsername);
-  loadChatMessages(otherUsername);
+  
+  // Switch to chat section
+  const chatMenuItem = document.querySelector('.menu-item[data-section="chat"]');
+  if (chatMenuItem) {
+    chatMenuItem.click();
+  }
+  
+  // Small delay to ensure section is visible before loading messages
+  setTimeout(() => {
+    loadChatMessages(otherUsername);
+  }, 50);
 }
 
 function loadChatMessages(otherUsername) {
@@ -796,6 +811,127 @@ function checkNewChats() {
 setInterval(checkNewChats, 3000);
 
 // =====================
+// Notifications Functionality
+// =====================
+function getNotifications() {
+  const chatRequests = JSON.parse(localStorage.getItem('chatRequests') || '[]');
+  const myUsername = localStorage.getItem('username');
+  
+  // Filter notifications for this seller
+  return chatRequests.filter(r => r.seller === myUsername);
+}
+
+function displayNotifications() {
+  const notificationsList = document.getElementById('notificationsList');
+  const notifBadge = document.getElementById('notifBadge');
+  
+  if (!notificationsList) return;
+  
+  const notifications = getNotifications();
+  const pendingCount = notifications.filter(n => n.status === 'pending').length;
+  
+  // Update badge
+  if (notifBadge) {
+    if (pendingCount > 0) {
+      notifBadge.style.display = 'inline-flex';
+      notifBadge.textContent = pendingCount;
+    } else {
+      notifBadge.style.display = 'none';
+    }
+  }
+  
+  if (notifications.length === 0) {
+    notificationsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No notifications yet</p>';
+    return;
+  }
+  
+  // Sort by newest first
+  notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  notificationsList.innerHTML = notifications.map(notif => {
+    const timeAgo = getTimeAgo(notif.timestamp);
+    const statusClass = notif.status === 'pending' ? 'notification-new' : 'notification-read';
+    
+    return `
+      <div class="notification-item ${statusClass}" data-buyer="${notif.buyer}" data-id="${notif.id}">
+        <div class="notification-icon">💬</div>
+        <div class="notification-content">
+          <p class="notification-text"><strong>${notif.buyer}</strong> wants to chat with you</p>
+          <p class="notification-time">${timeAgo}</p>
+        </div>
+        <button class="notification-action" data-buyer="${notif.buyer}">Chat</button>
+      </div>
+    `;
+  }).join('');
+  
+  // Add click handlers
+  notificationsList.querySelectorAll('.notification-action').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const buyerUsername = btn.dataset.buyer;
+      markNotificationAsRead(buyerUsername);
+      openChatWith(buyerUsername);
+    });
+  });
+  
+  notificationsList.querySelectorAll('.notification-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const buyerUsername = item.dataset.buyer;
+      markNotificationAsRead(buyerUsername);
+      openChatWith(buyerUsername);
+    });
+  });
+}
+
+function markNotificationAsRead(buyerUsername) {
+  const myUsername = localStorage.getItem('username');
+  let chatRequests = JSON.parse(localStorage.getItem('chatRequests') || '[]');
+  
+  chatRequests = chatRequests.map(req => {
+    if (req.seller === myUsername && req.buyer === buyerUsername) {
+      return { ...req, status: 'read' };
+    }
+    return req;
+  });
+  
+  localStorage.setItem('chatRequests', JSON.stringify(chatRequests));
+  displayNotifications();
+}
+
+function getTimeAgo(timestamp) {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now - then;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${diffDays}d ago`;
+}
+
+// Check notifications periodically
+function checkNotifications() {
+  const notifBadge = document.getElementById('notifBadge');
+  const notifications = getNotifications();
+  const pendingCount = notifications.filter(n => n.status === 'pending').length;
+  
+  if (notifBadge) {
+    if (pendingCount > 0) {
+      notifBadge.style.display = 'inline-flex';
+      notifBadge.textContent = pendingCount;
+    } else {
+      notifBadge.style.display = 'none';
+    }
+  }
+}
+
+// Check notifications every 2 seconds
+setInterval(checkNotifications, 2000);
+
+// =====================
 // Initialize: show profile section by default and load listings
 // =====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -817,5 +953,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Check for new chats
   checkNewChats();
+  
+  // Display notifications
+  displayNotifications();
 });
 

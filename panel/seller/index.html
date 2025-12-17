@@ -33,7 +33,8 @@
                 <nav class="menu">
                     <button class="menu-item active" data-section="profile">👤 Profile</button>
                     <button class="menu-item" data-section="listings">📦 My Listings</button>
-                    <button class="menu-item" data-section="chat">💬 Chats <span class="chat-badge" id="chatBadge" style="display:none;">0</span></button>
+                    <button class="menu-item" data-section="notifications">🔔 Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span></button>
+                    <button class="menu-item" data-section="chat">💬 Chats</button>
                     <button class="menu-item" data-section="orders">🧾 Orders</button>
                     <button class="menu-item" data-section="settings">⚙️ Settings</button>
                 </nav>
@@ -187,6 +188,16 @@
                             <button class="confirm-btn delete-confirm-btn" id="confirmLogoutBtn">Log Out</button>
                         </div>
                     </div>
+                </div>
+
+                <div class="content-section" data-section="notifications" style="display: none;">
+                    <section class="card">
+                        <h3>Notifications</h3>
+                        <p class="muted">Chat requests and updates from buyers.</p>
+                        <div class="notifications-list" id="notificationsList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No notifications yet</p>
+                        </div>
+                    </section>
                 </div>
 
                 <div class="content-section" data-section="chat" style="display: none;">

@@ -34,6 +34,11 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
         if (targetSection === 'chat') {
           loadChatList();
         }
+        
+        // Load notifications when notifications section is shown
+        if (targetSection === 'notifications') {
+          displayNotifications();
+        }
       } else {
         section.style.display = 'none';
       }
@@ -718,6 +723,129 @@ if (chatInput) {
 }
 
 // =====================
+// Notifications Functionality
+// =====================
+function getBuyerNotifications() {
+  const myUsername = localStorage.getItem('username');
+  const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '{}');
+  
+  // For buyers, notifications can be when a seller replies
+  // Check for new messages from sellers
+  const notifications = [];
+  
+  Object.keys(allChats).forEach(chatKey => {
+    const [user1, user2] = chatKey.split('_');
+    if (user1 === myUsername || user2 === myUsername) {
+      const otherUser = user1 === myUsername ? user2 : user1;
+      const messages = allChats[chatKey];
+      const unreadMessages = messages.filter(m => 
+        m.sender !== myUsername && 
+        !m.readByBuyer
+      );
+      
+      if (unreadMessages.length > 0) {
+        notifications.push({
+          from: otherUser,
+          count: unreadMessages.length,
+          lastMessage: messages[messages.length - 1]
+        });
+      }
+    }
+  });
+  
+  return notifications;
+}
+
+function displayNotifications() {
+  const notificationsList = document.getElementById('notificationsList');
+  const notifBadge = document.getElementById('notifBadge');
+  
+  if (!notificationsList) return;
+  
+  const notifications = getBuyerNotifications();
+  const totalCount = notifications.reduce((sum, n) => sum + n.count, 0);
+  
+  // Update badge
+  if (notifBadge) {
+    if (totalCount > 0) {
+      notifBadge.style.display = 'inline-flex';
+      notifBadge.textContent = totalCount;
+    } else {
+      notifBadge.style.display = 'none';
+    }
+  }
+  
+  if (notifications.length === 0) {
+    notificationsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No new notifications</p>';
+    return;
+  }
+  
+  notificationsList.innerHTML = notifications.map(notif => {
+    const timeAgo = getTimeAgo(notif.lastMessage.timestamp);
+    
+    return `
+      <div class="notification-item notification-new" data-user="${notif.from}">
+        <div class="notification-icon">💬</div>
+        <div class="notification-content">
+          <p class="notification-text"><strong>${notif.from}</strong> sent you ${notif.count} message${notif.count > 1 ? 's' : ''}</p>
+          <p class="notification-time">${timeAgo}</p>
+        </div>
+        <button class="notification-action" data-user="${notif.from}">View</button>
+      </div>
+    `;
+  }).join('');
+  
+  // Add click handlers
+  notificationsList.querySelectorAll('.notification-action').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const sellerUsername = btn.dataset.user;
+      openChatWith(sellerUsername);
+    });
+  });
+  
+  notificationsList.querySelectorAll('.notification-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const sellerUsername = item.dataset.user;
+      openChatWith(sellerUsername);
+    });
+  });
+}
+
+function getTimeAgo(timestamp) {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now - then;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${diffDays}d ago`;
+}
+
+// Check notifications periodically
+function checkNotifications() {
+  const notifications = getBuyerNotifications();
+  const totalCount = notifications.reduce((sum, n) => sum + n.count, 0);
+  const notifBadge = document.getElementById('notifBadge');
+  
+  if (notifBadge) {
+    if (totalCount > 0) {
+      notifBadge.style.display = 'inline-flex';
+      notifBadge.textContent = totalCount;
+    } else {
+      notifBadge.style.display = 'none';
+    }
+  }
+}
+
+// Check notifications every 2 seconds
+setInterval(checkNotifications, 2000);
+
+// =====================
 // Initialize: show profile section by default
 // =====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -736,5 +864,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Load chat list
   loadChatList();
+  
+  // Display notifications
+  displayNotifications();
 });
 

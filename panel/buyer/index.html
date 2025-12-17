@@ -33,7 +33,8 @@
                 <nav class="menu">
                     <button class="menu-item active" data-section="profile">👤 Profile</button>
                     <button class="menu-item" data-section="browse">🛍️ Browse Products</button>
-                    <button class="menu-item" data-section="chat">💬 Chats <span class="chat-badge" id="chatBadge" style="display:none;">0</span></button>
+                    <button class="menu-item" data-section="notifications">🔔 Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span></button>
+                    <button class="menu-item" data-section="chat">💬 Chats</button>
                     <button class="menu-item" data-section="orders">🧾 My Orders</button>
                     <button class="menu-item" data-section="wishlist">❤️ Wishlist</button>
                     <button class="menu-item" data-section="settings">⚙️ Settings</button>
@@ -103,6 +104,16 @@
                         <p class="muted">Save items you love for later.</p>
                         <div class="wishlist-grid" id="wishlistGrid">
                             <p class="muted" style="text-align: center; padding: 40px;">Your wishlist is empty. Browse products and add items you like!</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="notifications" style="display: none;">
+                    <section class="card">
+                        <h3>Notifications</h3>
+                        <p class="muted">Updates and messages from sellers.</p>
+                        <div class="notifications-list" id="notificationsList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No notifications yet</p>
                         </div>
                     </section>
                 </div>
