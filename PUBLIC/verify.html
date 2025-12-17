@@ -229,6 +229,10 @@
             </div>
             <h2 class="verify-heading">Verify</h2>
             <p class="verify-subheading">Enter the 6-digit code we sent to your email.</p>
+            <p id="debugEmail" style="font-size: 0.85em; color: #999; margin-bottom: 15px;"></p>
+            <script>
+                document.getElementById('debugEmail').textContent = 'Verifying: ' + (localStorage.getItem('email') || 'No email found') + ' (Role: ' + (localStorage.getItem('role') || 'None') + ')';
+            </script>
 
             <form class="verify-form">
                 <div class="otp-container">
