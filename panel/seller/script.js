@@ -1200,6 +1200,8 @@ if (paymentDetailModal) {
 }
 
 // Check for payment updates
+let lastPaymentCount = 0;
+
 function checkPaymentUpdates() {
   const paymentBadge = document.getElementById('paymentBadge');
   const payments = getSellerPayments();
@@ -1213,10 +1215,24 @@ function checkPaymentUpdates() {
       paymentBadge.style.display = 'none';
     }
   }
+  
+  // If payment count changed, refresh the payments list if it's visible
+  if (pendingCount !== lastPaymentCount) {
+    lastPaymentCount = pendingCount;
+    
+    // Refresh payments list if payments section is visible
+    const paymentsSection = document.querySelector('.content-section[data-section="payments"]');
+    if (paymentsSection && paymentsSection.style.display !== 'none') {
+      displaySellerPayments();
+    }
+    
+    // Also update stats
+    updateStats();
+  }
 }
 
-// Check payment updates every 2 seconds
-setInterval(checkPaymentUpdates, 2000);
+// Check payment updates every 500ms for faster response
+setInterval(checkPaymentUpdates, 500);
 
 // =====================
 // Initialize: show profile section by default and load listings

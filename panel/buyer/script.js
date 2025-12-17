@@ -1175,10 +1175,16 @@ function displayBuyerOrders() {
 }
 
 // Check for payment status updates
+let lastBuyerPaymentState = '';
+
 function checkPaymentUpdates() {
   const paymentBadge = document.getElementById('paymentBadge');
   const payments = getBuyerPayments();
   const pendingCount = payments.filter(p => p.status === 'pending').length;
+  const confirmedCount = payments.filter(p => p.status === 'confirmed').length;
+  
+  // Create a state string to detect changes
+  const currentState = `${pendingCount}-${confirmedCount}`;
   
   if (paymentBadge) {
     if (pendingCount > 0) {
@@ -1188,10 +1194,30 @@ function checkPaymentUpdates() {
       paymentBadge.style.display = 'none';
     }
   }
+  
+  // If state changed, refresh displays
+  if (currentState !== lastBuyerPaymentState) {
+    lastBuyerPaymentState = currentState;
+    
+    // Update stats
+    updateStats();
+    
+    // Refresh payments list if payments section is visible
+    const paymentsSection = document.querySelector('.content-section[data-section="payments"]');
+    if (paymentsSection && paymentsSection.style.display !== 'none') {
+      displayBuyerPayments();
+    }
+    
+    // Refresh orders list if orders section is visible
+    const ordersSection = document.querySelector('.content-section[data-section="orders"]');
+    if (ordersSection && ordersSection.style.display !== 'none') {
+      displayBuyerOrders();
+    }
+  }
 }
 
-// Check payment updates every 2 seconds
-setInterval(checkPaymentUpdates, 2000);
+// Check payment updates every 500ms for faster response
+setInterval(checkPaymentUpdates, 500);
 
 // =====================
 // Initialize: show profile section by default
