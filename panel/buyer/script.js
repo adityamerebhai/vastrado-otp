@@ -110,20 +110,24 @@ function getOrders() {
 // Update stats cards
 function updateStats() {
   const wishlist = getWishlist();
-  const orders = getOrders();
+  const buyerUsername = localStorage.getItem('username');
+  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  const buyerPayments = allPayments.filter(p => p.buyer === buyerUsername);
+  const confirmedOrders = buyerPayments.filter(p => p.status === 'confirmed').length;
+  const pendingPayments = buyerPayments.filter(p => p.status === 'pending').length;
   
   const ordersCountEl = document.getElementById('ordersCount');
   const wishlistCountEl = document.getElementById('wishlistCount');
   const pendingCountEl = document.getElementById('pendingCount');
   
   if (ordersCountEl) {
-    ordersCountEl.textContent = orders.length;
+    ordersCountEl.textContent = confirmedOrders;
   }
   if (wishlistCountEl) {
     wishlistCountEl.textContent = wishlist.length;
   }
   if (pendingCountEl) {
-    pendingCountEl.textContent = '0';
+    pendingCountEl.textContent = pendingPayments;
   }
 }
 
@@ -1034,14 +1038,63 @@ function submitPayment() {
   currentPaymentProduct = null;
   paymentScreenshotData = null;
   
-  // Show success message
-  alert('Payment submitted! Waiting for seller confirmation.');
+  // Update stats
+  updateStats();
   
-  // Switch to payments section
-  const paymentsMenuItem = document.querySelector('.menu-item[data-section="payments"]');
-  if (paymentsMenuItem) {
-    paymentsMenuItem.click();
+  // Show success modal
+  showSuccessModal('Payment Submitted!', 'Your payment has been submitted successfully. Waiting for seller confirmation.');
+  
+  // After closing success modal, switch to payments section
+  pendingAction = 'goToPayments';
+}
+
+// Success Modal functionality
+let pendingAction = null;
+
+function showSuccessModal(title, message) {
+  const modal = document.getElementById('successModal');
+  const titleEl = document.getElementById('successTitle');
+  const messageEl = document.getElementById('successMessage');
+  
+  if (modal && titleEl && messageEl) {
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    modal.style.display = 'flex';
   }
+}
+
+const successModal = document.getElementById('successModal');
+const successOkBtn = document.getElementById('successOkBtn');
+
+if (successOkBtn) {
+  successOkBtn.addEventListener('click', () => {
+    if (successModal) successModal.style.display = 'none';
+    
+    // Execute pending action
+    if (pendingAction === 'goToPayments') {
+      const paymentsMenuItem = document.querySelector('.menu-item[data-section="payments"]');
+      if (paymentsMenuItem) {
+        paymentsMenuItem.click();
+      }
+    }
+    pendingAction = null;
+  });
+}
+
+if (successModal) {
+  successModal.addEventListener('click', (e) => {
+    if (e.target === successModal) {
+      successModal.style.display = 'none';
+      
+      if (pendingAction === 'goToPayments') {
+        const paymentsMenuItem = document.querySelector('.menu-item[data-section="payments"]');
+        if (paymentsMenuItem) {
+          paymentsMenuItem.click();
+        }
+      }
+      pendingAction = null;
+    }
+  });
 }
 
 function getBuyerPayments() {

@@ -1623,3 +1623,74 @@ body {
     margin-top: 4px;
 }
 
+/* ===================== */
+/* Success Modal Styles */
+/* ===================== */
+.success-modal {
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+
+.success-modal-body {
+    padding: 40px 30px;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    animation: successPop 0.4s ease-out;
+}
+
+@keyframes successPop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.success-modal-body h2 {
+    color: var(--text);
+    margin-bottom: 12px;
+    font-size: 1.5rem;
+}
+
+.success-modal-body p {
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.success-ok-btn {
+    padding: 12px 48px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.success-ok-btn:hover {
+    background: var(--primary-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(247, 183, 49, 0.3);
+}
+

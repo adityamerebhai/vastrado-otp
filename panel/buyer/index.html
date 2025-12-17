@@ -48,7 +48,7 @@
                         <article class="card stat-card">
                             <p class="stat-label">Orders</p>
                             <h2 class="stat-value" id="ordersCount">0</h2>
-                            <p class="stat-sub">Total orders placed</p>
+                            <p class="stat-sub">Confirmed purchases</p>
                         </article>
                         <article class="card stat-card">
                             <p class="stat-label">Wishlist</p>
@@ -58,7 +58,7 @@
                         <article class="card stat-card">
                             <p class="stat-label">Pending</p>
                             <h2 class="stat-value" id="pendingCount">0</h2>
-                            <p class="stat-sub">Awaiting delivery</p>
+                            <p class="stat-sub">Awaiting confirmation</p>
                         </article>
                     </section>
 
@@ -154,6 +154,18 @@
                                 </div>
                             </div>
                             <button class="submit-payment-btn" id="submitPaymentBtn" disabled>Submit Payment</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Modal -->
+                <div class="modal-overlay" id="successModal" style="display: none;">
+                    <div class="modal-content success-modal">
+                        <div class="success-modal-body">
+                            <div class="success-icon">✓</div>
+                            <h2 id="successTitle">Success!</h2>
+                            <p id="successMessage">Your action was completed successfully.</p>
+                            <button class="success-ok-btn" id="successOkBtn">OK</button>
                         </div>
                     </div>
                 </div>

@@ -1088,8 +1088,8 @@ function confirmPayment(paymentId) {
   displaySellerPayments();
   updateStats();
   
-  // Show success
-  alert('Payment confirmed! The sale has been recorded.');
+  // Show success modal
+  showSuccessModal('Payment Confirmed!', 'The sale has been recorded successfully. Check your Orders tab for details.');
 }
 
 function rejectPayment(paymentId) {
@@ -1111,6 +1111,39 @@ function rejectPayment(paymentId) {
   // Update display
   displaySellerPayments();
   updateStats();
+  
+  // Show info message
+  showSuccessModal('Payment Rejected', 'The payment has been rejected and the buyer will be notified.');
+}
+
+// Success Modal functionality
+function showSuccessModal(title, message) {
+  const modal = document.getElementById('successModal');
+  const titleEl = document.getElementById('successTitle');
+  const messageEl = document.getElementById('successMessage');
+  
+  if (modal && titleEl && messageEl) {
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    modal.style.display = 'flex';
+  }
+}
+
+const successModal = document.getElementById('successModal');
+const successOkBtn = document.getElementById('successOkBtn');
+
+if (successOkBtn) {
+  successOkBtn.addEventListener('click', () => {
+    if (successModal) successModal.style.display = 'none';
+  });
+}
+
+if (successModal) {
+  successModal.addEventListener('click', (e) => {
+    if (e.target === successModal) {
+      successModal.style.display = 'none';
+    }
+  });
 }
 
 function displaySellerOrders() {
