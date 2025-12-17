@@ -29,6 +29,11 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
         if (targetSection === 'profile') {
           updateStats();
         }
+        
+        // Load chat list when chat section is shown
+        if (targetSection === 'chat') {
+          loadChatList();
+        }
       } else {
         section.style.display = 'none';
       }
@@ -142,12 +147,15 @@ function displayProducts() {
     const mainImage = product.photos && product.photos.length > 0 ? product.photos[0] : '';
     const isInWishlist = wishlist.some(item => item.id === product.id);
     
+    const sellerName = product.sellerUsername || 'Unknown Seller';
+    
     card.innerHTML = `
       <button class="wishlist-btn ${isInWishlist ? 'active' : ''}" data-id="${product.id}" aria-label="Add to wishlist">❤</button>
       <div class="product-image">
         <img src="${mainImage}" alt="Product ${index + 1}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'200\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'200\\' height=\\'200\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'18\\' dy=\\'10.5\\' font-weight=\\'bold\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\'%3ENo Image%3C/text%3E%3C/svg%3E'">
       </div>
       <div class="product-info">
+        <p class="product-seller"><span class="seller-badge">👤 ${sellerName}</span></p>
         <p class="product-fabric"><strong>Fabric:</strong> ${product.fabricType || 'N/A'}</p>
         <p class="product-cost"><strong>Cost:</strong> ₹${product.expectedCost || '0'}</p>
         <p class="product-condition"><strong>Condition:</strong> ${product.clothCondition || 'N/A'}</p>
@@ -249,6 +257,7 @@ function showProductDetails(product) {
   
   if (!modal || !modalBody) return;
 
+  const sellerName = product.sellerUsername || 'Unknown Seller';
   const photosHtml = product.photos && product.photos.length > 0 
     ? product.photos.map(photo => `<img src="${photo}" alt="Photo" class="detail-photo">`).join('')
     : '<p class="muted">No photos available</p>';
@@ -261,6 +270,10 @@ function showProductDetails(product) {
       ${photosHtml}
     </div>
     <div class="detail-info">
+      <div class="detail-row seller-row">
+        <span class="detail-label">Seller:</span>
+        <span class="detail-value seller-name">👤 ${sellerName}</span>
+      </div>
       <div class="detail-row">
         <span class="detail-label">Fabric Type:</span>
         <span class="detail-value">${product.fabricType || 'N/A'}</span>
@@ -273,24 +286,63 @@ function showProductDetails(product) {
         <span class="detail-label">Condition:</span>
         <span class="detail-value">${product.clothCondition || 'N/A'}</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Seller Phone:</span>
-        <span class="detail-value">${product.phoneNumber || 'N/A'}</span>
-      </div>
     </div>
-    <button class="contact-seller-btn" onclick="contactSeller('${product.phoneNumber || ''}')">Contact Seller</button>
+    <button class="chat-seller-btn" id="chatWithSellerBtn">💬 Chat with ${sellerName}</button>
   `;
+
+  // Add chat button handler
+  const chatBtn = document.getElementById('chatWithSellerBtn');
+  if (chatBtn) {
+    chatBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+      startChatWithSeller(sellerName, product.id);
+    });
+  }
 
   modal.style.display = 'flex';
 }
 
-// Contact seller function
-function contactSeller(phone) {
-  if (phone && phone !== 'N/A') {
-    window.open(`tel:${phone}`, '_self');
-  } else {
-    alert('Seller contact information is not available.');
+// Start chat with seller
+function startChatWithSeller(sellerUsername, productId) {
+  const buyerUsername = localStorage.getItem('username') || 'Buyer';
+  
+  // Create chat request
+  const chatRequest = {
+    id: Date.now(),
+    buyer: buyerUsername,
+    seller: sellerUsername,
+    productId: productId,
+    timestamp: new Date().toISOString(),
+    status: 'pending'
+  };
+  
+  // Store chat request for seller notification
+  let chatRequests = JSON.parse(localStorage.getItem('chatRequests') || '[]');
+  
+  // Check if chat already exists
+  const existingChat = chatRequests.find(c => c.buyer === buyerUsername && c.seller === sellerUsername);
+  if (!existingChat) {
+    chatRequests.push(chatRequest);
+    localStorage.setItem('chatRequests', JSON.stringify(chatRequests));
   }
+  
+  // Open chat section
+  openChatWith(sellerUsername);
+}
+
+// Open chat with a specific user
+function openChatWith(otherUsername) {
+  // Store current chat partner
+  localStorage.setItem('currentChatPartner', otherUsername);
+  
+  // Switch to chat section
+  const chatMenuItem = document.querySelector('.menu-item[data-section="chat"]');
+  if (chatMenuItem) {
+    chatMenuItem.click();
+  }
+  
+  // Load chat messages
+  loadChatMessages(otherUsername);
 }
 
 // Close modal
@@ -487,6 +539,185 @@ if (logoutConfirmModal) {
 }
 
 // =====================
+// Chat Functionality
+// =====================
+let currentChatPartner = null;
+let chatRefreshInterval = null;
+
+function loadChatList() {
+  const chatList = document.getElementById('chatList');
+  if (!chatList) return;
+  
+  const myUsername = localStorage.getItem('username');
+  const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '{}');
+  
+  // Find all conversations for this user
+  const myConversations = [];
+  Object.keys(allChats).forEach(chatKey => {
+    const [user1, user2] = chatKey.split('_');
+    if (user1 === myUsername || user2 === myUsername) {
+      const otherUser = user1 === myUsername ? user2 : user1;
+      const messages = allChats[chatKey];
+      const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+      myConversations.push({
+        chatKey,
+        otherUser,
+        lastMessage,
+        lastTime: lastMessage ? new Date(lastMessage.timestamp).getTime() : 0
+      });
+    }
+  });
+  
+  // Sort by last message time
+  myConversations.sort((a, b) => b.lastTime - a.lastTime);
+  
+  if (myConversations.length === 0) {
+    chatList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No conversations yet</p>';
+    return;
+  }
+  
+  chatList.innerHTML = myConversations.map(conv => `
+    <div class="chat-list-item ${currentChatPartner === conv.otherUser ? 'active' : ''}" data-user="${conv.otherUser}">
+      <div class="chat-avatar">${conv.otherUser.charAt(0).toUpperCase()}</div>
+      <div class="chat-user-info">
+        <p class="chat-username">${conv.otherUser}</p>
+        <p class="chat-preview">${conv.lastMessage ? conv.lastMessage.text.substring(0, 30) + (conv.lastMessage.text.length > 30 ? '...' : '') : 'No messages yet'}</p>
+      </div>
+    </div>
+  `).join('');
+  
+  // Add click handlers
+  chatList.querySelectorAll('.chat-list-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const otherUser = item.dataset.user;
+      openChatWith(otherUser);
+    });
+  });
+}
+
+function loadChatMessages(otherUsername) {
+  const chatMessages = document.getElementById('chatMessages');
+  const chatHeader = document.getElementById('chatHeader');
+  const chatInputArea = document.getElementById('chatInputArea');
+  
+  if (!chatMessages || !otherUsername) return;
+  
+  currentChatPartner = otherUsername;
+  
+  // Update header
+  if (chatHeader) {
+    chatHeader.innerHTML = `
+      <div class="chat-avatar" style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--primary-strong);">
+        ${otherUsername.charAt(0).toUpperCase()}
+      </div>
+      <h4>${otherUsername}</h4>
+    `;
+  }
+  
+  // Show input area
+  if (chatInputArea) {
+    chatInputArea.style.display = 'flex';
+  }
+  
+  // Get messages
+  const myUsername = localStorage.getItem('username');
+  const chatKey = [myUsername, otherUsername].sort().join('_');
+  const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '{}');
+  const messages = allChats[chatKey] || [];
+  
+  if (messages.length === 0) {
+    chatMessages.innerHTML = '<p class="muted" style="text-align:center;padding:40px;">No messages yet. Start the conversation!</p>';
+  } else {
+    chatMessages.innerHTML = messages.map(msg => `
+      <div class="chat-message ${msg.sender === myUsername ? 'sent' : 'received'}">
+        ${msg.text}
+        <span class="message-time">${formatTime(msg.timestamp)}</span>
+      </div>
+    `).join('');
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  // Update chat list to show active
+  loadChatList();
+  
+  // Start refresh interval
+  if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+  chatRefreshInterval = setInterval(() => {
+    if (currentChatPartner) {
+      refreshMessages();
+    }
+  }, 2000);
+}
+
+function refreshMessages() {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages || !currentChatPartner) return;
+  
+  const myUsername = localStorage.getItem('username');
+  const chatKey = [myUsername, currentChatPartner].sort().join('_');
+  const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '{}');
+  const messages = allChats[chatKey] || [];
+  
+  const currentCount = chatMessages.querySelectorAll('.chat-message').length;
+  if (messages.length !== currentCount) {
+    loadChatMessages(currentChatPartner);
+  }
+}
+
+function sendMessage(text) {
+  if (!text.trim() || !currentChatPartner) return;
+  
+  const myUsername = localStorage.getItem('username');
+  const chatKey = [myUsername, currentChatPartner].sort().join('_');
+  const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '{}');
+  
+  if (!allChats[chatKey]) {
+    allChats[chatKey] = [];
+  }
+  
+  allChats[chatKey].push({
+    sender: myUsername,
+    text: text.trim(),
+    timestamp: new Date().toISOString()
+  });
+  
+  localStorage.setItem('vastradoChats', JSON.stringify(allChats));
+  
+  // Reload messages
+  loadChatMessages(currentChatPartner);
+  
+  // Clear input
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) chatInput.value = '';
+}
+
+function formatTime(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Chat input handlers
+const chatInput = document.getElementById('chatInput');
+const sendMessageBtn = document.getElementById('sendMessageBtn');
+
+if (sendMessageBtn) {
+  sendMessageBtn.addEventListener('click', () => {
+    const text = chatInput ? chatInput.value : '';
+    sendMessage(text);
+  });
+}
+
+if (chatInput) {
+  chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      sendMessage(chatInput.value);
+    }
+  });
+}
+
+// =====================
 // Initialize: show profile section by default
 // =====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -502,5 +733,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Load products
   displayProducts();
+  
+  // Load chat list
+  loadChatList();
 });
 

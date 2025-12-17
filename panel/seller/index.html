@@ -33,6 +33,7 @@
                 <nav class="menu">
                     <button class="menu-item active" data-section="profile">👤 Profile</button>
                     <button class="menu-item" data-section="listings">📦 My Listings</button>
+                    <button class="menu-item" data-section="chat">💬 Chats <span class="chat-badge" id="chatBadge" style="display:none;">0</span></button>
                     <button class="menu-item" data-section="orders">🧾 Orders</button>
                     <button class="menu-item" data-section="settings">⚙️ Settings</button>
                 </nav>
@@ -186,6 +187,31 @@
                             <button class="confirm-btn delete-confirm-btn" id="confirmLogoutBtn">Log Out</button>
                         </div>
                     </div>
+                </div>
+
+                <div class="content-section" data-section="chat" style="display: none;">
+                    <section class="card chat-container">
+                        <div class="chat-layout">
+                            <div class="chat-sidebar">
+                                <h4>Conversations</h4>
+                                <div class="chat-list" id="chatList">
+                                    <p class="muted" style="padding: 20px; text-align: center;">No conversations yet</p>
+                                </div>
+                            </div>
+                            <div class="chat-main">
+                                <div class="chat-header" id="chatHeader">
+                                    <p class="muted">Select a conversation to start chatting</p>
+                                </div>
+                                <div class="chat-messages" id="chatMessages">
+                                    <!-- Messages will appear here -->
+                                </div>
+                                <div class="chat-input-area" id="chatInputArea" style="display: none;">
+                                    <input type="text" id="chatInput" placeholder="Type a message..." class="chat-input">
+                                    <button id="sendMessageBtn" class="send-message-btn">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
                 <div class="content-section" data-section="orders" style="display: none;">
