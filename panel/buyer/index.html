@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyer Dashboard | Vastrado</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">Vastrado</div>
+            <div class="top-actions">
+                <button class="ghost-btn" aria-label="Notifications">🔔</button>
+                <div class="profile" id="profileDropdown">
+                    <span class="avatar" id="avatar">B</span>
+                    <span class="profile-name" id="profileName">Buyer</span>
+                    <div class="profile-dropdown" id="profileDropdownMenu" style="display: none;">
+                        <button class="dropdown-item" id="logoutBtn">
+                            <span>🚪</span>
+                            <span>Log Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="layout">
+            <aside class="sidebar">
+                <nav class="menu">
+                    <button class="menu-item active" data-section="profile">👤 Profile</button>
+                    <button class="menu-item" data-section="browse">🛍️ Browse Products</button>
+                    <button class="menu-item" data-section="orders">🧾 My Orders</button>
+                    <button class="menu-item" data-section="wishlist">❤️ Wishlist</button>
+                    <button class="menu-item" data-section="settings">⚙️ Settings</button>
+                </nav>
+            </aside>
+
+            <main class="content">
+                <div class="content-section" data-section="profile">
+                    <section class="stats-grid">
+                        <article class="card stat-card">
+                            <p class="stat-label">Orders</p>
+                            <h2 class="stat-value" id="ordersCount">0</h2>
+                            <p class="stat-sub">Total orders placed</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">Wishlist</p>
+                            <h2 class="stat-value" id="wishlistCount">0</h2>
+                            <p class="stat-sub">Items saved</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">Pending</p>
+                            <h2 class="stat-value" id="pendingCount">0</h2>
+                            <p class="stat-sub">Awaiting delivery</p>
+                        </article>
+                    </section>
+
+                    <section class="browse-highlight card">
+                        <div>
+                            <p class="muted">Quick action</p>
+                            <h3>Start exploring products</h3>
+                            <p class="subtext">Discover unique items from verified sellers.</p>
+                        </div>
+                        <button class="browse-btn" id="browseAction" aria-label="Browse products">🔍</button>
+                    </section>
+
+                    <section class="card list-placeholder">
+                        <h3>Recent Activity</h3>
+                        <p class="muted">No recent activity yet. Start browsing to see your history here.</p>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="browse" style="display: none;">
+                    <section class="card browse-container">
+                        <h3>Browse Products</h3>
+                        <p class="muted">Explore available products from sellers.</p>
+                        <div class="products-grid" id="productsGrid">
+                            <p class="muted" style="text-align: center; padding: 40px;">No products available yet. Check back soon!</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="orders" style="display: none;">
+                    <section class="card list-placeholder">
+                        <h3>My Orders</h3>
+                        <p class="muted">No orders to show yet. Once you make a purchase, you'll see them here.</p>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="wishlist" style="display: none;">
+                    <section class="card wishlist-container">
+                        <h3>My Wishlist</h3>
+                        <p class="muted">Save items you love for later.</p>
+                        <div class="wishlist-grid" id="wishlistGrid">
+                            <p class="muted" style="text-align: center; padding: 40px;">Your wishlist is empty. Browse products and add items you like!</p>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Product Detail Modal -->
+                <div class="modal-overlay" id="detailModal" style="display: none;">
+                    <div class="modal-content">
+                        <button class="modal-close" id="closeModal">×</button>
+                        <div class="modal-body" id="modalBody">
+                            <!-- Details will be shown here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logout Confirmation Modal -->
+                <div class="modal-overlay" id="logoutConfirmModal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="confirm-icon">🚪</div>
+                        <h3 class="confirm-title">Log Out</h3>
+                        <p class="confirm-message">Are you sure you want to log out? All your session data will be cleared.</p>
+                        <div class="confirm-actions">
+                            <button class="confirm-btn cancel-confirm-btn" id="cancelLogoutBtn">Cancel</button>
+                            <button class="confirm-btn logout-confirm-btn" id="confirmLogoutBtn">Log Out</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section" data-section="settings" style="display: none;">
+                    <section class="card settings-card">
+                        <div class="settings-header">
+                            <h3>Settings</h3>
+                            <p class="muted">Personalize your workspace.</p>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Theme</p>
+                                <p class="muted small">Choose your preferred look.</p>
+                            </div>
+                            <div class="theme-pills" id="themePills">
+                                <button class="pill" data-theme="light">Light</button>
+                                <button class="pill" data-theme="grey">Grey</button>
+                                <button class="pill" data-theme="dark">Dark</button>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Notifications</p>
+                                <p class="muted small">Get updates about new products.</p>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="notifyToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
