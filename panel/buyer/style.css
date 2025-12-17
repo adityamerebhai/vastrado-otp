@@ -396,6 +396,45 @@ body {
     gap: 20px;
 }
 
+.browse-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.browse-header h3 {
+    margin: 0 0 4px;
+}
+
+.refresh-btn {
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.refresh-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+#productCount {
+    font-weight: 600;
+    color: var(--primary);
+}
+
 .products-grid,
 .wishlist-grid {
     display: grid;

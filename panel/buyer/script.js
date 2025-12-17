@@ -51,6 +51,25 @@ if (browseAction) {
 }
 
 // =====================
+// Refresh products button
+// =====================
+const refreshProducts = document.getElementById('refreshProducts');
+if (refreshProducts) {
+  refreshProducts.addEventListener('click', () => {
+    displayProducts();
+    // Visual feedback
+    refreshProducts.textContent = '✓ Refreshed!';
+    refreshProducts.style.background = 'var(--primary)';
+    refreshProducts.style.color = 'white';
+    setTimeout(() => {
+      refreshProducts.textContent = '🔄 Refresh';
+      refreshProducts.style.background = '';
+      refreshProducts.style.color = '';
+    }, 1500);
+  });
+}
+
+// =====================
 // Store and display data
 // =====================
 function getWishlist() {
@@ -98,11 +117,17 @@ function getAvailableProducts() {
 
 function displayProducts() {
   const productsGrid = document.getElementById('productsGrid');
+  const productCountEl = document.getElementById('productCount');
   if (!productsGrid) return;
 
   const products = getAvailableProducts();
   const wishlist = getWishlist();
   productsGrid.innerHTML = '';
+
+  // Update product count
+  if (productCountEl) {
+    productCountEl.textContent = products.length > 0 ? `(${products.length} items available)` : '';
+  }
 
   if (products.length === 0) {
     productsGrid.innerHTML = '<p class="muted" style="text-align: center; padding: 40px;">No products available yet. Check back soon!</p>';

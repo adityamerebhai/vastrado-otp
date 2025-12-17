@@ -76,8 +76,13 @@
 
                 <div class="content-section" data-section="browse" style="display: none;">
                     <section class="card browse-container">
-                        <h3>Browse Products</h3>
-                        <p class="muted">Explore available products from sellers.</p>
+                        <div class="browse-header">
+                            <div>
+                                <h3>Browse Products</h3>
+                                <p class="muted">Explore available products from sellers. <span id="productCount"></span></p>
+                            </div>
+                            <button class="refresh-btn" id="refreshProducts" title="Refresh products">🔄 Refresh</button>
+                        </div>
                         <div class="products-grid" id="productsGrid">
                             <p class="muted" style="text-align: center; padding: 40px;">No products available yet. Check back soon!</p>
                         </div>
