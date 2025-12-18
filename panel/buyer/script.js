@@ -17,7 +17,10 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
         
         // Refresh products when browse section is shown
         if (targetSection === 'browse') {
+          // Force immediate refresh when opening browse section
+          lastProductHash = ''; // Reset hash to force refresh
           displayProducts();
+          checkProductUpdates(); // Check immediately
         }
         
         // Refresh wishlist when wishlist section is shown
@@ -76,7 +79,11 @@ if (browseAction) {
 const refreshProducts = document.getElementById('refreshProducts');
 if (refreshProducts) {
   refreshProducts.addEventListener('click', () => {
+    // Reset hash to force refresh
+    lastProductHash = '';
+    // Force immediate refresh
     displayProducts();
+    checkProductUpdates();
     // Visual feedback
     refreshProducts.textContent = '✓ Refreshed!';
     refreshProducts.style.background = 'var(--primary)';
@@ -1221,23 +1228,34 @@ setInterval(checkPaymentUpdates, 500);
 // =====================
 // Check for new product listings
 // =====================
-let lastProductCount = 0;
+let lastProductHash = '';
+
+function getProductHash() {
+  const products = getAvailableProducts();
+  // Create a hash from all product IDs and dates
+  return products.map(p => `${p.id}:${p.dateAdded || ''}`).sort().join(',');
+}
 
 function checkProductUpdates() {
-  const products = getAvailableProducts();
-  const currentCount = products.length;
+  const currentHash = getProductHash();
   
-  // If product count changed, refresh the display
-  if (currentCount !== lastProductCount) {
-    lastProductCount = currentCount;
+  // If product data changed, refresh the display
+  if (currentHash !== lastProductHash) {
+    lastProductHash = currentHash;
     
-    // Always refresh products display when count changes
+    // Always refresh products display when data changes
     displayProducts();
+    
+    // Also update stats if profile section is visible
+    const profileSection = document.querySelector('.content-section[data-section="profile"]');
+    if (profileSection && profileSection.style.display !== 'none') {
+      updateStats();
+    }
   }
 }
 
-// Check for new products every 2 seconds
-setInterval(checkProductUpdates, 2000);
+// Check for new products every 1 second for faster updates
+setInterval(checkProductUpdates, 1000);
 
 // =====================
 // Initialize: show profile section by default
@@ -1250,9 +1268,8 @@ document.addEventListener('DOMContentLoaded', () => {
     profileSection.style.gap = '16px';
   }
   
-  // Initialize product count
-  const products = getAvailableProducts();
-  lastProductCount = products.length;
+  // Initialize product hash
+  lastProductHash = getProductHash();
   
   // Update stats
   updateStats();
@@ -1269,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check for payment updates
   checkPaymentUpdates();
   
-  // Check for product updates
+  // Check for product updates immediately and then periodically
   checkProductUpdates();
 });
 
