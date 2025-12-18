@@ -266,16 +266,27 @@ window.showProductDetails = function(product) {
   
   const chatBtn = modalBody.querySelector('.chat-seller-btn');
   if (chatBtn) {
+    const sellerUsername = product.sellerUsername || "";
+    let touchHandled = false;
+    
     chatBtn.onclick = (e) => {
+      if (touchHandled) {
+        touchHandled = false;
+        return;
+      }
       e.stopPropagation();
-      openChatWithSeller(product.sellerUsername || "");
+      openChatWithSeller(sellerUsername);
     };
+    
     // Mobile touch support
     chatBtn.addEventListener('touchend', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      openChatWithSeller(product.sellerUsername || "");
-    });
+      touchHandled = true;
+      openChatWithSeller(sellerUsername);
+      // Reset after a short delay
+      setTimeout(() => { touchHandled = false; }, 300);
+    }, { passive: false });
   }
 
   modal.style.display = "flex";
@@ -283,12 +294,24 @@ window.showProductDetails = function(product) {
 
 // Make functions global for onclick handlers
 window.openChatWithSeller = function (sellerUsername) {
-  const chatSection = document.querySelector('.content-section[data-section="chat"]');
-  const browseMenuItem = document.querySelector('.menu-item[data-section="chat"]');
-  if (browseMenuItem) browseMenuItem.click();
+  if (!sellerUsername || sellerUsername.trim() === "") {
+    console.warn("No seller username provided");
+    return;
+  }
+  
+  // Close product detail modal if open
+  const detailModal = document.getElementById("detailModal");
+  if (detailModal && detailModal.style.display !== "none") {
+    detailModal.style.display = "none";
+  }
   
   // Create chat if doesn't exist
   const buyerUsername = localStorage.getItem("username");
+  if (!buyerUsername) {
+    console.warn("Buyer username not found");
+    return;
+  }
+  
   const chatKey = [buyerUsername, sellerUsername].sort().join("_");
   const chats = JSON.parse(localStorage.getItem("vastradoChats") || "{}");
   if (!chats[chatKey]) {
@@ -296,8 +319,33 @@ window.openChatWithSeller = function (sellerUsername) {
     localStorage.setItem("vastradoChats", JSON.stringify(chats));
   }
   
-  loadChatList();
-  loadChatMessages(sellerUsername);
+  // Switch to chat section
+  const chatMenuItem = document.querySelector('.menu-item[data-section="chat"]');
+  if (chatMenuItem) {
+    // Remove active class from all menu items
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    // Add active class to chat menu item
+    chatMenuItem.classList.add('active');
+    // Hide all sections
+    document.querySelectorAll('.content-section').forEach(section => {
+      section.style.display = "none";
+    });
+    // Show chat section
+    const chatSection = document.querySelector('.content-section[data-section="chat"]');
+    if (chatSection) {
+      chatSection.style.display = "block";
+    }
+  }
+  
+  // Wait a bit for section to show, then load chat
+  setTimeout(() => {
+    loadChatList();
+    loadChatMessages(sellerUsername);
+    // Scroll to top on mobile
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 150);
 };
 
 window.openPaymentModal = function (product) {
