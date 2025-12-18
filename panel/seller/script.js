@@ -276,15 +276,26 @@ async function getItemsFromCloud() {
 }
 
 function saveItem(item) {
+  console.log('💾 [SAVE] saveItem() called with:', item);
   const items = getStoredItems();
+  console.log('💾 [SAVE] Current items count:', items.length);
   items.push(item);
+  console.log('💾 [SAVE] New items count:', items.length);
   
   // Save to localStorage
   localStorage.setItem('sellerListings', JSON.stringify(items));
+  console.log('💾 [SAVE] Saved to localStorage');
   
-  // Sync to cloud (async, don't wait)
-  syncToCloud(items).catch(() => {
-    // Silently fail - localStorage is the primary storage
+  // Sync ALL items to cloud (async, don't wait)
+  console.log('💾 [SAVE] Syncing ALL items to cloud...');
+  syncToCloud(items).then((success) => {
+    if (success) {
+      console.log('💾 [SAVE] ✅ Successfully synced all items to API');
+    } else {
+      console.log('💾 [SAVE] ⚠️ Failed to sync to API, but saved locally');
+    }
+  }).catch((error) => {
+    console.error('💾 [SAVE] ❌ Error syncing to cloud:', error);
   });
   
   updateStats();
@@ -1400,6 +1411,7 @@ async function syncListingsFromCloud() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 [INIT] Seller panel initialized');
   const profileSection = document.querySelector('.content-section[data-section="profile"]');
   if (profileSection) {
     profileSection.style.display = 'flex';
@@ -1407,7 +1419,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     profileSection.style.gap = '16px';
   }
   
-  // Sync from cloud on startup
+  // Get current listings from localStorage FIRST
+  const localItems = getStoredItems();
+  console.log('🚀 [INIT] Local items count:', localItems.length);
+  
+  // CRITICAL: Sync ALL local items to cloud API on startup
+  // This ensures any listings created get synced to the API
+  if (localItems.length > 0) {
+    console.log('🚀 [INIT] Syncing ALL local items to cloud API...');
+    const syncSuccess = await syncToCloud(localItems);
+    if (syncSuccess) {
+      console.log('🚀 [INIT] ✅ Successfully synced all items to API');
+    } else {
+      console.log('🚀 [INIT] ⚠️ Failed to sync to API - check console for errors');
+    }
+  } else {
+    console.log('🚀 [INIT] No local items to sync');
+  }
+  
+  // Then sync from cloud (to get items from other devices)
   await syncListingsFromCloud();
   
   // Update stats
