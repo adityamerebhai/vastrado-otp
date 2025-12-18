@@ -17,32 +17,26 @@ let listings = [];
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from PUBLIC directory
-app.use(express.static(path.join(__dirname, 'PUBLIC')));
-
-// Serve static files from panel directory
-app.use('/panel', express.static(path.join(__dirname, 'panel')));
-
-// Serve root static files (if any)
-app.use(express.static(__dirname));
-
-// Get all listings
+// API routes (must come before static files)
 app.get('/api/listings', (req, res) => {
   res.json(listings);
 });
 
-// Save/update listings
 app.post('/api/listings', (req, res) => {
   listings = req.body;
   res.json({ success: true, count: listings.length });
 });
 
-// Route handlers for panel pages
+// Route handlers for panel pages (must come before static middleware)
 app.get('/panel/seller', (req, res) => {
   res.sendFile(path.join(__dirname, 'panel', 'seller', 'index.html'));
 });
 
 app.get('/panel/seller/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'panel', 'seller', 'index.html'));
+});
+
+app.get('/panel/seller/index.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'panel', 'seller', 'index.html'));
 });
 
@@ -53,6 +47,21 @@ app.get('/panel/buyer', (req, res) => {
 app.get('/panel/buyer/', (req, res) => {
   res.sendFile(path.join(__dirname, 'panel', 'buyer', 'index.html'));
 });
+
+app.get('/panel/buyer/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'panel', 'buyer', 'index.html'));
+});
+
+// Serve static files from panel directory (CSS, JS files)
+app.use('/panel', express.static(path.join(__dirname, 'panel'), {
+  index: false // Don't serve index.html automatically
+}));
+
+// Serve static files from PUBLIC directory
+app.use(express.static(path.join(__dirname, 'PUBLIC')));
+
+// Serve root static files (if any)
+app.use(express.static(__dirname));
 
 // Health check
 app.get('/health', (req, res) => {
