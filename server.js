@@ -29,6 +29,84 @@ app.post('/api/listings', (req, res) => {
   res.json({ success: true, count: Array.isArray(listings) ? listings.length : 0 });
 });
 
+// OTP endpoints
+// In-memory storage for OTPs (replace with database in production)
+const otpStore = new Map();
+
+app.post('/send-otp', (req, res) => {
+  try {
+    const { email, role } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+    
+    // Generate a 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store OTP with expiration (5 minutes)
+    otpStore.set(email, {
+      otp,
+      role: role || 'buyer',
+      expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
+    });
+    
+    console.log(`📧 OTP generated for ${email}: ${otp} (Role: ${role || 'buyer'})`);
+    console.log(`💡 In production, send this OTP via email service`);
+    
+    // In production, send OTP via email service here
+    // For demo purposes, we'll just return success
+    // The OTP will be visible in server logs for testing
+    
+    res.json({ 
+      success: true, 
+      message: 'OTP sent successfully',
+      // For demo: include OTP in response (remove in production!)
+      otp: otp // REMOVE THIS IN PRODUCTION - only for testing
+    });
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+  }
+});
+
+app.post('/verify-otp', (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
+    
+    const stored = otpStore.get(email);
+    
+    if (!stored) {
+      return res.json({ success: false, message: 'OTP not found or expired' });
+    }
+    
+    if (Date.now() > stored.expiresAt) {
+      otpStore.delete(email);
+      return res.json({ success: false, message: 'OTP expired' });
+    }
+    
+    if (stored.otp !== otp) {
+      return res.json({ success: false, message: 'Invalid OTP' });
+    }
+    
+    // OTP verified - remove it
+    otpStore.delete(email);
+    
+    res.json({ 
+      success: true, 
+      message: 'OTP verified successfully',
+      role: stored.role
+    });
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    res.status(500).json({ success: false, message: 'Failed to verify OTP' });
+  }
+});
+
 // Route handlers for panel pages (must come before static middleware)
 app.get('/panel/seller', (req, res) => {
   res.sendFile(path.join(__dirname, 'panel', 'seller', 'index.html'));
@@ -75,6 +153,8 @@ app.listen(PORT, () => {
   console.log(`📡 API Endpoints:`);
   console.log(`   GET  /api/listings - Get all listings`);
   console.log(`   POST /api/listings - Save listings`);
+  console.log(`   POST /send-otp - Send OTP`);
+  console.log(`   POST /verify-otp - Verify OTP`);
   console.log(`📄 Static Files:`);
   console.log(`   /panel/seller - Seller dashboard`);
   console.log(`   /panel/buyer - Buyer dashboard`);

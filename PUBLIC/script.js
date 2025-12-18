@@ -123,6 +123,26 @@ async function sendOTP(roleParam) {
       body: JSON.stringify({ email, role })
     });
 
+    console.log("Response status:", res.status, res.statusText);
+    console.log("Response headers:", Object.fromEntries(res.headers.entries()));
+    
+    // Check if response is OK
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Server error response:", errorText);
+      alert(`Server error (${res.status}): ${errorText || res.statusText}`);
+      return;
+    }
+    
+    // Check content type
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const textResponse = await res.text();
+      console.error("Non-JSON response:", textResponse);
+      alert("Server returned non-JSON response. Please check server configuration.");
+      return;
+    }
+
     const data = await res.json();
     console.log("Send OTP response:", data);
     
@@ -135,10 +155,19 @@ async function sendOTP(roleParam) {
       });
       window.location.href = "verify.html";
     } else {
-      alert("OTP send failed - please try again");
+      alert(data.message || "OTP send failed - please try again");
     }
   } catch (err) {
     console.error("sendOTP error:", err);
-    alert("Server error - please try again");
+    console.error("Error details:", err.message, err.stack);
+    
+    // More specific error message
+    if (err instanceof SyntaxError) {
+      alert("Server returned invalid response. The /send-otp endpoint may not be configured correctly.");
+    } else if (err instanceof TypeError && err.message.includes("fetch")) {
+      alert("Network error. Please check your connection and ensure the server is running.");
+    } else {
+      alert(`Error sending OTP: ${err.message}`);
+    }
   }
 }
