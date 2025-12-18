@@ -153,6 +153,14 @@ async function sendOTP(roleParam) {
         username: localStorage.getItem("username"),
         role: localStorage.getItem("role")
       });
+      
+      // Show OTP to user if email sending failed (for testing)
+      if (data.otp) {
+        alert(`✅ OTP sent successfully!\n\nYour OTP is: ${data.otp}\n\n(Email sending failed - using this OTP for testing)`);
+      } else {
+        alert("✅ OTP sent successfully! Please check your email inbox.");
+      }
+      
       window.location.href = "verify.html";
     } else {
       alert(data.message || "OTP send failed - please try again");
