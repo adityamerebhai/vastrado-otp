@@ -139,24 +139,30 @@
           localStorage.setItem("loggedIn", "true");
         }
 
-        // ✅ Redirect based on role (prefer panel if available)
+        // ✅ Redirect to panel based on role from server response
         const redirectRole = data.role || localStorage.getItem("role");
+        console.log("Redirecting to role:", redirectRole);
+        
         const panelMap = {
           buyer: "/panel/buyer/index.html",
           seller: "/panel/seller/index.html",
           ngo: "/panel/ngo/index.html",
           donation: "/panel/donation/index.html"
         };
+        
         if (redirectRole && panelMap[redirectRole]) {
-          location.href = panelMap[redirectRole];
+          console.log("Redirecting to:", panelMap[redirectRole]);
+          window.location.href = panelMap[redirectRole];
         } else if (redirectRole) {
-          location.href = `${redirectRole}-dashboard.html`;
+          console.log("Redirecting to dashboard:", `${redirectRole}-dashboard.html`);
+          window.location.href = `${redirectRole}-dashboard.html`;
         } else {
-          location.href = "index.html";
+          console.log("No role found, redirecting to index");
+          window.location.href = "index.html";
         }
 
       } else {
-        alert("Invalid or expired OTP. The server may have restarted. Please go back and request a new OTP.");
+        alert("Invalid or expired OTP. Please go back and request a new OTP.");
       }
     } catch (err) {
       console.error("Verification error:", err);
