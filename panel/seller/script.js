@@ -418,26 +418,47 @@ function handleFormSubmit(e) {
       dateAdded: new Date().toISOString()
     };
 
+    // Validate data before saving
+    if (!data.fabricType || !data.expectedCost || !data.clothCondition) {
+      console.error('Missing required fields');
+      return;
+    }
+
     // Save to localStorage
-    saveItem(data);
-    
-    // Reset form and close
-    closeUploadForm();
-    
-    // Hide upload section
-    const uploadSection = document.querySelector('.content-section[data-section="upload"]');
-    if (uploadSection) {
-      uploadSection.style.display = 'none';
+    try {
+      saveItem(data);
+      
+      // Verify it was saved
+      const savedItems = getStoredItems();
+      const wasSaved = savedItems.some(item => item.id === data.id);
+      
+      if (!wasSaved) {
+        console.error('Failed to save item to localStorage');
+        return;
+      }
+      
+      // Reset form and close
+      closeUploadForm();
+      
+      // Hide upload section
+      const uploadSection = document.querySelector('.content-section[data-section="upload"]');
+      if (uploadSection) {
+        uploadSection.style.display = 'none';
+      }
+      
+      // Switch to listings section
+      const listingsMenuItem = document.querySelector('.menu-item[data-section="listings"]');
+      if (listingsMenuItem) {
+        listingsMenuItem.click();
+      }
+      
+      // Display listings
+      displayListings();
+    } catch (error) {
+      console.error('Error saving item:', error);
     }
-    
-    // Switch to listings section
-    const listingsMenuItem = document.querySelector('.menu-item[data-section="listings"]');
-    if (listingsMenuItem) {
-      listingsMenuItem.click();
-    }
-    
-    // Display listings
-    displayListings();
+  }).catch(error => {
+    console.error('Error processing files:', error);
   });
 }
 

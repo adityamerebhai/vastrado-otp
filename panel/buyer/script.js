@@ -1219,6 +1219,27 @@ function checkPaymentUpdates() {
 setInterval(checkPaymentUpdates, 500);
 
 // =====================
+// Check for new product listings
+// =====================
+let lastProductCount = 0;
+
+function checkProductUpdates() {
+  const products = getAvailableProducts();
+  const currentCount = products.length;
+  
+  // If product count changed, refresh the display
+  if (currentCount !== lastProductCount) {
+    lastProductCount = currentCount;
+    
+    // Always refresh products display when count changes
+    displayProducts();
+  }
+}
+
+// Check for new products every 2 seconds
+setInterval(checkProductUpdates, 2000);
+
+// =====================
 // Initialize: show profile section by default
 // =====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -1228,6 +1249,10 @@ document.addEventListener('DOMContentLoaded', () => {
     profileSection.style.flexDirection = 'column';
     profileSection.style.gap = '16px';
   }
+  
+  // Initialize product count
+  const products = getAvailableProducts();
+  lastProductCount = products.length;
   
   // Update stats
   updateStats();
@@ -1243,5 +1268,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Check for payment updates
   checkPaymentUpdates();
+  
+  // Check for product updates
+  checkProductUpdates();
 });
 
