@@ -141,9 +141,13 @@ function updateStats() {
   const confirmed = payments.filter((p) => p.status === "confirmed").length;
   const pending = payments.filter((p) => p.status === "pending").length;
 
-  document.getElementById("wishlistCount")?.textContent = wishlist.length;
-  document.getElementById("ordersCount")?.textContent = confirmed;
-  document.getElementById("pendingCount")?.textContent = pending;
+  const wishlistCountEl = document.getElementById("wishlistCount");
+  const ordersCountEl = document.getElementById("ordersCount");
+  const pendingCountEl = document.getElementById("pendingCount");
+  
+  if (wishlistCountEl) wishlistCountEl.textContent = wishlist.length;
+  if (ordersCountEl) ordersCountEl.textContent = confirmed;
+  if (pendingCountEl) pendingCountEl.textContent = pending;
 }
 
 /* ===============================
@@ -275,17 +279,25 @@ window.showProductDetails = function(product) {
       </div>
     </div>
     <div class="detail-actions">
-      <button class="chat-seller-btn" onclick="openChatWithSeller('${product.sellerUsername || ""}')">💬 Chat with Seller</button>
+      <button class="chat-seller-btn" data-seller-username="${product.sellerUsername || ""}">💬 Chat with Seller</button>
       <button class="buy-now-btn" data-product-id="${product.id}">🛒 Buy Now</button>
     </div>
   `;
 
-  // Attach event listener to Buy Now button
+  // Attach event listeners
   const buyBtn = modalBody.querySelector('.buy-now-btn');
   if (buyBtn) {
     buyBtn.onclick = (e) => {
       e.stopPropagation();
       openPaymentModal(product);
+    };
+  }
+  
+  const chatBtn = modalBody.querySelector('.chat-seller-btn');
+  if (chatBtn) {
+    chatBtn.onclick = (e) => {
+      e.stopPropagation();
+      openChatWithSeller(product.sellerUsername || "");
     };
   }
 
@@ -560,11 +572,15 @@ function loadChatList() {
     return;
   }
 
-  el.innerHTML = items.map((u) => `
-    <div class="chat-list-item" onclick="loadChatMessages('${u}')">
-      ${u}
-    </div>
-  `).join("");
+  el.innerHTML = "";
+  
+  items.forEach((u) => {
+    const item = document.createElement("div");
+    item.className = "chat-list-item";
+    item.textContent = u;
+    item.onclick = () => loadChatMessages(u);
+    el.appendChild(item);
+  });
 }
 
 function loadChatMessages(otherUser) {
@@ -823,8 +839,10 @@ setInterval(syncProductsFromCloud, 2000);
 ================================ */
 document.addEventListener("DOMContentLoaded", async () => {
   const username = localStorage.getItem("username");
-  document.getElementById("profileName")?.textContent = username;
-  document.getElementById("avatar")?.textContent = username?.charAt(0).toUpperCase() || "U";
+  const profileNameEl = document.getElementById("profileName");
+  const avatarEl = document.getElementById("avatar");
+  if (profileNameEl) profileNameEl.textContent = username;
+  if (avatarEl) avatarEl.textContent = username?.charAt(0).toUpperCase() || "U";
 
   updateStats();
   displayProducts();
