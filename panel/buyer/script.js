@@ -276,9 +276,18 @@ window.showProductDetails = function(product) {
     </div>
     <div class="detail-actions">
       <button class="chat-seller-btn" onclick="openChatWithSeller('${product.sellerUsername || ""}')">💬 Chat with Seller</button>
-      <button class="buy-now-btn" onclick="openPaymentModal(${JSON.stringify(product).replace(/"/g, "&quot;")})">🛒 Buy Now</button>
+      <button class="buy-now-btn" data-product-id="${product.id}">🛒 Buy Now</button>
     </div>
   `;
+
+  // Attach event listener to Buy Now button
+  const buyBtn = modalBody.querySelector('.buy-now-btn');
+  if (buyBtn) {
+    buyBtn.onclick = (e) => {
+      e.stopPropagation();
+      openPaymentModal(product);
+    };
+  }
 
   modal.style.display = "flex";
 }
@@ -495,21 +504,36 @@ function displayWishlist() {
     return;
   }
 
-  grid.innerHTML = wishlist.map((product) => {
-    return `
-      <div class="product-card" onclick="showProductDetails(${JSON.stringify(product).replace(/"/g, "&quot;")})">
-        <button class="wishlist-btn active" onclick="event.stopPropagation(); toggleWishlist(${JSON.stringify(product).replace(/"/g, "&quot;")})">❤</button>
-        <div class="product-image">
-          <img src="${product.photos?.[0] || ""}" alt="${product.fabricType || "Product"}" />
-        </div>
-        <div class="product-info">
-          <p class="product-seller"><span class="seller-badge">👤 ${product.sellerUsername || "Seller"}</span></p>
-          <p class="product-fabric"><strong>Fabric:</strong> ${product.fabricType || "N/A"}</p>
-          <p class="product-cost"><strong>Cost:</strong> ₹${product.expectedCost || 0}</p>
-        </div>
+  grid.innerHTML = "";
+  
+  wishlist.forEach((product) => {
+    const card = document.createElement("div");
+    card.className = "product-card";
+    
+    card.innerHTML = `
+      <button class="wishlist-btn active" data-product-id="${product.id}">❤</button>
+      <div class="product-image">
+        <img src="${product.photos?.[0] || ""}" alt="${product.fabricType || "Product"}" />
+      </div>
+      <div class="product-info">
+        <p class="product-seller"><span class="seller-badge">👤 ${product.sellerUsername || "Seller"}</span></p>
+        <p class="product-fabric"><strong>Fabric:</strong> ${product.fabricType || "N/A"}</p>
+        <p class="product-cost"><strong>Cost:</strong> ₹${product.expectedCost || 0}</p>
       </div>
     `;
-  }).join("");
+    
+    // Attach event listeners
+    const wishlistBtn = card.querySelector(".wishlist-btn");
+    if (wishlistBtn) {
+      wishlistBtn.onclick = (e) => {
+        e.stopPropagation();
+        toggleWishlist(product);
+      };
+    }
+    
+    card.onclick = () => showProductDetails(product);
+    grid.appendChild(card);
+  });
 }
 
 /* ===============================
