@@ -12,34 +12,6 @@
 })();
 
 /* ===============================
-   DEBUG PANEL
-================================ */
-let debugLogs = [];
-const MAX_DEBUG_LOGS = 50;
-
-function addDebugLog(message, type = "info") {
-  const timestamp = new Date().toLocaleTimeString();
-  const entry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
-  debugLogs.push(entry);
-  if (debugLogs.length > MAX_DEBUG_LOGS) debugLogs.shift();
-  updateDebugPanel();
-  console.log(entry);
-}
-
-function updateDebugPanel() {
-  const el = document.getElementById("debugContent");
-  if (el) el.textContent = debugLogs.join("\n");
-}
-
-function showDebugPanel() {
-  const panel = document.getElementById("debugPanel");
-  if (panel) {
-    panel.style.display = "block";
-    updateDebugPanel();
-  }
-}
-
-/* ===============================
    API CONFIG
 ================================ */
 const API_BASE_URL = "https://vastrado-otp-production.up.railway.app/api";
@@ -168,11 +140,10 @@ async function syncProductsFromCloud() {
     const data = await res.json();
     if (Array.isArray(data)) {
       localStorage.setItem("sellerListings", JSON.stringify(data));
-      addDebugLog(`Synced ${data.length} products`, "success");
       return true;
     }
   } catch (err) {
-    addDebugLog("Cloud sync failed, using localStorage", "warning");
+    // Cloud sync failed, using localStorage
   }
   return false;
 }
@@ -299,6 +270,12 @@ window.showProductDetails = function(product) {
       e.stopPropagation();
       openChatWithSeller(product.sellerUsername || "");
     };
+    // Mobile touch support
+    chatBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openChatWithSeller(product.sellerUsername || "");
+    });
   }
 
   modal.style.display = "flex";
@@ -579,6 +556,11 @@ function loadChatList() {
     item.className = "chat-list-item";
     item.textContent = u;
     item.onclick = () => loadChatMessages(u);
+    // Mobile touch support
+    item.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      loadChatMessages(u);
+    });
     el.appendChild(item);
   });
 }
@@ -612,6 +594,11 @@ const chatInput = document.getElementById("chatInput");
 
 if (sendMessageBtn && chatInput) {
   sendMessageBtn.onclick = () => sendMessage();
+  // Mobile touch support
+  sendMessageBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    sendMessage();
+  });
   chatInput.onkeypress = (e) => {
     if (e.key === "Enter") sendMessage();
   };
@@ -710,17 +697,6 @@ if (refreshProducts) {
       refreshProducts.textContent = "🔄 Refresh";
       refreshProducts.disabled = false;
     }, 1500);
-  };
-}
-
-/* ===============================
-   DEBUG BUTTON
-================================ */
-const debugBtn = document.getElementById("debugBtn");
-if (debugBtn) {
-  debugBtn.onclick = () => {
-    showDebugPanel();
-    addDebugLog("Debug panel opened", "info");
   };
 }
 
@@ -854,7 +830,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await syncProductsFromCloud();
   displayProducts();
-
-  addDebugLog("Buyer panel initialized", "info");
-  addDebugLog(`API URL: ${API_BASE_URL}`, "info");
 });

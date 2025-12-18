@@ -89,16 +89,7 @@
                             </div>
                             <div style="display: flex; gap: 8px;">
                                 <button class="refresh-btn" id="refreshProducts" title="Refresh products">🔄 Refresh</button>
-                                <button class="refresh-btn" id="debugBtn" title="Show debug info" style="background: #3498db; color: white;">🐛 Debug</button>
                             </div>
-                        </div>
-                        <!-- Debug Panel -->
-                        <div id="debugPanel" style="display: none; background: #f8f9fa; border: 2px solid #3498db; border-radius: 8px; padding: 16px; margin-top: 16px; font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <h4 style="margin: 0; color: #3498db;">🐛 Debug Information</h4>
-                                <button onclick="document.getElementById('debugPanel').style.display='none'" style="background: #e74c3c; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer;">✕ Close</button>
-                            </div>
-                            <div id="debugContent" style="white-space: pre-wrap; word-break: break-all;"></div>
                         </div>
                         <div class="products-grid" id="productsGrid">
                             <p class="muted" style="text-align: center; padding: 40px;">No products available yet. Check back soon!</p>

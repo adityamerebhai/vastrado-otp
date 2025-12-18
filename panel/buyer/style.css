@@ -949,6 +949,11 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
 .chat-list-item:hover {
@@ -1097,6 +1102,11 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
 .send-message-btn:hover {
@@ -1138,9 +1148,15 @@ body {
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(247, 183, 49, 0.3);
     transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
-.chat-seller-btn:hover {
+.chat-seller-btn:hover,
+.chat-seller-btn:active {
     background: var(--primary-strong);
     box-shadow: 0 6px 16px rgba(247, 183, 49, 0.4);
     transform: translateY(-1px);
