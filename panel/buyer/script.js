@@ -1,4 +1,49 @@
 // =====================
+// Debug Panel Functions
+// =====================
+let debugLogs = [];
+const MAX_DEBUG_LOGS = 50;
+
+function addDebugLog(message, type = 'info') {
+  const timestamp = new Date().toLocaleTimeString();
+  const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+  debugLogs.push(logEntry);
+  
+  // Keep only last 50 logs
+  if (debugLogs.length > MAX_DEBUG_LOGS) {
+    debugLogs.shift();
+  }
+  
+  // Update debug panel if visible
+  updateDebugPanel();
+  
+  // Also log to console if available
+  if (typeof console !== 'undefined') {
+    console.log(logEntry);
+  }
+}
+
+function updateDebugPanel() {
+  const debugContent = document.getElementById('debugContent');
+  if (debugContent) {
+    debugContent.textContent = debugLogs.join('\n');
+    // Auto-scroll to bottom
+    const debugPanel = document.getElementById('debugPanel');
+    if (debugPanel && debugPanel.style.display !== 'none') {
+      debugPanel.scrollTop = debugPanel.scrollHeight;
+    }
+  }
+}
+
+function showDebugPanel() {
+  const debugPanel = document.getElementById('debugPanel');
+  if (debugPanel) {
+    debugPanel.style.display = 'block';
+    updateDebugPanel();
+  }
+}
+
+// =====================
 // Section navigation: show/hide content based on menu selection
 // =====================
 document.querySelectorAll('.menu-item').forEach((btn) => {
@@ -79,6 +124,7 @@ if (browseAction) {
 const refreshProducts = document.getElementById('refreshProducts');
 if (refreshProducts) {
   refreshProducts.addEventListener('click', async () => {
+    console.log('🔄 [REFRESH] Refresh button clicked');
     // Reset hash to force refresh
     lastProductHash = '';
     
@@ -86,8 +132,10 @@ if (refreshProducts) {
     refreshProducts.textContent = '⏳ Syncing...';
     refreshProducts.disabled = true;
     
+    console.log('🔄 [REFRESH] Starting cloud sync...');
     await syncProductsFromCloud();
     
+    console.log('🔄 [REFRESH] Cloud sync complete, displaying products...');
     // Force immediate refresh
     displayProducts();
     checkProductUpdates();
@@ -105,6 +153,25 @@ if (refreshProducts) {
     }, 1500);
   });
 }
+
+// Debug function - can be called from console: window.testAPI()
+window.testAPI = async function() {
+  console.log('🧪 [TEST] Testing API connection...');
+  console.log('🧪 [TEST] API_BASE_URL:', API_BASE_URL);
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/listings`);
+    console.log('🧪 [TEST] Response status:', response.status);
+    const data = await response.json();
+    console.log('🧪 [TEST] Response data:', data);
+    console.log('🧪 [TEST] Is array?', Array.isArray(data));
+    console.log('🧪 [TEST] Count:', Array.isArray(data) ? data.length : 'N/A');
+    return data;
+  } catch (error) {
+    console.error('🧪 [TEST] Error:', error);
+    return null;
+  }
+};
 
 // =====================
 // Store and display data
@@ -153,9 +220,18 @@ function updateStats() {
 const API_BASE_URL = 'https://vastrado-otp-production.up.railway.app/api';
 
 async function getItemsFromCloud() {
+  addDebugLog('getItemsFromCloud() called', 'info');
+  addDebugLog(`API URL: ${API_BASE_URL}`, 'info');
+  console.log('🔍 [DEBUG] getItemsFromCloud() called');
+  console.log('🔍 [DEBUG] API_BASE_URL:', API_BASE_URL);
+  
   // Try to fetch from backend API first (for cross-device sync)
   try {
-    const response = await fetch(`${API_BASE_URL}/listings`, {
+    const apiUrl = `${API_BASE_URL}/listings`;
+    addDebugLog(`Fetching from: ${apiUrl}`, 'info');
+    console.log('🔍 [DEBUG] Fetching from:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -163,35 +239,63 @@ async function getItemsFromCloud() {
       cache: 'no-cache' // Always fetch fresh data
     });
     
+    console.log('🔍 [DEBUG] Response status:', response.status, response.statusText);
+    console.log('🔍 [DEBUG] Response headers:', Object.fromEntries(response.headers.entries()));
+    
     if (response.ok) {
       const items = await response.json();
+      console.log('🔍 [DEBUG] Response data:', items);
+      console.log('🔍 [DEBUG] Is array?', Array.isArray(items));
+      console.log('🔍 [DEBUG] Items length:', Array.isArray(items) ? items.length : 'N/A');
+      
       if (Array.isArray(items)) {
         // Also save to localStorage for offline access
         localStorage.setItem('sellerListings', JSON.stringify(items));
-        console.log(`✅ Fetched ${items.length} listings from API`);
+        addDebugLog(`✅ SUCCESS: Fetched ${items.length} listings from API`, 'success');
+        if (items.length > 0) {
+          addDebugLog(`First item: ${JSON.stringify(items[0]).substring(0, 100)}...`, 'info');
+          console.log('🔍 [DEBUG] First item:', items[0]);
+        }
         return items;
       } else {
-        console.warn('API returned non-array data:', items);
+        console.error('❌ API returned non-array data:', items);
+        console.error('❌ Type:', typeof items);
       }
     } else {
-      console.warn(`API response not OK: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`❌ API response not OK: ${response.status} ${response.statusText}`);
+      console.error('❌ Error body:', errorText);
     }
   } catch (apiError) {
     // Backend not available - use local storage
-    console.log('⚠️ Backend API not available, using local storage:', apiError.message);
+    addDebugLog(`❌ ERROR: API fetch failed - ${apiError.message}`, 'error');
+    console.error('❌ Backend API fetch failed:', apiError);
+    console.error('❌ Error name:', apiError.name);
+    console.error('❌ Error message:', apiError.message);
+    console.error('❌ Error stack:', apiError.stack);
   }
   
   // Fallback to localStorage
+  console.log('🔍 [DEBUG] Falling back to localStorage');
   const localItems = localStorage.getItem('sellerListings');
+  console.log('🔍 [DEBUG] LocalStorage has data?', !!localItems);
+  
   if (localItems) {
     try {
       const parsed = JSON.parse(localItems);
       console.log(`📦 Using ${parsed.length} listings from local storage`);
+      if (parsed.length > 0) {
+        console.log('🔍 [DEBUG] First local item:', parsed[0]);
+      }
       return parsed;
     } catch (e) {
-      console.error('Error parsing local storage:', e);
+      console.error('❌ Error parsing local storage:', e);
     }
+  } else {
+    console.log('🔍 [DEBUG] No data in localStorage');
   }
+  
+  console.log('🔍 [DEBUG] Returning empty array');
   return [];
 }
 
@@ -211,37 +315,66 @@ function getAvailableProducts() {
 
 // Sync products from cloud
 async function syncProductsFromCloud() {
+  console.log('🔄 [SYNC] syncProductsFromCloud() called');
   try {
     const cloudItems = await getItemsFromCloud();
+    console.log('🔄 [SYNC] Got items:', cloudItems);
+    console.log('🔄 [SYNC] Is array?', Array.isArray(cloudItems));
+    console.log('🔄 [SYNC] Length:', Array.isArray(cloudItems) ? cloudItems.length : 'N/A');
+    
     if (cloudItems && Array.isArray(cloudItems)) {
       // Always update display, even if empty (to show latest state)
+      console.log('🔄 [SYNC] Calling displayProducts() with', cloudItems.length, 'items');
       displayProducts();
       return cloudItems.length > 0;
+    } else {
+      console.error('❌ [SYNC] cloudItems is not an array:', cloudItems);
     }
   } catch (error) {
-    console.error('Error syncing from cloud:', error);
+    console.error('❌ [SYNC] Error syncing from cloud:', error);
+    console.error('❌ [SYNC] Error stack:', error.stack);
   }
   return false;
 }
 
 function displayProducts() {
+  addDebugLog('displayProducts() called', 'info');
+  console.log('🎨 [DISPLAY] displayProducts() called');
   const productsGrid = document.getElementById('productsGrid');
   const productCountEl = document.getElementById('productCount');
-  if (!productsGrid) return;
+  
+  if (!productsGrid) {
+    addDebugLog('❌ ERROR: productsGrid element not found!', 'error');
+    console.error('❌ [DISPLAY] productsGrid element not found!');
+    return;
+  }
+  
+  addDebugLog('productsGrid element found', 'info');
+  console.log('🎨 [DISPLAY] productsGrid found:', productsGrid);
 
   const products = getAvailableProducts();
+  addDebugLog(`Products count: ${products.length}`, 'info');
+  console.log('🎨 [DISPLAY] Products from getAvailableProducts():', products);
+  console.log('🎨 [DISPLAY] Products count:', products.length);
+  
   const wishlist = getWishlist();
   productsGrid.innerHTML = '';
 
   // Update product count
   if (productCountEl) {
     productCountEl.textContent = products.length > 0 ? `(${products.length} items available)` : '';
+    console.log('🎨 [DISPLAY] Updated product count:', productCountEl.textContent);
   }
 
   if (products.length === 0) {
+    addDebugLog('⚠️ No products found, showing empty message', 'warning');
+    console.log('🎨 [DISPLAY] No products, showing empty message');
     productsGrid.innerHTML = '<p class="muted" style="text-align: center; padding: 40px;">No products available yet. Check back soon!</p>';
     return;
   }
+  
+  addDebugLog(`✅ Rendering ${products.length} products`, 'success');
+  console.log('🎨 [DISPLAY] Rendering', products.length, 'products');
 
   products.forEach((product, index) => {
     const card = document.createElement('div');
@@ -1349,6 +1482,10 @@ setInterval(syncFromCloudPeriodically, 2000);
 // Initialize: show profile section by default
 // =====================
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize debug
+  addDebugLog('Buyer panel initialized', 'info');
+  addDebugLog(`API URL: ${API_BASE_URL}`, 'info');
+  
   const profileSection = document.querySelector('.content-section[data-section="profile"]');
   if (profileSection) {
     profileSection.style.display = 'flex';
@@ -1366,8 +1503,10 @@ document.addEventListener('DOMContentLoaded', () => {
   displayProducts();
   
   // Sync from cloud on startup
+  addDebugLog('Starting initial cloud sync...', 'info');
   syncProductsFromCloud().then(() => {
     checkProductUpdates();
+    addDebugLog('Initial sync complete', 'info');
   });
   
   // Load chat list

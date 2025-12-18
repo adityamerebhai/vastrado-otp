@@ -212,14 +212,24 @@ function getStoredItems() {
 const API_BASE_URL = 'https://vastrado-otp-production.up.railway.app/api';
 
 async function syncToCloud(items) {
+  console.log('🔍 [DEBUG] syncToCloud() called');
+  console.log('🔍 [DEBUG] Items to sync:', items);
+  console.log('🔍 [DEBUG] Items count:', items.length);
+  console.log('🔍 [DEBUG] API_BASE_URL:', API_BASE_URL);
+  
   try {
     // Save to localStorage first (always works)
     localStorage.setItem('sellerListings', JSON.stringify(items));
     localStorage.setItem('sellerListings_sync', Date.now().toString());
+    console.log('✅ Saved to localStorage');
     
     // Try to sync to backend API for cross-device sync
     try {
-      const response = await fetch(`${API_BASE_URL}/listings`, {
+      const apiUrl = `${API_BASE_URL}/listings`;
+      console.log('🔍 [DEBUG] Posting to:', apiUrl);
+      console.log('🔍 [DEBUG] Payload:', JSON.stringify(items).substring(0, 200) + '...');
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -228,23 +238,32 @@ async function syncToCloud(items) {
         cache: 'no-cache'
       });
       
+      console.log('🔍 [DEBUG] Response status:', response.status, response.statusText);
+      console.log('🔍 [DEBUG] Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (response.ok) {
         const result = await response.json();
+        console.log('🔍 [DEBUG] Response data:', result);
         console.log(`✅ Synced ${items.length} listings to backend API (cross-device enabled)`);
         return true;
       } else {
         const errorText = await response.text();
-        console.error(`⚠️ Backend API error: ${response.status} - ${errorText}`);
+        console.error(`❌ Backend API error: ${response.status} - ${errorText}`);
+        console.error('❌ Full error response:', errorText);
       }
     } catch (apiError) {
       // Backend not available - use local storage only
-      console.error('⚠️ Backend API not available:', apiError.message);
+      console.error('❌ Backend API POST failed:', apiError);
+      console.error('❌ Error name:', apiError.name);
+      console.error('❌ Error message:', apiError.message);
+      console.error('❌ Error stack:', apiError.stack);
       console.log('💡 Using local storage only (cross-device sync unavailable)');
     }
     
     return true;
   } catch (error) {
-    console.error('Sync failed:', error.message);
+    console.error('❌ Sync failed:', error);
+    console.error('❌ Error details:', error.message, error.stack);
     return false;
   }
 }
