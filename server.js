@@ -99,8 +99,61 @@ app.post("/verify-otp", (req, res) => {
   res.json({ success: false });
 });
 
+// ================= CREATE PROFILE =================
+app.post("/create-profile", (req, res) => {
+  console.log("👤 /create-profile called");
+  const { username } = req.body;
+  // In production, create user profile in database
+  // For demo, just return success
+  res.json({ success: true, message: "Profile created" });
+});
+
+// ================= PANEL ROUTES =================
+app.get("/panel/buyer", (req, res) => {
+  res.sendFile(path.join(__dirname, "panel", "buyer", "index.html"));
+});
+
+app.get("/panel/buyer/", (req, res) => {
+  res.sendFile(path.join(__dirname, "panel", "buyer", "index.html"));
+});
+
+app.get("/panel/buyer/index.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "panel", "buyer", "index.html"));
+});
+
+app.get("/panel/seller", (req, res) => {
+  res.sendFile(path.join(__dirname, "panel", "seller", "index.html"));
+});
+
+app.get("/panel/seller/", (req, res) => {
+  res.sendFile(path.join(__dirname, "panel", "seller", "index.html"));
+});
+
+app.get("/panel/seller/index.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "panel", "seller", "index.html"));
+});
+
+// ================= STATIC FILES FOR PANEL =================
+app.use("/panel", express.static(path.join(__dirname, "panel"), {
+  index: false
+}));
+
+// ================= API ROUTES FOR LISTINGS =================
+let listings = [];
+
+app.get("/api/listings", (req, res) => {
+  console.log(`📥 GET /api/listings - Returning ${listings.length} listings`);
+  res.json(listings);
+});
+
+app.post("/api/listings", (req, res) => {
+  listings = req.body;
+  console.log(`📤 POST /api/listings - Received ${Array.isArray(listings) ? listings.length : 0} listings`);
+  res.json({ success: true, count: Array.isArray(listings) ? listings.length : 0 });
+});
+
 // ================= START SERVER =================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log("🚀 Server running on port", PORT);
 });
