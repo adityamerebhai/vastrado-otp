@@ -385,60 +385,80 @@ if (modalOverlay) {
   });
 }
 
-// Form submission
-if (uploadForm) {
-  uploadForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData(uploadForm);
-    const photos = [];
-    
-    // Convert file inputs to base64
-    const filePromises = Array.from(fileInput.files).map(file => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(filePromises).then(photoData => {
-      const sellerUsername = localStorage.getItem('username') || 'Unknown Seller';
-      const data = {
-        id: Date.now(),
-        
-        sellerUsername: sellerUsername,
-        photos: photoData.filter(p => p !== null),
-        fabricType: formData.get('fabricType'),
-        expectedCost: formData.get('expectedCost'),
-        clothCondition: formData.get('clothCondition'),
-        phoneNumber: formData.get('phoneNumber'),
-        dateAdded: new Date().toISOString()
-      };
-
-      // Save to localStorage
-      saveItem(data);
-      
-      // Reset form and close
-      closeUploadForm();
-      
-      // Hide upload section
-      const uploadSection = document.querySelector('.content-section[data-section="upload"]');
-      if (uploadSection) {
-        uploadSection.style.display = 'none';
-      }
-      
-      // Switch to listings section
-      const listingsMenuItem = document.querySelector('.menu-item[data-section="listings"]');
-      if (listingsMenuItem) {
-        listingsMenuItem.click();
-      }
-      
-      // Display listings
-      displayListings();
+// Form submission handler
+function handleFormSubmit(e) {
+  if (e) e.preventDefault();
+  
+  if (!uploadForm) return;
+  
+  const formData = new FormData(uploadForm);
+  const photos = [];
+  
+  // Convert file inputs to base64
+  const filePromises = Array.from(fileInput.files).map(file => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
     });
   });
+
+  Promise.all(filePromises).then(photoData => {
+    const sellerUsername = localStorage.getItem('username') || 'Unknown Seller';
+    const data = {
+      id: Date.now(),
+      
+      sellerUsername: sellerUsername,
+      photos: photoData.filter(p => p !== null),
+      fabricType: formData.get('fabricType'),
+      expectedCost: formData.get('expectedCost'),
+      clothCondition: formData.get('clothCondition'),
+      phoneNumber: formData.get('phoneNumber'),
+      dateAdded: new Date().toISOString()
+    };
+
+    // Save to localStorage
+    saveItem(data);
+    
+    // Reset form and close
+    closeUploadForm();
+    
+    // Hide upload section
+    const uploadSection = document.querySelector('.content-section[data-section="upload"]');
+    if (uploadSection) {
+      uploadSection.style.display = 'none';
+    }
+    
+    // Switch to listings section
+    const listingsMenuItem = document.querySelector('.menu-item[data-section="listings"]');
+    if (listingsMenuItem) {
+      listingsMenuItem.click();
+    }
+    
+    // Display listings
+    displayListings();
+  });
+}
+
+// Form submission
+if (uploadForm) {
+  uploadForm.addEventListener('submit', handleFormSubmit);
+  
+  // Also add direct handler to submit button for mobile compatibility
+  const submitBtn = uploadForm.querySelector('.submit-btn');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFormSubmit(e);
+    });
+    submitBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFormSubmit(e);
+    });
+  }
 }
 
 // =====================
@@ -1049,20 +1069,28 @@ function showPaymentDetails(paymentId) {
     </div>
   `;
   
-  // Add button handlers
+  // Add button handlers (support both click and touch for mobile)
   const confirmBtn = document.getElementById('confirmPaymentBtn');
   const rejectBtn = document.getElementById('rejectPaymentBtn');
   
   if (confirmBtn) {
-    confirmBtn.addEventListener('click', () => {
+    const handleConfirm = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       confirmPayment(paymentId);
-    });
+    };
+    confirmBtn.addEventListener('click', handleConfirm);
+    confirmBtn.addEventListener('touchend', handleConfirm);
   }
   
   if (rejectBtn) {
-    rejectBtn.addEventListener('click', () => {
+    const handleReject = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       rejectPayment(paymentId);
-    });
+    };
+    rejectBtn.addEventListener('click', handleReject);
+    rejectBtn.addEventListener('touchend', handleReject);
   }
   
   modal.style.display = 'flex';

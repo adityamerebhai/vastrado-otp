@@ -600,9 +600,15 @@ select.form-input {
     background: var(--primary);
     color: white;
     box-shadow: 0 4px 12px rgba(247, 183, 49, 0.3);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
-.submit-btn:hover {
+.submit-btn:hover,
+.submit-btn:active {
     background: var(--primary-strong);
     box-shadow: 0 6px 16px rgba(247, 183, 49, 0.4);
     transform: translateY(-1px);
@@ -872,6 +878,8 @@ select.form-input {
     z-index: 1000;
     padding: 20px;
     backdrop-filter: blur(4px);
+    touch-action: manipulation;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-content {
@@ -884,6 +892,8 @@ select.form-input {
     overflow-y: auto;
     position: relative;
     animation: modalSlideIn 0.3s ease;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
 }
 
 @keyframes modalSlideIn {
@@ -1614,9 +1624,15 @@ select.form-input {
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
-.confirm-payment-btn:hover {
+.confirm-payment-btn:hover,
+.confirm-payment-btn:active {
     background: #219a52;
     transform: translateY(-2px);
 }
@@ -1632,9 +1648,15 @@ select.form-input {
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
-.reject-payment-btn:hover {
+.reject-payment-btn:hover,
+.reject-payment-btn:active {
     background: #e74c3c;
     color: white;
 }
