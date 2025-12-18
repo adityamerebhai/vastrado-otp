@@ -11,6 +11,16 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000; // Railway provides PORT environment variable
 
+// Add error handling for uncaught errors
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 // In-memory storage (replace with database in production)
 let listings = [];
 
@@ -155,7 +165,19 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.listen(PORT, () => {
+// 404 handler (must be after all routes)
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
+});
+
+// Error handling middleware (must be last)
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ success: false, message: 'Internal server error' });
+});
+
+// Start server - bind to 0.0.0.0 for Railway
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Vastrado API server running on port ${PORT}`);
   console.log(`📡 API Endpoints:`);
   console.log(`   GET  /api/listings - Get all listings`);
@@ -166,4 +188,7 @@ app.listen(PORT, () => {
   console.log(`   /panel/seller - Seller dashboard`);
   console.log(`   /panel/buyer - Buyer dashboard`);
   console.log(`   /PUBLIC/* - Public files`);
+}).on('error', (err) => {
+  console.error('❌ Server failed to start:', err);
+  process.exit(1);
 });
