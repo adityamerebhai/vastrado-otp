@@ -78,16 +78,26 @@ if (browseAction) {
 // =====================
 const refreshProducts = document.getElementById('refreshProducts');
 if (refreshProducts) {
-  refreshProducts.addEventListener('click', () => {
+  refreshProducts.addEventListener('click', async () => {
     // Reset hash to force refresh
     lastProductHash = '';
+    
+    // Sync from cloud first
+    refreshProducts.textContent = '⏳ Syncing...';
+    refreshProducts.disabled = true;
+    
+    await syncProductsFromCloud();
+    
     // Force immediate refresh
     displayProducts();
     checkProductUpdates();
+    
     // Visual feedback
     refreshProducts.textContent = '✓ Refreshed!';
     refreshProducts.style.background = 'var(--primary)';
     refreshProducts.style.color = 'white';
+    refreshProducts.disabled = false;
+    
     setTimeout(() => {
       refreshProducts.textContent = '🔄 Refresh';
       refreshProducts.style.background = '';
@@ -138,12 +148,62 @@ function updateStats() {
   }
 }
 
+// Get items from backend API for cross-device sync
+// Railway server URL
+const API_BASE_URL = 'https://vastrado-otp-production.up.railway.app/api';
+
+async function getItemsFromCloud() {
+  // Try to fetch from backend API first (for cross-device sync)
+  try {
+    const response = await fetch(`${API_BASE_URL}/listings`);
+    if (response.ok) {
+      const items = await response.json();
+      if (Array.isArray(items)) {
+        // Also save to localStorage for offline access
+        localStorage.setItem('sellerListings', JSON.stringify(items));
+        return items;
+      }
+    }
+  } catch (apiError) {
+    // Backend not available - use local storage
+    console.log('⚠️ Backend API not available, using local storage');
+  }
+  
+  // Fallback to localStorage
+  const localItems = localStorage.getItem('sellerListings');
+  if (localItems) {
+    try {
+      return JSON.parse(localItems);
+    } catch (e) {
+      console.error('Error parsing local storage:', e);
+    }
+  }
+  return [];
+}
+
 // Get all available products (from seller listings - for demo purposes)
 function getAvailableProducts() {
-  // In a real app, this would fetch from an API
-  // For now, we'll check if there are any seller listings in localStorage
+  // First try localStorage
   const sellerListings = localStorage.getItem('sellerListings');
-  return sellerListings ? JSON.parse(sellerListings) : [];
+  if (sellerListings) {
+    try {
+      return JSON.parse(sellerListings);
+    } catch (e) {
+      console.error('Error parsing local storage:', e);
+    }
+  }
+  return [];
+}
+
+// Sync products from cloud
+async function syncProductsFromCloud() {
+  const cloudItems = await getItemsFromCloud();
+  if (cloudItems && cloudItems.length > 0) {
+    // Update display if we got new items
+    displayProducts();
+    return true;
+  }
+  return false;
 }
 
 function displayProducts() {
@@ -1236,6 +1296,8 @@ function getProductHash() {
   return products.map(p => `${p.id}:${p.dateAdded || ''}`).sort().join(',');
 }
 
+let cloudSyncInterval = null;
+
 function checkProductUpdates() {
   const currentHash = getProductHash();
   
@@ -1254,8 +1316,16 @@ function checkProductUpdates() {
   }
 }
 
-// Check for new products every 1 second for faster updates
+// Sync from cloud every 3 seconds
+async function syncFromCloudPeriodically() {
+  await syncProductsFromCloud();
+  checkProductUpdates();
+}
+
+// Check for new products every 1 second (local)
+// Sync from cloud every 3 seconds (cross-device)
 setInterval(checkProductUpdates, 1000);
+setInterval(syncFromCloudPeriodically, 3000);
 
 // =====================
 // Initialize: show profile section by default
@@ -1274,8 +1344,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Update stats
   updateStats();
   
-  // Load products
+  // Load products from local storage first
   displayProducts();
+  
+  // Sync from cloud on startup
+  syncProductsFromCloud().then(() => {
+    checkProductUpdates();
+  });
   
   // Load chat list
   loadChatList();

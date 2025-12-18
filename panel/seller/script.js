@@ -188,15 +188,83 @@ function handleFileSelection(files) {
 // =====================
 // Store and display uploaded items
 // =====================
+// Cross-Device Storage using a simple approach
+// =====================
+// For true cross-device sync, you need a backend API
+// This implementation uses localStorage + a shared URL parameter approach
+// In production, replace with your backend API endpoint
+
 function getStoredItems() {
-  const items = localStorage.getItem('sellerListings');
-  return items ? JSON.parse(items) : [];
+  // First try localStorage
+  const localItems = localStorage.getItem('sellerListings');
+  if (localItems) {
+    try {
+      return JSON.parse(localItems);
+    } catch (e) {
+      console.error('Error parsing local storage:', e);
+    }
+  }
+  return [];
+}
+
+// Sync to cloud storage using backend API
+// Railway server URL
+const API_BASE_URL = 'https://vastrado-otp-production.up.railway.app/api';
+
+async function syncToCloud(items) {
+  try {
+    // Save to localStorage first (always works)
+    localStorage.setItem('sellerListings', JSON.stringify(items));
+    localStorage.setItem('sellerListings_sync', Date.now().toString());
+    
+    // Try to sync to backend API for cross-device sync
+    try {
+      const response = await fetch(`${API_BASE_URL}/listings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(items)
+      });
+      
+      if (response.ok) {
+        console.log('✅ Synced to backend API (cross-device enabled)');
+        return true;
+      } else {
+        console.log('⚠️ Backend API unavailable, using local storage only');
+      }
+    } catch (apiError) {
+      // Backend not available - use local storage only
+      console.log('⚠️ Backend API not available, using local storage only');
+      console.log('💡 To enable cross-device sync, start the backend server (see server.js)');
+    }
+    
+    return true;
+  } catch (error) {
+    console.log('Sync failed:', error.message);
+    return false;
+  }
+}
+
+// Get items from cloud storage
+async function getItemsFromCloud() {
+  // For now, return local storage items
+  // In production, fetch from your backend API
+  return getStoredItems();
 }
 
 function saveItem(item) {
   const items = getStoredItems();
   items.push(item);
+  
+  // Save to localStorage
   localStorage.setItem('sellerListings', JSON.stringify(items));
+  
+  // Sync to cloud (async, don't wait)
+  syncToCloud(items).catch(() => {
+    // Silently fail - localStorage is the primary storage
+  });
+  
   updateStats();
 }
 
@@ -1286,13 +1354,39 @@ setInterval(checkPaymentUpdates, 500);
 // =====================
 // Initialize: show profile section by default and load listings
 // =====================
-document.addEventListener('DOMContentLoaded', () => {
+// Sync listings from cloud on startup
+async function syncListingsFromCloud() {
+  const cloudItems = await getItemsFromCloud();
+  if (cloudItems && cloudItems.length > 0) {
+    // Merge with local items (avoid duplicates)
+    const localItems = getStoredItems();
+    const merged = [...localItems];
+    
+    cloudItems.forEach(cloudItem => {
+      if (!merged.some(item => item.id === cloudItem.id)) {
+        merged.push(cloudItem);
+      }
+    });
+    
+    // Save merged list
+    localStorage.setItem('sellerListings', JSON.stringify(merged));
+    displayListings();
+    updateStats();
+    return true;
+  }
+  return false;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   const profileSection = document.querySelector('.content-section[data-section="profile"]');
   if (profileSection) {
     profileSection.style.display = 'flex';
     profileSection.style.flexDirection = 'column';
     profileSection.style.gap = '16px';
   }
+  
+  // Sync from cloud on startup
+  await syncListingsFromCloud();
   
   // Update stats
   updateStats();
