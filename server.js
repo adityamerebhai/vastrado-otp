@@ -1,194 +1,106 @@
-// =====================
-// Simple Backend API for Cross-Device Sync
-// =====================
-// Run this server to enable cross-device listing sync
-// Install dependencies: npm install express cors
-// Run: node server.js
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const { Resend } = require("resend");
 
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
 const app = express();
-const PORT = process.env.PORT || 3000; // Railway provides PORT environment variable
 
-// Add error handling for uncaught errors
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-// In-memory storage (replace with database in production)
-let listings = [];
-
+// ================= MIDDLEWARE =================
 app.use(cors());
 app.use(express.json());
 
-// OTP endpoints (MUST come before static files and other routes)
-// In-memory storage for OTPs (replace with database in production)
-const otpStore = new Map();
+// ================= STATIC FILES =================
+app.use(express.static(path.join(__dirname, "PUBLIC")));
 
-app.post('/send-otp', (req, res) => {
+// ================= ROOT =================
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "PUBLIC", "index.html"));
+});
+
+// ================= RESEND =================
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// ================= OTP STORE =================
+// email → { otp, role, expiry }
+let otpStore = {};
+
+// ================= OTP GENERATOR =================
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000);
+}
+
+// ================= SEND OTP =================
+app.post("/send-otp", async (req, res) => {
+  console.log("🔥 /send-otp called");
+
+  const { email, role } = req.body;
+
+  if (!email || !role) {
+    console.log("❌ Missing email or role");
+    return res.json({ success: false });
+  }
+
+  const otp = generateOTP();
+
+  otpStore[email] = {
+    otp,
+    role,
+    expiry: Date.now() + 5 * 60 * 1000 // 5 minutes
+  };
+
+  console.log("🔐 OTP GENERATED:", otp);
+
   try {
-    const { email, role } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
-    }
-    
-    // Generate a 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // Store OTP with expiration (5 minutes)
-    otpStore.set(email, {
-      otp,
-      role: role || 'buyer',
-      expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
+    await resend.emails.send({
+      from: "Vastrado <onboarding@resend.dev>",
+      to: email,
+      subject: "Your Vastrado OTP",
+      html: `
+        <h2>Your OTP: ${otp}</h2>
+        <p>This OTP is valid for 5 minutes.</p>
+      `
     });
-    
-    console.log(`OTP generated for ${email}: ${otp}`);
-    
-    res.json({ 
-      success: true, 
-      message: 'OTP sent successfully'
-    });
-  } catch (error) {
-    console.error('Error sending OTP:', error);
-    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+
+    console.log("✅ OTP sent");
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("❌ Resend error:", err);
+    res.json({ success: false });
   }
 });
 
-app.post('/verify-otp', (req, res) => {
-  try {
-    const { email, otp } = req.body;
-    
-    if (!email || !otp) {
-      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
-    }
-    
-    const stored = otpStore.get(email);
-    
-    if (!stored) {
-      return res.json({ success: false, message: 'OTP not found or expired' });
-    }
-    
-    if (Date.now() > stored.expiresAt) {
-      otpStore.delete(email);
-      return res.json({ success: false, message: 'OTP expired' });
-    }
-    
-    if (stored.otp !== otp) {
-      return res.json({ success: false, message: 'Invalid OTP' });
-    }
-    
-    // OTP verified - remove it
-    otpStore.delete(email);
-    
-    res.json({ 
-      success: true, 
-      message: 'OTP verified successfully',
-      role: stored.role
-    });
-  } catch (error) {
-    console.error('Error verifying OTP:', error);
-    res.status(500).json({ success: false, message: 'Failed to verify OTP' });
+// ================= VERIFY OTP =================
+app.post("/verify-otp", (req, res) => {
+  console.log("🔐 /verify-otp called");
+
+  const { email, otp } = req.body;
+  const data = otpStore[email];
+
+  if (!data) {
+    console.log("❌ OTP not found");
+    return res.json({ success: false });
   }
-});
 
-app.post('/create-profile', (req, res) => {
-  try {
-    const { username } = req.body;
-    console.log(`👤 Creating profile for: ${username}`);
-    
-    // In production, create user profile in database
-    // For demo, just return success
-    res.json({ success: true, message: 'Profile created' });
-  } catch (error) {
-    console.error('Error creating profile:', error);
-    res.status(500).json({ success: false, message: 'Failed to create profile' });
+  if (Date.now() > data.expiry) {
+    console.log("❌ OTP expired");
+    delete otpStore[email];
+    return res.json({ success: false });
   }
+
+  if (Number(otp) === data.otp) {
+    console.log("✅ OTP verified");
+    delete otpStore[email];
+    return res.json({ success: true, role: data.role });
+  }
+
+  console.log("❌ OTP mismatch");
+  res.json({ success: false });
 });
 
-// API routes (must come before static files)
-app.get('/api/listings', (req, res) => {
-  console.log(`📥 GET /api/listings - Returning ${listings.length} listings`);
-  res.json(listings);
-});
-
-app.post('/api/listings', (req, res) => {
-  listings = req.body;
-  console.log(`📤 POST /api/listings - Received ${Array.isArray(listings) ? listings.length : 0} listings`);
-  res.json({ success: true, count: Array.isArray(listings) ? listings.length : 0 });
-});
-
-// Route handlers for panel pages (must come before static middleware)
-app.get('/panel/seller', (req, res) => {
-  res.sendFile(path.join(__dirname, 'panel', 'seller', 'index.html'));
-});
-
-app.get('/panel/seller/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'panel', 'seller', 'index.html'));
-});
-
-app.get('/panel/seller/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'panel', 'seller', 'index.html'));
-});
-
-app.get('/panel/buyer', (req, res) => {
-  res.sendFile(path.join(__dirname, 'panel', 'buyer', 'index.html'));
-});
-
-app.get('/panel/buyer/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'panel', 'buyer', 'index.html'));
-});
-
-app.get('/panel/buyer/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'panel', 'buyer', 'index.html'));
-});
-
-// Serve static files from panel directory (CSS, JS files)
-app.use('/panel', express.static(path.join(__dirname, 'panel'), {
-  index: false // Don't serve index.html automatically
-}));
-
-// Serve static files from PUBLIC directory
-app.use(express.static(path.join(__dirname, 'PUBLIC')));
-
-// Serve root static files (if any)
-app.use(express.static(__dirname));
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
-
-// 404 handler (must be after all routes)
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
-});
-
-// Error handling middleware (must be last)
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ success: false, message: 'Internal server error' });
-});
-
-// Start server - bind to 0.0.0.0 for Railway
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Vastrado API server running on port ${PORT}`);
-  console.log(`📡 API Endpoints:`);
-  console.log(`   GET  /api/listings - Get all listings`);
-  console.log(`   POST /api/listings - Save listings`);
-  console.log(`   POST /send-otp - Send OTP`);
-  console.log(`   POST /verify-otp - Verify OTP`);
-  console.log(`📄 Static Files:`);
-  console.log(`   /panel/seller - Seller dashboard`);
-  console.log(`   /panel/buyer - Buyer dashboard`);
-  console.log(`   /PUBLIC/* - Public files`);
-}).on('error', (err) => {
-  console.error('❌ Server failed to start:', err);
-  process.exit(1);
+// ================= START SERVER =================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("🚀 Server running on port", PORT);
 });
