@@ -19,12 +19,14 @@ app.use(express.json());
 
 // API routes (must come before static files)
 app.get('/api/listings', (req, res) => {
+  console.log(`📥 GET /api/listings - Returning ${listings.length} listings`);
   res.json(listings);
 });
 
 app.post('/api/listings', (req, res) => {
   listings = req.body;
-  res.json({ success: true, count: listings.length });
+  console.log(`📤 POST /api/listings - Received ${Array.isArray(listings) ? listings.length : 0} listings`);
+  res.json({ success: true, count: Array.isArray(listings) ? listings.length : 0 });
 });
 
 // Route handlers for panel pages (must come before static middleware)

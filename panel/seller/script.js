@@ -224,24 +224,27 @@ async function syncToCloud(items) {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(items)
+        body: JSON.stringify(items),
+        cache: 'no-cache'
       });
       
       if (response.ok) {
-        console.log('✅ Synced to backend API (cross-device enabled)');
+        const result = await response.json();
+        console.log(`✅ Synced ${items.length} listings to backend API (cross-device enabled)`);
         return true;
       } else {
-        console.log('⚠️ Backend API unavailable, using local storage only');
+        const errorText = await response.text();
+        console.error(`⚠️ Backend API error: ${response.status} - ${errorText}`);
       }
     } catch (apiError) {
       // Backend not available - use local storage only
-      console.log('⚠️ Backend API not available, using local storage only');
-      console.log('💡 To enable cross-device sync, start the backend server (see server.js)');
+      console.error('⚠️ Backend API not available:', apiError.message);
+      console.log('💡 Using local storage only (cross-device sync unavailable)');
     }
     
     return true;
   } catch (error) {
-    console.log('Sync failed:', error.message);
+    console.error('Sync failed:', error.message);
     return false;
   }
 }

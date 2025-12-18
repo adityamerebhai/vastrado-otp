@@ -155,25 +155,39 @@ const API_BASE_URL = 'https://vastrado-otp-production.up.railway.app/api';
 async function getItemsFromCloud() {
   // Try to fetch from backend API first (for cross-device sync)
   try {
-    const response = await fetch(`${API_BASE_URL}/listings`);
+    const response = await fetch(`${API_BASE_URL}/listings`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      cache: 'no-cache' // Always fetch fresh data
+    });
+    
     if (response.ok) {
       const items = await response.json();
       if (Array.isArray(items)) {
         // Also save to localStorage for offline access
         localStorage.setItem('sellerListings', JSON.stringify(items));
+        console.log(`✅ Fetched ${items.length} listings from API`);
         return items;
+      } else {
+        console.warn('API returned non-array data:', items);
       }
+    } else {
+      console.warn(`API response not OK: ${response.status} ${response.statusText}`);
     }
   } catch (apiError) {
     // Backend not available - use local storage
-    console.log('⚠️ Backend API not available, using local storage');
+    console.log('⚠️ Backend API not available, using local storage:', apiError.message);
   }
   
   // Fallback to localStorage
   const localItems = localStorage.getItem('sellerListings');
   if (localItems) {
     try {
-      return JSON.parse(localItems);
+      const parsed = JSON.parse(localItems);
+      console.log(`📦 Using ${parsed.length} listings from local storage`);
+      return parsed;
     } catch (e) {
       console.error('Error parsing local storage:', e);
     }
@@ -197,11 +211,15 @@ function getAvailableProducts() {
 
 // Sync products from cloud
 async function syncProductsFromCloud() {
-  const cloudItems = await getItemsFromCloud();
-  if (cloudItems && cloudItems.length > 0) {
-    // Update display if we got new items
-    displayProducts();
-    return true;
+  try {
+    const cloudItems = await getItemsFromCloud();
+    if (cloudItems && Array.isArray(cloudItems)) {
+      // Always update display, even if empty (to show latest state)
+      displayProducts();
+      return cloudItems.length > 0;
+    }
+  } catch (error) {
+    console.error('Error syncing from cloud:', error);
   }
   return false;
 }
@@ -1316,16 +1334,16 @@ function checkProductUpdates() {
   }
 }
 
-// Sync from cloud every 3 seconds
+// Sync from cloud every 2 seconds for faster cross-device updates
 async function syncFromCloudPeriodically() {
   await syncProductsFromCloud();
   checkProductUpdates();
 }
 
 // Check for new products every 1 second (local)
-// Sync from cloud every 3 seconds (cross-device)
+// Sync from cloud every 2 seconds (cross-device) - faster for better sync
 setInterval(checkProductUpdates, 1000);
-setInterval(syncFromCloudPeriodically, 3000);
+setInterval(syncFromCloudPeriodically, 2000);
 
 // =====================
 // Initialize: show profile section by default
