@@ -1008,26 +1008,12 @@ function checkProductUpdates() {
   }
 }
 
-// Check for product updates every second
-
-// Sync from cloud every 2 seconds
-window.__productSyncInterval = setInterval(async () => {
-  try {
-    await syncProductsFromCloud();
-    checkProductUpdates();
-  } catch (err) {
-    // Silently handle errors, don't break the interval
-    console.warn('Sync interval error (will retry):', err.message);
-  }
-}, 2000);
-
-// Initial sync on page load - do it immediately
-(async () => {
+// No automatic syncing - products are fetched only when refresh button is clicked
+// Initial display on page load (from localStorage, no API call)
+(function() {
   console.log('🚀 [INIT] Buyer panel initializing...');
-  await syncProductsFromCloud();
   displayProducts();
-  checkProductUpdates();
-  console.log('✅ [INIT] Buyer panel initialized');
+  console.log('✅ [INIT] Buyer panel initialized (products will load from server when you click refresh)');
 })();
 
 /* ===============================
