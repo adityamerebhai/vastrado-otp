@@ -949,7 +949,7 @@ function checkProductUpdates() {
 }
 
 setInterval(checkProductUpdates, 1000);
-setInterval(syncProductsFromCloud, 2000);
+window.__productSyncInterval = setInterval(syncProductsFromCloud, 2000);
 
 /* ===============================
    INIT
