@@ -661,7 +661,27 @@ async function loadChatList() {
   const sendMessageBtn = document.getElementById("sendMessageBtn");
   const chatInput = document.getElementById("chatInput");
   
+  async function sendMessage() {
+    if (!currentChatUser || !chatInput || !chatInput.value.trim()) return;
   
+    const buyer = localStorage.getItem("username");
+    const seller = currentChatUser;
+    const text = chatInput.value.trim();
+  
+    try {
+      await fetch(`${API_BASE_URL}/chat/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buyer, seller, text })
+      });
+  
+      chatInput.value = "";
+      loadChatMessages(seller);
+    } catch (err) {
+      console.error("❌ Failed to send message", err);
+    }
+  }  
+
   if (sendMessageBtn) {
   sendMessageBtn.onclick = sendMessage;
   sendMessageBtn.addEventListener("touchend", (e) => {
