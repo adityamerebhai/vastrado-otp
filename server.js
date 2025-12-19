@@ -21,7 +21,6 @@ app.get("/", (req, res) => {
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ================= OTP STORE =================
-// email → { otp, role, expiry }
 let otpStore = {};
 
 // ================= OTP GENERATOR =================
@@ -85,7 +84,9 @@ app.get("/panel/seller", (req, res) => {
   res.sendFile(path.join(__dirname, "panel", "seller", "index.html"));
 });
 
-app.use("/panel", express.static(path.join(__dirname, "panel"), { index: false }));
+app.use("/panel", express.static(path.join(__dirname, "panel"), {
+  index: false
+}));
 
 // ================= LISTINGS API =================
 let listings = [];
@@ -95,33 +96,33 @@ app.get("/api/listings", (req, res) => {
 });
 
 app.post("/api/listings", (req, res) => {
-  listings = req.body;
+  listings = Array.isArray(req.body) ? req.body : [];
   res.json({ success: true });
 });
 
 // =================================================
-// ================= CHAT FIX START =================
+// ================= CHAT SYSTEM ===================
 // =================================================
 
-// 🔥 MISSING STORE (THIS WAS THE MAIN BUG)
+// 🔥 Chat store (FIXED)
 let chats = {}; 
 // key: buyer_seller → [{ from, text, createdAt }]
 
-// 👉 Get chat users for buyer
+// 👉 Buyer chat list
 app.get("/api/chat/buyer/:buyer", (req, res) => {
   const buyer = req.params.buyer;
   const users = new Set();
 
   Object.keys(chats).forEach(key => {
-    if (key.startsWith(buyer + "_")) {
-      users.add(key.split("_")[1]);
-    }
+    const [u1, u2] = key.split("_");
+    if (u1 === buyer) users.add(u2);
+    if (u2 === buyer) users.add(u1);
   });
 
   res.json([...users]);
 });
 
-// 👉 Get messages (USED BY BUYER SCRIPT)
+// 👉 Load messages
 app.get("/api/chat/messages", (req, res) => {
   const { buyer, seller } = req.query;
   const key = [buyer, seller].sort().join("_");
@@ -130,17 +131,15 @@ app.get("/api/chat/messages", (req, res) => {
 
 // 👉 Send message
 app.post("/api/chat/send", (req, res) => {
-  // Support both formats: {from, to} or {buyer, seller}
   const from = req.body.from || req.body.buyer;
   const to = req.body.to || req.body.seller;
   const text = req.body.text;
-  
+
   if (!from || !to || !text) {
-    return res.status(400).json({ success: false, error: "Missing required fields" });
+    return res.status(400).json({ success: false });
   }
 
   const key = [from, to].sort().join("_");
-
   if (!chats[key]) chats[key] = [];
 
   chats[key].push({
@@ -153,8 +152,40 @@ app.post("/api/chat/send", (req, res) => {
 });
 
 // =================================================
-// ================= CHAT FIX END ===================
+// ================= USERS SYSTEM ==================
 // =================================================
+
+let users = [];
+
+// Save user
+app.post("/api/users", (req, res) => {
+  const { username, role, email } = req.body;
+  if (!username) return res.json({ success: false });
+
+  const exists = users.find(u => u.username === username);
+  if (exists) return res.json({ success: true });
+
+  users.push({
+    username,
+    role: role || "unknown",
+    email: email || "",
+    createdAt: new Date().toISOString()
+  });
+
+  res.json({ success: true });
+});
+
+// Get all users
+app.get("/api/users", (req, res) => {
+  res.json(users);
+});
+
+// Delete user
+app.delete("/api/users/:username", (req, res) => {
+  const { username } = req.params;
+  users = users.filter(u => u.username !== username);
+  res.json({ success: true });
+});
 
 // ================= START SERVER =================
 const PORT = process.env.PORT || 3000;
