@@ -85,10 +85,17 @@ body {
     position: relative;
     cursor: pointer;
     user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 1;
 }
 
 .profile:hover {
     background: rgba(247, 183, 49, 0.05);
+}
+
+.profile:active {
+    background: rgba(247, 183, 49, 0.1);
 }
 
 .avatar {
@@ -133,6 +140,11 @@ body {
 }
 
 .dropdown-item {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 1;
     width: 100%;
     display: flex;
     align-items: center;
@@ -727,6 +739,11 @@ body {
     transition: all 0.2s ease;
     border: none;
     min-width: 100px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
 .cancel-confirm-btn {
@@ -740,6 +757,16 @@ body {
     border-color: var(--primary);
 }
 
+.logout-confirm-btn:active,
+.cancel-confirm-btn:active {
+    transform: scale(0.98);
+}
+
+.dropdown-item:active {
+    background: var(--menu-bg);
+    transform: scale(0.98);
+}
+
 .logout-confirm-btn {
     background: var(--primary);
     color: white;
@@ -750,6 +777,16 @@ body {
     background: var(--primary-strong);
     box-shadow: 0 6px 16px rgba(247, 183, 49, 0.4);
     transform: translateY(-1px);
+}
+
+.logout-confirm-btn:active,
+.cancel-confirm-btn:active {
+    transform: scale(0.98);
+}
+
+.dropdown-item:active {
+    background: var(--menu-bg);
+    transform: scale(0.98);
 }
 
 /* Responsive */

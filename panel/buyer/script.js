@@ -66,13 +66,20 @@ const profileDropdown = document.getElementById("profileDropdown");
 const profileDropdownMenu = document.getElementById("profileDropdownMenu");
 
 if (profileDropdown) {
-  profileDropdown.addEventListener("click", (e) => {
+  const toggleDropdown = (e) => {
     e.stopPropagation();
     if (profileDropdownMenu) {
       profileDropdownMenu.style.display =
         profileDropdownMenu.style.display === "none" ? "block" : "none";
     }
-  });
+  };
+  
+  profileDropdown.addEventListener("click", toggleDropdown);
+  // Mobile touch support
+  profileDropdown.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    toggleDropdown(e);
+  }, { passive: false });
 }
 
 document.addEventListener("click", () => {
@@ -769,13 +776,20 @@ const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
 const cancelLogoutBtn = document.getElementById("cancelLogoutBtn");
 
 if (logoutBtn) {
-  logoutBtn.onclick = () => {
+  logoutBtn.onclick = (e) => {
+    e.stopPropagation();
     if (logoutConfirmModal) logoutConfirmModal.style.display = "flex";
   };
+  // Mobile touch support
+  logoutBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (logoutConfirmModal) logoutConfirmModal.style.display = "flex";
+  }, { passive: false });
 }
 
 if (confirmLogoutBtn) {
-  confirmLogoutBtn.onclick = () => {
+  const handleLogout = () => {
     [
       "username",
       "email",
@@ -788,12 +802,30 @@ if (confirmLogoutBtn) {
     ].forEach((k) => localStorage.removeItem(k));
     window.location.href = "/";
   };
+  
+  confirmLogoutBtn.onclick = (e) => {
+    e.stopPropagation();
+    handleLogout();
+  };
+  // Mobile touch support
+  confirmLogoutBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleLogout();
+  }, { passive: false });
 }
 
 if (cancelLogoutBtn) {
-  cancelLogoutBtn.onclick = () => {
+  cancelLogoutBtn.onclick = (e) => {
+    e.stopPropagation();
     if (logoutConfirmModal) logoutConfirmModal.style.display = "none";
   };
+  // Mobile touch support
+  cancelLogoutBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (logoutConfirmModal) logoutConfirmModal.style.display = "none";
+  }, { passive: false });
 }
 
 /* ===============================
