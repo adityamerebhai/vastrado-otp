@@ -852,12 +852,13 @@ if (successOkBtn) {
 const refreshProducts = document.getElementById("refreshProducts");
 if (refreshProducts) {
   refreshProducts.onclick = async () => {
-    refreshProducts.textContent = "⏳ Syncing...";
+    refreshProducts.textContent = "⏳ Fetching...";
     refreshProducts.disabled = true;
     try {
+      // Only fetch products from server
       const success = await syncProductsFromCloud();
+      // Update display with fetched products
       displayProducts();
-      checkProductUpdates();
       if (success) {
         refreshProducts.textContent = "✓ Refreshed!";
       } else {
