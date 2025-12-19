@@ -7,6 +7,7 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
     document.querySelectorAll('.menu-item').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
     
+    const API_BASE_URL = "https://vastrado-otp-production.up.railway.app/api";
     // Show/hide content sections
     const targetSection = btn.dataset.section;
     document.querySelectorAll('.content-section').forEach((section) => {
@@ -755,340 +756,194 @@ if (logoutConfirmModal) {
     }
   });
 }
-
 // =====================
-// Chat Functionality
+// CHAT FUNCTIONALITY (SELLER - API BASED)
 // =====================
-let currentChatPartner = null;
-let chatRefreshInterval = null;
 
-function loadChatList() {
-  const chatList = document.getElementById('chatList');
-  if (!chatList) return;
-  
-  const myUsername = localStorage.getItem('username');
-  const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '{}');
-  
-  // Find all conversations for this user
-  const myConversations = [];
-  Object.keys(allChats).forEach(chatKey => {
-    const [user1, user2] = chatKey.split('_');
-    if (user1 === myUsername || user2 === myUsername) {
-      const otherUser = user1 === myUsername ? user2 : user1;
-      const messages = allChats[chatKey];
-      const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
-      myConversations.push({
-        chatKey,
-        otherUser,
-        lastMessage,
-        lastTime: lastMessage ? new Date(lastMessage.timestamp).getTime() : 0
-      });
+let currentChatUser = null;
+// ================= CHAT + NOTIFICATIONS STORE =================
+let chats = {};
+let notifications = [];
+
+/* ===============================
+   LOAD CHAT LIST (SELLER)
+================================ */
+async function loadChatList() {
+  const el = document.getElementById("chatList");
+  if (!el) return;
+
+  const seller = localStorage.getItem("username");
+  if (!seller) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/chat/seller/${seller}`);
+    const buyers = await res.json();
+
+    if (!buyers.length) {
+      el.innerHTML = `<p class="muted" style="padding:20px;text-align:center">No chats yet</p>`;
+      return;
     }
-  });
-  
-  // Sort by last message time
-  myConversations.sort((a, b) => b.lastTime - a.lastTime);
-  
-  if (myConversations.length === 0) {
-    chatList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No conversations yet</p>';
-    return;
-  }
-  
-  chatList.innerHTML = myConversations.map(conv => `
-    <div class="chat-list-item ${currentChatPartner === conv.otherUser ? 'active' : ''}" data-user="${conv.otherUser}">
-      <div class="chat-avatar">${conv.otherUser.charAt(0).toUpperCase()}</div>
-      <div class="chat-user-info">
-        <p class="chat-username">${conv.otherUser}</p>
-        <p class="chat-preview">${conv.lastMessage ? conv.lastMessage.text.substring(0, 30) + (conv.lastMessage.text.length > 30 ? '...' : '') : 'No messages yet'}</p>
-      </div>
-    </div>
-  `).join('');
-  
-  // Add click handlers
-  chatList.querySelectorAll('.chat-list-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const otherUser = item.dataset.user;
-      openChatWith(otherUser);
+
+    el.innerHTML = "";
+    buyers.forEach((buyer) => {
+      const div = document.createElement("div");
+      div.className = "chat-list-item";
+      div.textContent = buyer;
+      div.onclick = () => loadChatMessages(buyer);
+      el.appendChild(div);
     });
-  });
-}
 
-function openChatWith(otherUsername) {
-  currentChatPartner = otherUsername;
-  localStorage.setItem('currentChatPartner', otherUsername);
-  
-  // Switch to chat section
-  const chatMenuItem = document.querySelector('.menu-item[data-section="chat"]');
-  if (chatMenuItem) {
-    chatMenuItem.click();
+  } catch (err) {
+    el.innerHTML = `<p class="muted">Chat service unavailable</p>`;
   }
-  
-  // Small delay to ensure section is visible before loading messages
-  setTimeout(() => {
-    loadChatMessages(otherUsername);
-  }, 50);
 }
 
-function loadChatMessages(otherUsername) {
-  const chatMessages = document.getElementById('chatMessages');
-  const chatHeader = document.getElementById('chatHeader');
-  const chatInputArea = document.getElementById('chatInputArea');
-  
-  if (!chatMessages || !otherUsername) return;
-  
-  currentChatPartner = otherUsername;
-  
-  // Update header
-  if (chatHeader) {
-    chatHeader.innerHTML = `
-      <div class="chat-avatar" style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--primary-strong);">
-        ${otherUsername.charAt(0).toUpperCase()}
+/* ===============================
+   LOAD CHAT MESSAGES
+================================ */
+async function loadChatMessages(buyer) {
+  currentChatUser = buyer;
+
+  const seller = localStorage.getItem("username");
+  const header = document.getElementById("chatHeader");
+  const messagesEl = document.getElementById("chatMessages");
+  const inputArea = document.getElementById("chatInputArea");
+
+  if (header) header.innerHTML = `<h4>Chat with ${buyer}</h4>`;
+  if (inputArea) inputArea.style.display = "flex";
+
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/chat/messages?buyer=${buyer}&seller=${seller}`
+    );
+    const messages = await res.json();
+
+    messagesEl.innerHTML = messages.map(m => `
+      <div class="chat-message ${m.from === seller ? "sent" : "received"}">
+        <p>${m.text}</p>
+        <span class="chat-time">${new Date(m.createdAt).toLocaleTimeString()}</span>
       </div>
-      <h4>${otherUsername}</h4>
-    `;
-  }
-  
-  // Show input area
-  if (chatInputArea) {
-    chatInputArea.style.display = 'flex';
-  }
-  
-  // Get messages
-  const myUsername = localStorage.getItem('username');
-  const chatKey = [myUsername, otherUsername].sort().join('_');
-  const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '{}');
-  const messages = allChats[chatKey] || [];
-  
-  if (messages.length === 0) {
-    chatMessages.innerHTML = '<p class="muted" style="text-align:center;padding:40px;">No messages yet. Start the conversation!</p>';
-  } else {
-    chatMessages.innerHTML = messages.map(msg => `
-      <div class="chat-message ${msg.sender === myUsername ? 'sent' : 'received'}">
-        ${msg.text}
-        <span class="message-time">${formatTime(msg.timestamp)}</span>
-      </div>
-    `).join('');
-    
-    // Scroll to bottom
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-  
-  // Update chat list to show active
-  loadChatList();
-  
-  // Start refresh interval
-  if (chatRefreshInterval) clearInterval(chatRefreshInterval);
-  chatRefreshInterval = setInterval(() => {
-    if (currentChatPartner) {
-      refreshMessages();
-    }
-  }, 2000);
-}
+    `).join("");
 
-function refreshMessages() {
-  const chatMessages = document.getElementById('chatMessages');
-  if (!chatMessages || !currentChatPartner) return;
-  
-  const myUsername = localStorage.getItem('username');
-  const chatKey = [myUsername, currentChatPartner].sort().join('_');
-  const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '{}');
-  const messages = allChats[chatKey] || [];
-  
-  const currentCount = chatMessages.querySelectorAll('.chat-message').length;
-  if (messages.length !== currentCount) {
-    loadChatMessages(currentChatPartner);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  } catch (err) {
+    messagesEl.innerHTML = `<p class="muted">Failed to load messages</p>`;
   }
 }
 
-function sendMessage(text) {
-  if (!text.trim() || !currentChatPartner) return;
-  
-  const myUsername = localStorage.getItem('username');
-  const chatKey = [myUsername, currentChatPartner].sort().join('_');
-  const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '{}');
-  
-  if (!allChats[chatKey]) {
-    allChats[chatKey] = [];
-  }
-  
-  allChats[chatKey].push({
-    sender: myUsername,
-    text: text.trim(),
-    timestamp: new Date().toISOString()
+/* ===============================
+   SEND MESSAGE
+================================ */
+async function sendMessage() {
+  const input = document.getElementById("chatInput");
+  if (!input || !input.value.trim() || !currentChatUser) return;
+
+  const seller = localStorage.getItem("username");
+
+  await fetch(`${API_BASE_URL}/chat/send`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: seller,
+      to: currentChatUser,
+      text: input.value.trim()
+    })
   });
-  
-  localStorage.setItem('vastradoChats', JSON.stringify(allChats));
-  
-  // Reload messages
-  loadChatMessages(currentChatPartner);
-  
-  // Clear input
-  const chatInput = document.getElementById('chatInput');
-  if (chatInput) chatInput.value = '';
+
+  input.value = "";
+  loadChatMessages(currentChatUser);
 }
 
-function formatTime(timestamp) {
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-// Chat input handlers
-const chatInput = document.getElementById('chatInput');
-const sendMessageBtn = document.getElementById('sendMessageBtn');
+/* ===============================
+   INPUT HANDLERS
+================================ */
+const sendMessageBtn = document.getElementById("sendMessageBtn");
+const chatInput = document.getElementById("chatInput");
 
 if (sendMessageBtn) {
-  sendMessageBtn.addEventListener('click', () => {
-    const text = chatInput ? chatInput.value : '';
-    sendMessage(text);
+  sendMessageBtn.onclick = sendMessage;
+  sendMessageBtn.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    sendMessage();
   });
 }
 
 if (chatInput) {
-  chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      sendMessage(chatInput.value);
-    }
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage();
   });
 }
 
-// Check for new chat requests (notifications)
-function checkNewChats() {
-  const myUsername = localStorage.getItem('username');
-  const chatRequests = JSON.parse(localStorage.getItem('chatRequests') || '[]');
-  const newRequests = chatRequests.filter(r => r.seller === myUsername && r.status === 'pending');
-  
-  const chatBadge = document.getElementById('chatBadge');
-  if (chatBadge && newRequests.length > 0) {
-    chatBadge.style.display = 'inline-flex';
-    chatBadge.textContent = newRequests.length;
-  } else if (chatBadge) {
-    chatBadge.style.display = 'none';
-  }
-}
-
-// Check for new chats every 3 seconds
-setInterval(checkNewChats, 3000);
-
-// =====================
-// Notifications Functionality
-// =====================
-function getNotifications() {
-  const chatRequests = JSON.parse(localStorage.getItem('chatRequests') || '[]');
-  const myUsername = localStorage.getItem('username');
-  
-  // Filter notifications for this seller
-  return chatRequests.filter(r => r.seller === myUsername);
-}
-
-function displayNotifications() {
-  const notificationsList = document.getElementById('notificationsList');
-  const notifBadge = document.getElementById('notifBadge');
-  
+/* ===============================
+   INIT
+================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  loadChatList();
+});
+/* ===============================
+   NOTIFICATIONS (SELLER)
+================================ */
+async function loadNotifications() {
+  const notificationsList = document.getElementById("notificationsList");
+  const notifBadge = document.getElementById("notifBadge");
   if (!notificationsList) return;
-  
-  const notifications = getNotifications();
-  const pendingCount = notifications.filter(n => n.status === 'pending').length;
-  
-  // Update badge
-  if (notifBadge) {
-    if (pendingCount > 0) {
-      notifBadge.style.display = 'inline-flex';
-      notifBadge.textContent = pendingCount;
-    } else {
-      notifBadge.style.display = 'none';
+
+  const seller = localStorage.getItem("username");
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/notifications/${seller}`);
+    const notifications = await res.json();
+
+    // Badge
+    if (notifBadge) {
+      if (notifications.length > 0) {
+        notifBadge.style.display = "inline-flex";
+        notifBadge.textContent = notifications.length;
+      } else {
+        notifBadge.style.display = "none";
+      }
     }
-  }
-  
-  if (notifications.length === 0) {
-    notificationsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No notifications yet</p>';
-    return;
-  }
-  
-  // Sort by newest first
-  notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
-  notificationsList.innerHTML = notifications.map(notif => {
-    const timeAgo = getTimeAgo(notif.timestamp);
-    const statusClass = notif.status === 'pending' ? 'notification-new' : 'notification-read';
-    
-    return `
-      <div class="notification-item ${statusClass}" data-buyer="${notif.buyer}" data-id="${notif.id}">
-        <div class="notification-icon">💬</div>
-        <div class="notification-content">
-          <p class="notification-text"><strong>${notif.buyer}</strong> wants to chat with you</p>
-          <p class="notification-time">${timeAgo}</p>
+
+    if (notifications.length === 0) {
+      notificationsList.innerHTML =
+        `<p class="muted" style="padding:20px;text-align:center">No notifications</p>`;
+      return;
+    }
+
+    notificationsList.innerHTML = notifications.map(n => `
+      <div class="notification-item">
+        <div>
+          <strong>${n.from}</strong> sent you a message
+          <div class="notification-time">
+            ${new Date(n.timestamp).toLocaleTimeString()}
+          </div>
         </div>
-        <button class="notification-action" data-buyer="${notif.buyer}">Chat</button>
+        <button onclick="openNotificationChat('${n.from}', ${n.id})">
+          Chat
+        </button>
       </div>
-    `;
-  }).join('');
-  
-  // Add click handlers
-  notificationsList.querySelectorAll('.notification-action').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const buyerUsername = btn.dataset.buyer;
-      markNotificationAsRead(buyerUsername);
-      openChatWith(buyerUsername);
-    });
-  });
-  
-  notificationsList.querySelectorAll('.notification-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const buyerUsername = item.dataset.buyer;
-      markNotificationAsRead(buyerUsername);
-      openChatWith(buyerUsername);
-    });
-  });
-}
+    `).join("");
 
-function markNotificationAsRead(buyerUsername) {
-  const myUsername = localStorage.getItem('username');
-  let chatRequests = JSON.parse(localStorage.getItem('chatRequests') || '[]');
-  
-  chatRequests = chatRequests.map(req => {
-    if (req.seller === myUsername && req.buyer === buyerUsername) {
-      return { ...req, status: 'read' };
-    }
-    return req;
-  });
-  
-  localStorage.setItem('chatRequests', JSON.stringify(chatRequests));
-  displayNotifications();
-}
-
-function getTimeAgo(timestamp) {
-  const now = new Date();
-  const then = new Date(timestamp);
-  const diffMs = now - then;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-  
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${diffDays}d ago`;
-}
-
-// Check notifications periodically
-function checkNotifications() {
-  const notifBadge = document.getElementById('notifBadge');
-  const notifications = getNotifications();
-  const pendingCount = notifications.filter(n => n.status === 'pending').length;
-  
-  if (notifBadge) {
-    if (pendingCount > 0) {
-      notifBadge.style.display = 'inline-flex';
-      notifBadge.textContent = pendingCount;
-    } else {
-      notifBadge.style.display = 'none';
-    }
+  } catch (err) {
+    notificationsList.innerHTML =
+      `<p class="muted">Notification service unavailable</p>`;
   }
 }
 
-// Check notifications every 2 seconds
-setInterval(checkNotifications, 2000);
+async function openNotificationChat(buyer, notifId) {
+  await fetch(`${API_BASE_URL}/notifications/read`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: notifId })
+  });
+
+  openChatWith(buyer);
+  loadNotifications();
+}
+
+// Auto refresh notifications
+setInterval(loadNotifications, 3000);
 
 // =====================
 // Payment Functionality
