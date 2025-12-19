@@ -578,100 +578,101 @@ function displayWishlist() {
 ================================ */
 let currentChatUser = null;
 
-function loadChatList() {
+async function loadChatList() {
   const el = document.getElementById("chatList");
   if (!el) return;
-
-  const me = localStorage.getItem("username");
-  const chats = JSON.parse(localStorage.getItem("vastradoChats") || "{}");
-
-  const items = [...new Set(Object.keys(chats)
-    .filter((k) => k.includes(me))
-    .map((k) => {
-      const [a, b] = k.split("_");
-      return a === me ? b : a;
-    }))];
-
-  if (items.length === 0) {
-    el.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No conversations yet</p>';
-    return;
-  }
-
-  el.innerHTML = "";
   
-  items.forEach((u) => {
-    const item = document.createElement("div");
-    item.className = "chat-list-item";
-    item.textContent = u;
-    item.onclick = () => loadChatMessages(u);
-    // Mobile touch support
-    item.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      loadChatMessages(u);
-    });
-    el.appendChild(item);
+  
+  const buyer = localStorage.getItem("username");
+  
+  
+  try {
+  const res = await fetch(`${API_BASE_URL}/chat/buyer/${buyer}`);
+  const users = await res.json();
+  
+  
+  if (!users.length) {
+  el.innerHTML = '<p class="muted" style="padding:20px;text-align:center">No chats yet</p>';
+  return;
+  }
+  
+  
+  el.innerHTML = "";
+  users.forEach((seller) => {
+  const div = document.createElement("div");
+  div.className = "chat-list-item";
+  div.textContent = seller;
+  div.onclick = () => loadChatMessages(seller);
+  el.appendChild(div);
   });
-}
-
-function loadChatMessages(otherUser) {
-  currentChatUser = otherUser;
-  const buyerUsername = localStorage.getItem("username");
-  const chatKey = [buyerUsername, otherUser].sort().join("_");
-  const chats = JSON.parse(localStorage.getItem("vastradoChats") || "{}");
-  const messages = chats[chatKey] || [];
-
+  } catch (e) {
+  el.innerHTML = '<p class="muted">Chat service unavailable</p>';
+  }
+  }
+  
+  
+  /* ===============================
+  LOAD CHAT MESSAGES (FROM API)
+  ================================ */
+  async function loadChatMessages(seller) {
+  currentChatUser = seller;
+  
+  
+  const buyer = localStorage.getItem("username");
   const header = document.getElementById("chatHeader");
   const messagesEl = document.getElementById("chatMessages");
   const inputArea = document.getElementById("chatInputArea");
-
-  if (header) header.innerHTML = `<h4>Chat with ${otherUser}</h4>`;
-  if (messagesEl) {
-    messagesEl.innerHTML = messages.map((msg) => `
-      <div class="chat-message ${msg.sender === buyerUsername ? "sent" : "received"}">
-        <p>${msg.text}</p>
-        <span class="chat-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
-      </div>
-    `).join("");
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
+  
+  
+  if (header) header.innerHTML = `<h4>Chat with ${seller}</h4>`;
   if (inputArea) inputArea.style.display = "flex";
-}
-
-const sendMessageBtn = document.getElementById("sendMessageBtn");
-const chatInput = document.getElementById("chatInput");
-
-if (sendMessageBtn && chatInput) {
-  sendMessageBtn.onclick = () => sendMessage();
-  // Mobile touch support
-  sendMessageBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    sendMessage();
+  
+  
+  try {
+  const res = await fetch(`${API_BASE_URL}/chat/messages?buyer=${buyer}&seller=${seller}`);
+  const messages = await res.json();
+  
+  
+  messagesEl.innerHTML = messages.map(m => `
+  <div class="chat-message ${m.from === buyer ? 'sent' : 'received'}">
+  <p>${m.text}</p>
+  <span class="chat-time">${new Date(m.createdAt).toLocaleTimeString()}</span>
+  </div>
+  `).join("");
+  
+  
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  } catch (e) {
+  messagesEl.innerHTML = '<p class="muted">Failed to load messages</p>';
+  }
+  }
+  
+  
+  /* ===============================
+  SEND MESSAGE (API)
+  ================================ */
+  const sendMessageBtn = document.getElementById("sendMessageBtn");
+  const chatInput = document.getElementById("chatInput");
+  
+  
+  if (sendMessageBtn) {
+  sendMessageBtn.onclick = sendMessage;
+  sendMessageBtn.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  sendMessage();
   });
-  chatInput.onkeypress = (e) => {
-    if (e.key === "Enter") sendMessage();
-  };
-}
-
-function sendMessage() {
-  if (!currentChatUser || !chatInput?.value.trim()) return;
-
-  const buyerUsername = localStorage.getItem("username");
-  const chatKey = [buyerUsername, currentChatUser].sort().join("_");
-  const chats = JSON.parse(localStorage.getItem("vastradoChats") || "{}");
-  if (!chats[chatKey]) chats[chatKey] = [];
-
-  const message = {
-    sender: buyerUsername,
-    text: chatInput.value.trim(),
-    timestamp: new Date().toISOString()
-  };
-
-  chats[chatKey].push(message);
-  localStorage.setItem("vastradoChats", JSON.stringify(chats));
-
-  chatInput.value = "";
-  loadChatMessages(currentChatUser);
-}
+  }
+  
+  
+  if (chatInput) {
+    chatInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  }
+  
 
 /* ===============================
    NOTIFICATIONS
@@ -861,21 +862,21 @@ setInterval(syncProductsFromCloud, 2000);
 /* ===============================
    INIT
 ================================ */
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   const username = localStorage.getItem("username");
+
   const profileNameEl = document.getElementById("profileName");
   const avatarEl = document.getElementById("avatar");
-  if (profileNameEl) profileNameEl.textContent = username;
-  if (avatarEl) avatarEl.textContent = username?.charAt(0).toUpperCase() || "U";
 
-  updateStats();
-  displayProducts();
+  if (profileNameEl) {
+    profileNameEl.textContent = username || "";
+  }
+
+  if (avatarEl) {
+    avatarEl.textContent = username
+      ? username.charAt(0).toUpperCase()
+      : "U";
+  }
+
   loadChatList();
-  displayBuyerPayments();
-  displayBuyerOrders();
-  displayWishlist();
-  displayNotifications();
-
-  await syncProductsFromCloud();
-  displayProducts();
 });

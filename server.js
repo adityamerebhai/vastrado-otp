@@ -152,6 +152,35 @@ app.post("/api/listings", (req, res) => {
   res.json({ success: true, count: Array.isArray(listings) ? listings.length : 0 });
 });
 
+// ================= CHAT APIs =================
+
+// Send message
+app.post("/api/chat/send", (req, res) => {
+  const { from, to, text } = req.body;
+  if (!from || !to || !text) {
+    return res.json({ success: false });
+  }
+
+  const chatKey = [from, to].sort().join("_");
+
+  if (!chats[chatKey]) chats[chatKey] = [];
+
+  chats[chatKey].push({
+    sender: from,
+    text,
+    timestamp: new Date().toISOString()
+  });
+
+  res.json({ success: true });
+});
+
+// Get chat messages
+app.get("/api/chat/:user1/:user2", (req, res) => {
+  const { user1, user2 } = req.params;
+  const chatKey = [user1, user2].sort().join("_");
+  res.json(chats[chatKey] || []);
+});
+
 // ================= START SERVER =================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
