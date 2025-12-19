@@ -6,8 +6,6 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
     // Update active menu item
     document.querySelectorAll('.menu-item').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
-    
-    const API_BASE_URL = "https://vastrado-otp-production.up.railway.app/api";
     // Show/hide content sections
     const targetSection = btn.dataset.section;
     document.querySelectorAll('.content-section').forEach((section) => {
@@ -210,8 +208,7 @@ function getStoredItems() {
 
 // Sync to cloud storage using backend API
 // Railway server URL
-const API_BASE_URL = 'https://vastrado-otp-production.up.railway.app/api';
-
+const API_BASE_URL = "https://vastrado-otp-production.up.railway.app/api";
 async function syncToCloud(items) {
   console.log('🔍 [DEBUG] syncToCloud() called');
   console.log('🔍 [DEBUG] Items to sync:', items);
@@ -406,8 +403,12 @@ if (confirmDeleteBtn) {
       if (pendingDeleteIndex >= 0 && pendingDeleteIndex < items.length) {
         items.splice(pendingDeleteIndex, 1);
         localStorage.setItem('sellerListings', JSON.stringify(items));
+
+        // 🔥 IMPORTANT: sync deletion to server
+        syncToCloud(items);
         displayListings();
         updateStats();
+
       }
       pendingDeleteIndex = null;
     }
