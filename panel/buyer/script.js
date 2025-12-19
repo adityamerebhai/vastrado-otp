@@ -159,46 +159,65 @@ async function syncProductsFromCloud() {
     
     if (!res.ok) {
       console.warn(`❌ Failed to fetch listings: ${res.status} ${res.statusText}`);
-      // Don't break the loop, just return false
       return false;
     }
     
-    const data = await res.json();
+    // Check if response is actually JSON
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('❌ Server did not return JSON. Content-Type:', contentType);
+      return false;
+    }
+    
+    // Parse JSON with error handling
+    let data;
+    try {
+      const text = await res.text();
+      if (!text || text.trim() === '') {
+        console.warn('⚠️ Server returned empty response');
+        return false;
+      }
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('❌ JSON parse error:', parseError);
+      console.error('❌ Response text:', await res.text().catch(() => 'Could not read response'));
+      return false;
+    }
+    
     console.log(`📦 Received ${Array.isArray(data) ? data.length : 0} products from server`);
     
     if (Array.isArray(data)) {
       const oldData = localStorage.getItem("sellerListings");
-      const oldProducts = oldData ? JSON.parse(oldData) : [];
-      localStorage.setItem("sellerListings", JSON.stringify(data));
+      let oldProducts = [];
+      try {
+        oldProducts = oldData ? JSON.parse(oldData) : [];
+      } catch (e) {
+        console.warn('⚠️ Error parsing old localStorage data, clearing it');
+        localStorage.removeItem("sellerListings");
+      }
       
-      // If data changed, trigger display update
-      if (oldData !== JSON.stringify(data)) {
+      try {
+        localStorage.setItem("sellerListings", JSON.stringify(data));
         console.log(`✅ Synced ${data.length} products from server (was ${oldProducts.length})`);
         // Force display update
         if (typeof displayProducts === 'function') {
           displayProducts();
         }
-        // Also trigger hash check
-        if (typeof checkProductUpdates === 'function') {
-          checkProductUpdates();
+        return true;
+      } catch (storageError) {
+        console.error('❌ Failed to save to localStorage:', storageError);
+        if (storageError.name === 'QuotaExceededError') {
+          console.error('💾 localStorage is full! Please clear old data or compress images.');
         }
+        return false;
       }
-      return true;
     } else {
-      console.warn("❌ Server returned non-array data:", data);
+      console.warn("❌ Server returned non-array data:", typeof data, data);
       return false;
     }
   } catch (err) {
-    // Network errors are expected sometimes, don't spam the console
-    if (err.name === 'TypeError' && err.message.includes('fetch')) {
-      // Only log network errors occasionally to avoid spam
-      if (Math.random() < 0.1) { // Log 10% of network errors
-        console.warn("⚠️ Network error fetching products (this is normal if server is unreachable)");
-      }
-    } else {
-      console.error("❌ Failed to sync products from cloud:", err);
-    }
-    // Continue using localStorage data, don't break the sync loop
+    console.error("❌ Failed to sync products from cloud:", err);
+    console.error("❌ Error details:", err.message, err.stack);
     return false;
   }
 }
