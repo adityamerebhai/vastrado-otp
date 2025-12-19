@@ -92,11 +92,13 @@ app.use("/panel", express.static(path.join(__dirname, "panel"), {
 let listings = [];
 
 app.get("/api/listings", (req, res) => {
+  console.log(`📤 GET /api/listings - Returning ${listings.length} listings`);
   res.json(listings);
 });
 
 app.post("/api/listings", (req, res) => {
   listings = Array.isArray(req.body) ? req.body : [];
+  console.log(`💾 POST /api/listings - Saved ${listings.length} listings`);
   res.json({ success: true });
 });
 

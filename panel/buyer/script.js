@@ -142,14 +142,43 @@ function getAvailableProducts() {
 
 async function syncProductsFromCloud() {
   try {
-    const res = await fetch(`${API_BASE_URL}/listings`, { cache: "no-cache" });
-    if (!res.ok) return;
+    const url = `${API_BASE_URL}/listings`;
+    console.log(`🔄 Fetching products from: ${url}`);
+    const res = await fetch(url, { 
+      cache: "no-cache",
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    if (!res.ok) {
+      console.warn(`❌ Failed to fetch listings: ${res.status} ${res.statusText}`);
+      return false;
+    }
     const data = await res.json();
+    console.log(`📦 Received ${Array.isArray(data) ? data.length : 0} products from server`);
     if (Array.isArray(data)) {
+      const oldData = localStorage.getItem("sellerListings");
+      const oldProducts = oldData ? JSON.parse(oldData) : [];
       localStorage.setItem("sellerListings", JSON.stringify(data));
+      // If data changed, trigger display update
+      if (oldData !== JSON.stringify(data)) {
+        console.log(`✅ Synced ${data.length} products from server (was ${oldProducts.length})`);
+        // Force display update
+        if (typeof displayProducts === 'function') {
+          displayProducts();
+        }
+        // Also trigger hash check
+        if (typeof checkProductUpdates === 'function') {
+          checkProductUpdates();
+        }
+      }
       return true;
+    } else {
+      console.warn("❌ Server returned non-array data:", data);
     }
   } catch (err) {
+    console.error("❌ Failed to sync products from cloud:", err);
     // Cloud sync failed, using localStorage
   }
   return false;
@@ -944,12 +973,23 @@ function checkProductUpdates() {
   const currentHash = getProductHash();
   if (currentHash !== lastProductHash) {
     lastProductHash = currentHash;
+    console.log("🔄 Products updated, refreshing display");
     displayProducts();
   }
 }
 
 setInterval(checkProductUpdates, 1000);
-window.__productSyncInterval = setInterval(syncProductsFromCloud, 2000);
+window.__productSyncInterval = setInterval(async () => {
+  await syncProductsFromCloud();
+  checkProductUpdates();
+}, 2000);
+
+// Initial sync on page load
+(async () => {
+  await syncProductsFromCloud();
+  displayProducts();
+  checkProductUpdates();
+})();
 
 /* ===============================
    INIT
