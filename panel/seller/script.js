@@ -228,12 +228,14 @@ async function syncToCloud(items) {
     try {
       const apiUrl = `${API_BASE_URL}/listings`;
       console.log('🔍 [DEBUG] Posting to:', apiUrl);
-      console.log('🔍 [DEBUG] Payload:', JSON.stringify(items).substring(0, 200) + '...');
+      console.log('🔍 [DEBUG] Items to sync:', items.length);
+      console.log('🔍 [DEBUG] Payload preview:', JSON.stringify(items).substring(0, 200) + '...');
       
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         },
         body: JSON.stringify(items),
         cache: 'no-cache'
@@ -245,12 +247,17 @@ async function syncToCloud(items) {
       if (response.ok) {
         const result = await response.json();
         console.log('🔍 [DEBUG] Response data:', result);
-        console.log(`✅ Synced ${items.length} listings to backend API (cross-device enabled)`);
-        return true;
+        if (result.success) {
+          console.log(`✅ Synced ${items.length} listings to backend API (cross-device enabled)`);
+          return true;
+        } else {
+          console.error(`❌ Backend API returned success: false`, result);
+        }
       } else {
         const errorText = await response.text();
         console.error(`❌ Backend API error: ${response.status} - ${errorText}`);
         console.error('❌ Full error response:', errorText);
+        return false;
       }
     } catch (apiError) {
       // Backend not available - use local storage only
@@ -259,9 +266,10 @@ async function syncToCloud(items) {
       console.error('❌ Error message:', apiError.message);
       console.error('❌ Error stack:', apiError.stack);
       console.log('💡 Using local storage only (cross-device sync unavailable)');
+      return false; // Return false if API sync failed
     }
     
-    return true;
+    return true; // Only return true if everything succeeded
   } catch (error) {
     console.error('❌ Sync failed:', error);
     console.error('❌ Error details:', error.message, error.stack);

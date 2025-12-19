@@ -97,9 +97,23 @@ app.get("/api/listings", (req, res) => {
 });
 
 app.post("/api/listings", (req, res) => {
-  listings = Array.isArray(req.body) ? req.body : [];
-  console.log(`💾 POST /api/listings - Saved ${listings.length} listings`);
-  res.json({ success: true });
+  console.log(`📥 POST /api/listings - Received request`);
+  console.log(`📥 Request body type:`, typeof req.body, Array.isArray(req.body));
+  console.log(`📥 Request body length:`, Array.isArray(req.body) ? req.body.length : 'not an array');
+  
+  if (Array.isArray(req.body)) {
+    listings = req.body;
+    console.log(`💾 POST /api/listings - Saved ${listings.length} listings`);
+    // Log first listing if exists
+    if (listings.length > 0) {
+      console.log(`📦 First listing:`, JSON.stringify(listings[0]).substring(0, 100) + '...');
+    }
+  } else {
+    console.error(`❌ POST /api/listings - Invalid data format, expected array, got:`, typeof req.body);
+    listings = [];
+  }
+  
+  res.json({ success: true, count: listings.length });
 });
 
 // =================================================
