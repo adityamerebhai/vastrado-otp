@@ -1,4 +1,3 @@
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -32,80 +31,49 @@ function generateOTP() {
 
 // ================= SEND OTP =================
 app.post("/send-otp", async (req, res) => {
-  console.log("🔥 /send-otp called");
-
   const { email, role } = req.body;
-
-  if (!email || !role) {
-    console.log("❌ Missing email or role");
-    return res.json({ success: false });
-  }
+  if (!email || !role) return res.json({ success: false });
 
   const otp = generateOTP();
-
   otpStore[email] = {
     otp,
     role,
-    expiry: Date.now() + 5 * 60 * 1000 // 5 minutes
+    expiry: Date.now() + 5 * 60 * 1000
   };
-
-  console.log("🔐 OTP GENERATED:", otp);
 
   try {
     await resend.emails.send({
       from: "Vastrado <onboarding@resend.dev>",
       to: email,
       subject: "Your Vastrado OTP",
-      html: `
-        <h2>Your OTP: ${otp}</h2>
-        <p>This OTP is valid for 5 minutes.</p>
-      `
+      html: `<h2>Your OTP: ${otp}</h2>`
     });
-
-    console.log("✅ OTP sent");
     res.json({ success: true });
-
-  } catch (err) {
-    console.error("❌ Resend error:", err);
+  } catch {
     res.json({ success: false });
   }
 });
 
 // ================= VERIFY OTP =================
 app.post("/verify-otp", (req, res) => {
-  console.log("🔐 /verify-otp called");
-
   const { email, otp } = req.body;
   const data = otpStore[email];
 
-  if (!data) {
-    console.log("❌ OTP not found");
-    return res.json({ success: false });
-  }
-
-  if (Date.now() > data.expiry) {
-    console.log("❌ OTP expired");
-    delete otpStore[email];
+  if (!data || Date.now() > data.expiry) {
     return res.json({ success: false });
   }
 
   if (Number(otp) === data.otp) {
-    console.log("✅ OTP verified");
     delete otpStore[email];
     return res.json({ success: true, role: data.role });
   }
 
-  console.log("❌ OTP mismatch");
   res.json({ success: false });
 });
 
 // ================= CREATE PROFILE =================
 app.post("/create-profile", (req, res) => {
-  console.log("👤 /create-profile called");
-  const { username } = req.body;
-  // In production, create user profile in database
-  // For demo, just return success
-  res.json({ success: true, message: "Profile created" });
+  res.json({ success: true });
 });
 
 // ================= PANEL ROUTES =================
@@ -113,73 +81,76 @@ app.get("/panel/buyer", (req, res) => {
   res.sendFile(path.join(__dirname, "panel", "buyer", "index.html"));
 });
 
-app.get("/panel/buyer/", (req, res) => {
-  res.sendFile(path.join(__dirname, "panel", "buyer", "index.html"));
-});
-
-app.get("/panel/buyer/index.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "panel", "buyer", "index.html"));
-});
-
 app.get("/panel/seller", (req, res) => {
   res.sendFile(path.join(__dirname, "panel", "seller", "index.html"));
 });
 
-app.get("/panel/seller/", (req, res) => {
-  res.sendFile(path.join(__dirname, "panel", "seller", "index.html"));
-});
+app.use("/panel", express.static(path.join(__dirname, "panel"), { index: false }));
 
-app.get("/panel/seller/index.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "panel", "seller", "index.html"));
-});
-
-// ================= STATIC FILES FOR PANEL =================
-app.use("/panel", express.static(path.join(__dirname, "panel"), {
-  index: false
-}));
-
-// ================= API ROUTES FOR LISTINGS =================
+// ================= LISTINGS API =================
 let listings = [];
 
 app.get("/api/listings", (req, res) => {
-  console.log(`📥 GET /api/listings - Returning ${listings.length} listings`);
   res.json(listings);
 });
 
 app.post("/api/listings", (req, res) => {
   listings = req.body;
-  console.log(`📤 POST /api/listings - Received ${Array.isArray(listings) ? listings.length : 0} listings`);
-  res.json({ success: true, count: Array.isArray(listings) ? listings.length : 0 });
+  res.json({ success: true });
 });
 
-// ================= CHAT APIs =================
+// =================================================
+// ================= CHAT FIX START =================
+// =================================================
 
-// Send message
+// 🔥 MISSING STORE (THIS WAS THE MAIN BUG)
+let chats = {}; 
+// key: buyer_seller → [{ from, text, createdAt }]
+
+// 👉 Get chat users for buyer
+app.get("/api/chat/buyer/:buyer", (req, res) => {
+  const buyer = req.params.buyer;
+  const users = new Set();
+
+  Object.keys(chats).forEach(key => {
+    if (key.startsWith(buyer + "_")) {
+      users.add(key.split("_")[1]);
+    }
+  });
+
+  res.json([...users]);
+});
+
+// 👉 Get messages (USED BY BUYER SCRIPT)
+app.get("/api/chat/messages", (req, res) => {
+  const { buyer, seller } = req.query;
+  const key = [buyer, seller].sort().join("_");
+  res.json(chats[key] || []);
+});
+
+// 👉 Send message
 app.post("/api/chat/send", (req, res) => {
   const { from, to, text } = req.body;
   if (!from || !to || !text) {
-    return res.json({ success: false });
+    return res.status(400).json({ success: false });
   }
 
-  const chatKey = [from, to].sort().join("_");
+  const key = [from, to].sort().join("_");
 
-  if (!chats[chatKey]) chats[chatKey] = [];
+  if (!chats[key]) chats[key] = [];
 
-  chats[chatKey].push({
-    sender: from,
+  chats[key].push({
+    from,
     text,
-    timestamp: new Date().toISOString()
+    createdAt: new Date().toISOString()
   });
 
   res.json({ success: true });
 });
 
-// Get chat messages
-app.get("/api/chat/:user1/:user2", (req, res) => {
-  const { user1, user2 } = req.params;
-  const chatKey = [user1, user2].sort().join("_");
-  res.json(chats[chatKey] || []);
-});
+// =================================================
+// ================= CHAT FIX END ===================
+// =================================================
 
 // ================= START SERVER =================
 const PORT = process.env.PORT || 3000;
