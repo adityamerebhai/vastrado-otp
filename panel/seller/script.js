@@ -951,9 +951,6 @@ async function openNotificationChat(buyer, notifId) {
   loadNotifications();
 }
 
-// Auto refresh notifications
-setInterval(loadNotifications, 3000);
-
 // =====================
 // Payment Functionality
 // =====================
@@ -1312,13 +1309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Load chat list
   loadChatList();
-  
-  // Check for new chats
-  checkNewChats();
-  
-  // Display notifications
-  displayNotifications();
-  
+
   // Check for payment updates
   checkPaymentUpdates();
 });
