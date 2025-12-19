@@ -2,7 +2,7 @@
 // Section navigation: show/hide content based on menu selection
 // =====================
 document.querySelectorAll('.menu-item').forEach((btn) => {
-  btn.addEventListener('click', () => {
+  const handleMenuClick = () => {
     // Update active menu item
     document.querySelectorAll('.menu-item').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
@@ -23,26 +23,6 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
         if (targetSection === 'profile') {
           updateStats();
         }
-        
-        // Load chat list when chat section is shown
-        if (targetSection === 'chat') {
-          loadChatList();
-        }
-        
-        // Load notifications when notifications section is shown
-        if (targetSection === 'notifications') {
-          displayNotifications();
-        }
-        
-        // Load payments when payments section is shown
-        if (targetSection === 'payments') {
-          displaySellerPayments();
-        }
-        
-        // Load orders when orders section is shown
-        if (targetSection === 'orders') {
-          displaySellerOrders();
-        }
       } else {
         section.style.display = 'none';
       }
@@ -52,7 +32,14 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
     if (uploadFormCard && targetSection !== 'upload') {
       uploadFormCard.style.display = 'none';
     }
-  });
+  };
+  
+  btn.addEventListener('click', handleMenuClick);
+  // Mobile touch support
+  btn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    handleMenuClick();
+  }, { passive: false });
 });
 
 // =====================
@@ -69,7 +56,7 @@ const filePreview = document.getElementById('filePreview');
 
 // Open upload form when + button is clicked
 if (uploadAction) {
-  uploadAction.addEventListener('click', () => {
+  const openUploadForm = () => {
     // Show form in the upload section (which is now hidden but still exists)
     if (uploadFormCard) {
       // Make sure upload section is visible
@@ -81,7 +68,14 @@ if (uploadAction) {
       }
       uploadFormCard.style.display = 'block';
     }
-  });
+  };
+  
+  uploadAction.addEventListener('click', openUploadForm);
+  // Mobile touch support
+  uploadAction.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    openUploadForm();
+  }, { passive: false });
 }
 
 // Close form handlers
@@ -104,10 +98,20 @@ function closeUploadForm() {
 
 if (closeFormBtn) {
   closeFormBtn.addEventListener('click', closeUploadForm);
+  // Mobile touch support
+  closeFormBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    closeUploadForm();
+  }, { passive: false });
 }
 
 if (cancelBtn) {
   cancelBtn.addEventListener('click', closeUploadForm);
+  // Mobile touch support
+  cancelBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    closeUploadForm();
+  }, { passive: false });
 }
 
 // File upload handling
@@ -187,14 +191,7 @@ function handleFileSelection(files) {
 // =====================
 // Store and display uploaded items
 // =====================
-// Cross-Device Storage using a simple approach
-// =====================
-// For true cross-device sync, you need a backend API
-// This implementation uses localStorage + a shared URL parameter approach
-// In production, replace with your backend API endpoint
-
 function getStoredItems() {
-  // First try localStorage
   const localItems = localStorage.getItem('sellerListings');
   if (localItems) {
     try {
@@ -206,106 +203,16 @@ function getStoredItems() {
   return [];
 }
 
-// Sync to cloud storage using backend API
-// Railway server URL
-const API_BASE_URL = "https://vastrado-otp-production.up.railway.app/api";
-async function syncToCloud(items) {
-  console.log('🔍 [DEBUG] syncToCloud() called');
-  console.log('🔍 [DEBUG] Items to sync:', items);
-  console.log('🔍 [DEBUG] Items count:', items.length);
-  console.log('🔍 [DEBUG] API_BASE_URL:', API_BASE_URL);
-  
-  try {
-    // Save to localStorage first (always works)
-    localStorage.setItem('sellerListings', JSON.stringify(items));
-    localStorage.setItem('sellerListings_sync', Date.now().toString());
-    console.log('✅ Saved to localStorage');
-    
-    // Try to sync to backend API for cross-device sync
-    try {
-      const apiUrl = `${API_BASE_URL}/listings`;
-      console.log('🔍 [DEBUG] Posting to:', apiUrl);
-      console.log('🔍 [DEBUG] Items to sync:', items.length);
-      console.log('🔍 [DEBUG] Payload preview:', JSON.stringify(items).substring(0, 200) + '...');
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
-        body: JSON.stringify(items),
-        cache: 'no-cache'
-      });
-      
-      console.log('🔍 [DEBUG] Response status:', response.status, response.statusText);
-      console.log('🔍 [DEBUG] Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('🔍 [DEBUG] Response data:', result);
-        if (result.success) {
-          console.log(`✅ Synced ${items.length} listings to backend API (cross-device enabled)`);
-          return true;
-        } else {
-          console.error(`❌ Backend API returned success: false`, result);
-        }
-      } else {
-        const errorText = await response.text();
-        console.error(`❌ Backend API error: ${response.status} - ${errorText}`);
-        console.error('❌ Full error response:', errorText);
-        return false;
-      }
-    } catch (apiError) {
-      // Backend not available - use local storage only
-      console.error('❌ Backend API POST failed:', apiError);
-      console.error('❌ Error name:', apiError.name);
-      console.error('❌ Error message:', apiError.message);
-      console.error('❌ Error stack:', apiError.stack);
-      console.log('💡 Using local storage only (cross-device sync unavailable)');
-      return false; // Return false if API sync failed
-    }
-    
-    return true; // Only return true if everything succeeded
-  } catch (error) {
-    console.error('❌ Sync failed:', error);
-    console.error('❌ Error details:', error.message, error.stack);
-    return false;
-  }
-}
-
-// Get items from cloud storage
-async function getItemsFromCloud() {
-  // For now, return local storage items
-  // In production, fetch from your backend API
-  return getStoredItems();
-}
-
-async function saveItem(item) {
+function saveItem(item) {
   console.log('💾 [SAVE] saveItem() called with:', item);
   const items = getStoredItems();
   console.log('💾 [SAVE] Current items count:', items.length);
   items.push(item);
   console.log('💾 [SAVE] New items count:', items.length);
   
-  // Save to localStorage first
+  // Save to localStorage
   localStorage.setItem('sellerListings', JSON.stringify(items));
   console.log('💾 [SAVE] Saved to localStorage');
-  
-  // Sync ALL items to cloud - WAIT for it to complete
-  console.log('💾 [SAVE] Syncing ALL items to cloud...');
-  try {
-    const success = await syncToCloud(items);
-    if (success) {
-      console.log('💾 [SAVE] ✅ Successfully synced all items to API');
-    } else {
-      console.error('💾 [SAVE] ⚠️ Failed to sync to API, but saved locally');
-      console.error('💾 [SAVE] Check network connection and server logs');
-    }
-  } catch (error) {
-    console.error('💾 [SAVE] ❌ Error syncing to cloud:', error);
-    console.error('💾 [SAVE] Error details:', error.message);
-  }
   
   updateStats();
   displayListings();
@@ -315,26 +222,11 @@ async function saveItem(item) {
 function updateStats() {
   const items = getStoredItems();
   const listingsCount = items.length;
-  const sellerUsername = localStorage.getItem('username');
-  
-  // Get payments for this seller
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  const sellerPayments = allPayments.filter(p => p.seller === sellerUsername);
-  const salesCount = sellerPayments.filter(p => p.status === 'confirmed').length;
-  const pendingCount = sellerPayments.filter(p => p.status === 'pending').length;
   
   const listingsCountEl = document.getElementById('listingsCount');
-  const salesCountEl = document.getElementById('salesCount');
-  const pendingCountEl = document.getElementById('pendingCount');
   
   if (listingsCountEl) {
     listingsCountEl.textContent = listingsCount;
-  }
-  if (salesCountEl) {
-    salesCountEl.textContent = salesCount;
-  }
-  if (pendingCountEl) {
-    pendingCountEl.textContent = pendingCount;
   }
 }
 
@@ -372,14 +264,29 @@ function displayListings() {
     // Delete button handler
     const deleteBtn = card.querySelector('.delete-listing-btn');
     if (deleteBtn) {
-      deleteBtn.addEventListener('click', (e) => {
+      const handleDelete = (e) => {
         e.stopPropagation(); // Prevent card click
         removeListing(index);
-      });
+      };
+      
+      deleteBtn.addEventListener('click', handleDelete);
+      // Mobile touch support
+      deleteBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleDelete(e);
+      }, { passive: false });
     }
 
     // Card click handler for viewing details
-    card.addEventListener('click', () => showItemDetails(item, index));
+    const handleCardClick = () => showItemDetails(item, index);
+    card.addEventListener('click', handleCardClick);
+    // Mobile touch support
+    card.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      handleCardClick();
+    }, { passive: false });
+    
     listingsGrid.appendChild(card);
   });
 }
@@ -401,34 +308,46 @@ const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 const deleteConfirmModal = document.getElementById('deleteConfirmModal');
 
 if (confirmDeleteBtn) {
-  confirmDeleteBtn.addEventListener('click', () => {
+  const handleConfirmDelete = () => {
     if (pendingDeleteIndex !== null) {
       const items = getStoredItems();
       if (pendingDeleteIndex >= 0 && pendingDeleteIndex < items.length) {
         items.splice(pendingDeleteIndex, 1);
         localStorage.setItem('sellerListings', JSON.stringify(items));
-
-        // 🔥 IMPORTANT: sync deletion to server
-        syncToCloud(items);
         displayListings();
         updateStats();
-
       }
       pendingDeleteIndex = null;
     }
     if (deleteConfirmModal) {
       deleteConfirmModal.style.display = 'none';
     }
-  });
+  };
+  
+  confirmDeleteBtn.addEventListener('click', handleConfirmDelete);
+  // Mobile touch support
+  confirmDeleteBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleConfirmDelete();
+  }, { passive: false });
 }
 
 if (cancelDeleteBtn) {
-  cancelDeleteBtn.addEventListener('click', () => {
+  const handleCancelDelete = () => {
     pendingDeleteIndex = null;
     if (deleteConfirmModal) {
       deleteConfirmModal.style.display = 'none';
     }
-  });
+  };
+  
+  cancelDeleteBtn.addEventListener('click', handleCancelDelete);
+  // Mobile touch support
+  cancelDeleteBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleCancelDelete();
+  }, { passive: false });
 }
 
 // Close modal on overlay click
@@ -484,10 +403,17 @@ function showItemDetails(item, index) {
 // Close modal
 const closeModal = document.getElementById('closeModal');
 if (closeModal) {
-  closeModal.addEventListener('click', () => {
+  const closeDetailModal = () => {
     const modal = document.getElementById('detailModal');
     if (modal) modal.style.display = 'none';
-  });
+  };
+  
+  closeModal.addEventListener('click', closeDetailModal);
+  // Mobile touch support
+  closeModal.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    closeDetailModal();
+  }, { passive: false });
 }
 
 // Close modal on overlay click
@@ -524,7 +450,6 @@ async function handleFormSubmit(e) {
     const sellerUsername = localStorage.getItem('username') || 'Unknown Seller';
     const data = {
       id: Date.now(),
-      
       sellerUsername: sellerUsername,
       photos: photoData.filter(p => p !== null),
       fabricType: formData.get('fabricType'),
@@ -540,9 +465,9 @@ async function handleFormSubmit(e) {
       return;
     }
 
-    // Save to localStorage and sync to cloud - WAIT for it
-    console.log('📝 [FORM] Saving item and syncing to cloud...');
-    await saveItem(data);
+    // Save to localStorage
+    console.log('📝 [FORM] Saving item...');
+    saveItem(data);
     
     // Verify it was saved
     const savedItems = getStoredItems();
@@ -553,7 +478,7 @@ async function handleFormSubmit(e) {
       return;
     }
     
-    console.log('✅ [FORM] Item saved and synced successfully');
+    console.log('✅ [FORM] Item saved successfully');
     
     // Reset form and close
     closeUploadForm();
@@ -605,9 +530,11 @@ const storedUsername = localStorage.getItem('username');
 const profileNameEl = document.getElementById('profileName');
 const avatarEl = document.getElementById('avatar');
 if (storedUsername) {
-  profileNameEl.textContent = storedUsername;
-  const initial = storedUsername.trim().charAt(0).toUpperCase() || 'S';
-  avatarEl.textContent = initial;
+  if (profileNameEl) profileNameEl.textContent = storedUsername;
+  if (avatarEl) {
+    const initial = storedUsername.trim().charAt(0).toUpperCase() || 'S';
+    avatarEl.textContent = initial;
+  }
 }
 
 // =====================
@@ -688,18 +615,6 @@ themePills.forEach(pill => {
 });
 
 // =====================
-// Settings toggles (mock)
-// =====================
-const notifyToggle = document.getElementById('notifyToggle');
-if (notifyToggle) {
-  const saved = localStorage.getItem('sellerNotify');
-  if (saved !== null) notifyToggle.checked = saved === 'true';
-  notifyToggle.addEventListener('change', () => {
-    localStorage.setItem('sellerNotify', notifyToggle.checked ? 'true' : 'false');
-  });
-}
-
-// =====================
 // Profile Dropdown and Logout
 // =====================
 const profileDropdown = document.getElementById('profileDropdown');
@@ -711,11 +626,18 @@ const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
 
 // Toggle dropdown
 if (profileDropdown && profileDropdownMenu) {
-  profileDropdown.addEventListener('click', (e) => {
+  const toggleDropdown = (e) => {
     e.stopPropagation();
     const isVisible = profileDropdownMenu.style.display === 'block';
     profileDropdownMenu.style.display = isVisible ? 'none' : 'block';
-  });
+  };
+  
+  profileDropdown.addEventListener('click', toggleDropdown);
+  // Mobile touch support
+  profileDropdown.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    toggleDropdown(e);
+  }, { passive: false });
 
   // Close dropdown when clicking outside
   document.addEventListener('click', (e) => {
@@ -727,18 +649,26 @@ if (profileDropdown && profileDropdownMenu) {
 
 // Show logout confirmation
 if (logoutBtn) {
-  logoutBtn.addEventListener('click', (e) => {
+  const showLogoutModal = (e) => {
     e.stopPropagation();
-    profileDropdownMenu.style.display = 'none';
+    if (profileDropdownMenu) profileDropdownMenu.style.display = 'none';
     if (logoutConfirmModal) {
       logoutConfirmModal.style.display = 'flex';
     }
-  });
+  };
+  
+  logoutBtn.addEventListener('click', showLogoutModal);
+  // Mobile touch support
+  logoutBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showLogoutModal(e);
+  }, { passive: false });
 }
 
 // Handle logout confirmation
 if (confirmLogoutBtn) {
-  confirmLogoutBtn.addEventListener('click', () => {
+  const handleLogout = () => {
     // Clear all localStorage data
     localStorage.removeItem('username');
     localStorage.removeItem('email');
@@ -749,17 +679,34 @@ if (confirmLogoutBtn) {
     localStorage.removeItem('sellerNotify');
     
     // Redirect to main page
-    window.location.href = 'https://vastrado-otp-production.up.railway.app/';
-  });
+    window.location.href = '/';
+  };
+  
+  confirmLogoutBtn.addEventListener('click', handleLogout);
+  // Mobile touch support
+  confirmLogoutBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleLogout();
+  }, { passive: false });
 }
 
 // Cancel logout
 if (cancelLogoutBtn) {
-  cancelLogoutBtn.addEventListener('click', () => {
+  const hideLogoutModal = (e) => {
+    e.stopPropagation();
     if (logoutConfirmModal) {
       logoutConfirmModal.style.display = 'none';
     }
-  });
+  };
+  
+  cancelLogoutBtn.addEventListener('click', hideLogoutModal);
+  // Mobile touch support
+  cancelLogoutBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    hideLogoutModal(e);
+  }, { passive: false });
 }
 
 // Close logout modal on overlay click
@@ -770,513 +717,23 @@ if (logoutConfirmModal) {
     }
   });
 }
-// =====================
-// CHAT FUNCTIONALITY (SELLER - API BASED)
-// =====================
-
-let currentChatUser = null;
-// ================= CHAT + NOTIFICATIONS STORE =================
-let chats = {};
-let notifications = [];
-
-/* ===============================
-   LOAD CHAT LIST (SELLER)
-================================ */
-async function loadChatList() {
-  const el = document.getElementById("chatList");
-  if (!el) return;
-
-  const seller = localStorage.getItem("username");
-  if (!seller) return;
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/chat/seller/${seller}`);
-    const buyers = await res.json();
-
-    if (!buyers.length) {
-      el.innerHTML = `<p class="muted" style="padding:20px;text-align:center">No chats yet</p>`;
-      return;
-    }
-
-    el.innerHTML = "";
-    buyers.forEach((buyer) => {
-      const div = document.createElement("div");
-      div.className = "chat-list-item";
-      div.textContent = buyer;
-      div.onclick = () => loadChatMessages(buyer);
-      el.appendChild(div);
-    });
-
-  } catch (err) {
-    el.innerHTML = `<p class="muted">Chat service unavailable</p>`;
-  }
-}
-
-/* ===============================
-   LOAD CHAT MESSAGES
-================================ */
-async function loadChatMessages(buyer) {
-  currentChatUser = buyer;
-
-  const seller = localStorage.getItem("username");
-  const header = document.getElementById("chatHeader");
-  const messagesEl = document.getElementById("chatMessages");
-  const inputArea = document.getElementById("chatInputArea");
-
-  if (header) header.innerHTML = `<h4>Chat with ${buyer}</h4>`;
-  if (inputArea) inputArea.style.display = "flex";
-
-  try {
-    const res = await fetch(
-      `${API_BASE_URL}/chat/messages?buyer=${buyer}&seller=${seller}`
-    );
-    const messages = await res.json();
-
-    messagesEl.innerHTML = messages.map(m => `
-      <div class="chat-message ${m.from === seller ? "sent" : "received"}">
-        <p>${m.text}</p>
-        <span class="chat-time">${new Date(m.createdAt).toLocaleTimeString()}</span>
-      </div>
-    `).join("");
-
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-
-  } catch (err) {
-    messagesEl.innerHTML = `<p class="muted">Failed to load messages</p>`;
-  }
-}
-
-/* ===============================
-   SEND MESSAGE
-================================ */
-async function sendMessage() {
-  const input = document.getElementById("chatInput");
-  if (!input || !input.value.trim() || !currentChatUser) return;
-
-  const seller = localStorage.getItem("username");
-
-  await fetch(`${API_BASE_URL}/chat/send`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: seller,
-      to: currentChatUser,
-      text: input.value.trim()
-    })
-  });
-
-  input.value = "";
-  loadChatMessages(currentChatUser);
-}
-
-/* ===============================
-   INPUT HANDLERS
-================================ */
-const sendMessageBtn = document.getElementById("sendMessageBtn");
-const chatInput = document.getElementById("chatInput");
-
-if (sendMessageBtn) {
-  sendMessageBtn.onclick = sendMessage;
-  sendMessageBtn.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    sendMessage();
-  });
-}
-
-if (chatInput) {
-  chatInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMessage();
-  });
-}
-
-/* ===============================
-   INIT
-================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  loadChatList();
-});
-/* ===============================
-   NOTIFICATIONS (SELLER)
-================================ */
-async function loadNotifications() {
-  const notificationsList = document.getElementById("notificationsList");
-  const notifBadge = document.getElementById("notifBadge");
-  if (!notificationsList) return;
-
-  const seller = localStorage.getItem("username");
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/notifications/${seller}`);
-    const notifications = await res.json();
-
-    // Badge
-    if (notifBadge) {
-      if (notifications.length > 0) {
-        notifBadge.style.display = "inline-flex";
-        notifBadge.textContent = notifications.length;
-      } else {
-        notifBadge.style.display = "none";
-      }
-    }
-
-    if (notifications.length === 0) {
-      notificationsList.innerHTML =
-        `<p class="muted" style="padding:20px;text-align:center">No notifications</p>`;
-      return;
-    }
-
-    notificationsList.innerHTML = notifications.map(n => `
-      <div class="notification-item">
-        <div>
-          <strong>${n.from}</strong> sent you a message
-          <div class="notification-time">
-            ${new Date(n.timestamp).toLocaleTimeString()}
-          </div>
-        </div>
-        <button onclick="openNotificationChat('${n.from}', ${n.id})">
-          Chat
-        </button>
-      </div>
-    `).join("");
-
-  } catch (err) {
-    notificationsList.innerHTML =
-      `<p class="muted">Notification service unavailable</p>`;
-  }
-}
-
-async function openNotificationChat(buyer, notifId) {
-  await fetch(`${API_BASE_URL}/notifications/read`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: notifId })
-  });
-
-  openChatWith(buyer);
-  loadNotifications();
-}
 
 // =====================
-// Payment Functionality
+// Settings toggles
 // =====================
-let currentPaymentToReview = null;
-
-function getSellerPayments() {
-  const sellerUsername = localStorage.getItem('username');
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  return allPayments.filter(p => p.seller === sellerUsername);
-}
-
-function displaySellerPayments() {
-  const paymentsList = document.getElementById('sellerPaymentsList');
-  if (!paymentsList) return;
-  
-  const payments = getSellerPayments().filter(p => p.status === 'pending');
-  
-  if (payments.length === 0) {
-    paymentsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No pending payments.</p>';
-    return;
-  }
-  
-  // Sort by newest first
-  payments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
-  paymentsList.innerHTML = payments.map(payment => {
-    const mainImage = payment.product.photos && payment.product.photos.length > 0 ? payment.product.photos[0] : '';
-    
-    return `
-      <div class="payment-item pending" data-id="${payment.id}">
-        <img src="${mainImage}" alt="Product" class="payment-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'60\\' height=\\'60\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'60\\' height=\\'60\\'/%3E%3C/svg%3E'">
-        <div class="payment-item-info">
-          <p class="payment-item-title">${payment.product.fabricType || 'Item'}</p>
-          <p class="payment-item-buyer">Buyer: ${payment.buyer}</p>
-        </div>
-        <div class="payment-item-amount">₹${payment.amount}</div>
-        <span class="payment-status pending">Pending</span>
-      </div>
-    `;
-  }).join('');
-  
-  // Add click handlers
-  paymentsList.querySelectorAll('.payment-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const paymentId = parseInt(item.dataset.id);
-      showPaymentDetails(paymentId);
-    });
+const notifyToggle = document.getElementById('notifyToggle');
+if (notifyToggle) {
+  const saved = localStorage.getItem('sellerNotify');
+  if (saved !== null) notifyToggle.checked = saved === 'true';
+  notifyToggle.addEventListener('change', () => {
+    localStorage.setItem('sellerNotify', notifyToggle.checked ? 'true' : 'false');
   });
 }
-
-function showPaymentDetails(paymentId) {
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  const payment = allPayments.find(p => p.id === paymentId);
-  
-  if (!payment) return;
-  
-  currentPaymentToReview = payment;
-  
-  const modal = document.getElementById('paymentDetailModal');
-  const modalBody = document.getElementById('paymentDetailBody');
-  
-  if (!modal || !modalBody) return;
-  
-  const mainImage = payment.product.photos && payment.product.photos.length > 0 ? payment.product.photos[0] : '';
-  
-  modalBody.innerHTML = `
-    <h2>Payment Review</h2>
-    
-    <div class="payment-detail-section">
-      <h4>Buyer Information</h4>
-      <div class="buyer-info">
-        <div class="buyer-avatar">${payment.buyer.charAt(0).toUpperCase()}</div>
-        <span class="buyer-name">${payment.buyer}</span>
-      </div>
-    </div>
-    
-    <div class="payment-detail-section">
-      <h4>Product Details</h4>
-      <div class="payment-product-card">
-        <img src="${mainImage}" alt="Product" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'100\\' height=\\'100\\'/%3E%3C/svg%3E'">
-        <div class="payment-product-card-info">
-          <h5>${payment.product.fabricType || 'Item'}</h5>
-          <p>Condition: ${payment.product.clothCondition || 'N/A'}</p>
-          <p class="payment-amount-display">₹${payment.amount}</p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="payment-detail-section">
-      <h4>Payment Screenshot</h4>
-      <div class="payment-screenshot-container">
-        <img src="${payment.screenshot}" alt="Payment Screenshot" class="payment-screenshot">
-      </div>
-    </div>
-    
-    <div class="payment-actions">
-      <button class="confirm-payment-btn" id="confirmPaymentBtn">✓ Confirm Payment</button>
-      <button class="reject-payment-btn" id="rejectPaymentBtn">✕ Reject</button>
-    </div>
-  `;
-  
-  // Add button handlers (support both click and touch for mobile)
-  const confirmBtn = document.getElementById('confirmPaymentBtn');
-  const rejectBtn = document.getElementById('rejectPaymentBtn');
-  
-  if (confirmBtn) {
-    const handleConfirm = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      confirmPayment(paymentId);
-    };
-    confirmBtn.addEventListener('click', handleConfirm);
-    confirmBtn.addEventListener('touchend', handleConfirm);
-  }
-  
-  if (rejectBtn) {
-    const handleReject = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      rejectPayment(paymentId);
-    };
-    rejectBtn.addEventListener('click', handleReject);
-    rejectBtn.addEventListener('touchend', handleReject);
-  }
-  
-  modal.style.display = 'flex';
-}
-
-function confirmPayment(paymentId) {
-  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  
-  allPayments = allPayments.map(p => {
-    if (p.id === paymentId) {
-      return { ...p, status: 'confirmed', confirmedAt: new Date().toISOString() };
-    }
-    return p;
-  });
-  
-  localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
-  
-  // Close modal
-  const modal = document.getElementById('paymentDetailModal');
-  if (modal) modal.style.display = 'none';
-  
-  // Update display
-  displaySellerPayments();
-  updateStats();
-  
-  // Show success modal
-  showSuccessModal('Payment Confirmed!', 'The sale has been recorded successfully. Check your Orders tab for details.');
-}
-
-function rejectPayment(paymentId) {
-  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  
-  allPayments = allPayments.map(p => {
-    if (p.id === paymentId) {
-      return { ...p, status: 'rejected', rejectedAt: new Date().toISOString() };
-    }
-    return p;
-  });
-  
-  localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
-  
-  // Close modal
-  const modal = document.getElementById('paymentDetailModal');
-  if (modal) modal.style.display = 'none';
-  
-  // Update display
-  displaySellerPayments();
-  updateStats();
-  
-  // Show info message
-  showSuccessModal('Payment Rejected', 'The payment has been rejected and the buyer will be notified.');
-}
-
-// Success Modal functionality
-function showSuccessModal(title, message) {
-  const modal = document.getElementById('successModal');
-  const titleEl = document.getElementById('successTitle');
-  const messageEl = document.getElementById('successMessage');
-  
-  if (modal && titleEl && messageEl) {
-    titleEl.textContent = title;
-    messageEl.textContent = message;
-    modal.style.display = 'flex';
-  }
-}
-
-const successModal = document.getElementById('successModal');
-const successOkBtn = document.getElementById('successOkBtn');
-
-if (successOkBtn) {
-  successOkBtn.addEventListener('click', () => {
-    if (successModal) successModal.style.display = 'none';
-  });
-}
-
-if (successModal) {
-  successModal.addEventListener('click', (e) => {
-    if (e.target === successModal) {
-      successModal.style.display = 'none';
-    }
-  });
-}
-
-function displaySellerOrders() {
-  const ordersList = document.getElementById('sellerOrdersList');
-  if (!ordersList) return;
-  
-  const payments = getSellerPayments().filter(p => p.status === 'confirmed');
-  
-  if (payments.length === 0) {
-    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed sales yet.</p>';
-    return;
-  }
-  
-  // Sort by newest first
-  payments.sort((a, b) => new Date(b.confirmedAt || b.timestamp) - new Date(a.confirmedAt || a.timestamp));
-  
-  ordersList.innerHTML = payments.map(order => {
-    const mainImage = order.product.photos && order.product.photos.length > 0 ? order.product.photos[0] : '';
-    const date = new Date(order.confirmedAt || order.timestamp).toLocaleDateString();
-    
-    return `
-      <div class="order-item">
-        <img src="${mainImage}" alt="Product" class="order-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'80\\' height=\\'80\\'/%3E%3C/svg%3E'">
-        <div class="order-item-info">
-          <p class="order-item-title">${order.product.fabricType || 'Item'}</p>
-          <p class="order-item-buyer">Buyer: ${order.buyer}</p>
-          <p class="order-item-date">Sold: ${date}</p>
-          <span class="sale-confirmed-badge">✓ Sale Complete</span>
-        </div>
-        <div class="order-item-amount">₹${order.amount}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-// Payment detail modal close handlers
-const paymentDetailModal = document.getElementById('paymentDetailModal');
-const closePaymentDetailModal = document.getElementById('closePaymentDetailModal');
-
-if (closePaymentDetailModal) {
-  closePaymentDetailModal.addEventListener('click', () => {
-    if (paymentDetailModal) paymentDetailModal.style.display = 'none';
-    currentPaymentToReview = null;
-  });
-}
-
-if (paymentDetailModal) {
-  paymentDetailModal.addEventListener('click', (e) => {
-    if (e.target === paymentDetailModal) {
-      paymentDetailModal.style.display = 'none';
-      currentPaymentToReview = null;
-    }
-  });
-}
-
-// Check for payment updates
-let lastPaymentCount = 0;
-
-function checkPaymentUpdates() {
-  const paymentBadge = document.getElementById('paymentBadge');
-  const payments = getSellerPayments();
-  const pendingCount = payments.filter(p => p.status === 'pending').length;
-  
-  if (paymentBadge) {
-    if (pendingCount > 0) {
-      paymentBadge.style.display = 'inline-flex';
-      paymentBadge.textContent = pendingCount;
-    } else {
-      paymentBadge.style.display = 'none';
-    }
-  }
-  
-  // If payment count changed, refresh the payments list if it's visible
-  if (pendingCount !== lastPaymentCount) {
-    lastPaymentCount = pendingCount;
-    
-    // Refresh payments list if payments section is visible
-    const paymentsSection = document.querySelector('.content-section[data-section="payments"]');
-    if (paymentsSection && paymentsSection.style.display !== 'none') {
-      displaySellerPayments();
-    }
-    
-    // Also update stats
-    updateStats();
-  }
-}
-
-// Check payment updates every 500ms for faster response
-setInterval(checkPaymentUpdates, 500);
 
 // =====================
 // Initialize: show profile section by default and load listings
 // =====================
-// Sync listings from cloud on startup
-async function syncListingsFromCloud() {
-  const cloudItems = await getItemsFromCloud();
-  if (cloudItems && cloudItems.length > 0) {
-    // Merge with local items (avoid duplicates)
-    const localItems = getStoredItems();
-    const merged = [...localItems];
-    
-    cloudItems.forEach(cloudItem => {
-      if (!merged.some(item => item.id === cloudItem.id)) {
-        merged.push(cloudItem);
-      }
-    });
-    
-    // Save merged list
-    localStorage.setItem('sellerListings', JSON.stringify(merged));
-    displayListings();
-    updateStats();
-    return true;
-  }
-  return false;
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 [INIT] Seller panel initialized');
   const profileSection = document.querySelector('.content-section[data-section="profile"]');
   if (profileSection) {
@@ -1285,37 +742,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     profileSection.style.gap = '16px';
   }
   
-  // Get current listings from localStorage FIRST
+  // Get current listings from localStorage
   const localItems = getStoredItems();
   console.log('🚀 [INIT] Local items count:', localItems.length);
-  
-  // CRITICAL: Sync ALL local items to cloud API on startup
-  // This ensures any listings created get synced to the API
-  if (localItems.length > 0) {
-    console.log('🚀 [INIT] Syncing ALL local items to cloud API...');
-    const syncSuccess = await syncToCloud(localItems);
-    if (syncSuccess) {
-      console.log('🚀 [INIT] ✅ Successfully synced all items to API');
-    } else {
-      console.log('🚀 [INIT] ⚠️ Failed to sync to API - check console for errors');
-    }
-  } else {
-    console.log('🚀 [INIT] No local items to sync');
-  }
-  
-  // Then sync from cloud (to get items from other devices)
-  await syncListingsFromCloud();
   
   // Update stats
   updateStats();
   
   // Load and display listings
   displayListings();
-  
-  // Load chat list
-  loadChatList();
-
-  // Check for payment updates
-  checkPaymentUpdates();
 });
-
