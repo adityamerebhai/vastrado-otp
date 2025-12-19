@@ -130,9 +130,13 @@ app.get("/api/chat/messages", (req, res) => {
 
 // 👉 Send message
 app.post("/api/chat/send", (req, res) => {
-  const { from, to, text } = req.body;
+  // Support both formats: {from, to} or {buyer, seller}
+  const from = req.body.from || req.body.buyer;
+  const to = req.body.to || req.body.seller;
+  const text = req.body.text;
+  
   if (!from || !to || !text) {
-    return res.status(400).json({ success: false });
+    return res.status(400).json({ success: false, error: "Missing required fields" });
   }
 
   const key = [from, to].sort().join("_");

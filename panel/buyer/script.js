@@ -589,33 +589,42 @@ async function loadChatList() {
   const el = document.getElementById("chatList");
   if (!el) return;
   
-  
   const buyer = localStorage.getItem("username");
-  
+  if (!buyer) {
+    el.innerHTML = '<p class="muted">Please log in to view chats</p>';
+    return;
+  }
   
   try {
-  const res = await fetch(`${API_BASE_URL}/chat/buyer/${buyer}`);
-  const users = await res.json();
-  
-  
-  if (!users.length) {
-  el.innerHTML = '<p class="muted" style="padding:20px;text-align:center">No chats yet</p>';
-  return;
-  }
-  
-  
-  el.innerHTML = "";
-  users.forEach((seller) => {
-  const div = document.createElement("div");
-  div.className = "chat-list-item";
-  div.textContent = seller;
-  div.onclick = () => loadChatMessages(seller);
-  el.appendChild(div);
-  });
+    const res = await fetch(`${API_BASE_URL}/chat/buyer/${encodeURIComponent(buyer)}`);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const users = await res.json();
+    
+    if (!users || !users.length) {
+      el.innerHTML = '<p class="muted" style="padding:20px;text-align:center">No chats yet</p>';
+      return;
+    }
+    
+    el.innerHTML = "";
+    users.forEach((seller) => {
+      const div = document.createElement("div");
+      div.className = "chat-list-item";
+      div.textContent = seller;
+      div.onclick = () => loadChatMessages(seller);
+      // Mobile touch support
+      div.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        loadChatMessages(seller);
+      }, { passive: false });
+      el.appendChild(div);
+    });
   } catch (e) {
-  el.innerHTML = '<p class="muted">Chat service unavailable</p>';
+    console.error("Failed to load chat list:", e);
+    el.innerHTML = '<p class="muted">Chat service unavailable. Please try again later.</p>';
   }
-  }
+}
   
   
   /* ===============================
@@ -636,21 +645,33 @@ async function loadChatList() {
   
   
   try {
-  const res = await fetch(`${API_BASE_URL}/chat/messages?buyer=${buyer}&seller=${seller}`);
-  const messages = await res.json();
-  
-  
-  messagesEl.innerHTML = messages.map(m => `
-  <div class="chat-message ${m.from === buyer ? 'sent' : 'received'}">
-  <p>${m.text}</p>
-  <span class="chat-time">${new Date(m.createdAt).toLocaleTimeString()}</span>
-  </div>
-  `).join("");
-  
-  
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+    const res = await fetch(`${API_BASE_URL}/chat/messages?buyer=${encodeURIComponent(buyer)}&seller=${encodeURIComponent(seller)}`);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const messages = await res.json();
+    
+    if (messagesEl) {
+      if (!messages || messages.length === 0) {
+        messagesEl.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No messages yet. Start the conversation!</p>';
+      } else {
+        messagesEl.innerHTML = messages.map(m => `
+          <div class="chat-message ${m.from === buyer ? 'sent' : 'received'}">
+            <p>${m.text}</p>
+            <span class="chat-time">${new Date(m.createdAt).toLocaleTimeString()}</span>
+          </div>
+        `).join("");
+        // Scroll to bottom after a short delay to ensure DOM is updated
+        setTimeout(() => {
+          if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
+        }, 100);
+      }
+    }
   } catch (e) {
-  messagesEl.innerHTML = '<p class="muted">Failed to load messages</p>';
+    console.error("Failed to load messages:", e);
+    if (messagesEl) {
+      messagesEl.innerHTML = '<p class="muted">Failed to load messages. Please refresh.</p>';
+    }
   }
   }
   
@@ -662,23 +683,42 @@ async function loadChatList() {
   const chatInput = document.getElementById("chatInput");
   
   async function sendMessage() {
-    if (!currentChatUser || !chatInput || !chatInput.value.trim()) return;
+    if (!currentChatUser || !chatInput || !chatInput.value.trim()) {
+      console.warn("Cannot send: missing chat user or empty message");
+      return;
+    }
   
     const buyer = localStorage.getItem("username");
+    if (!buyer) {
+      console.error("Buyer username not found");
+      return;
+    }
+    
     const seller = currentChatUser;
     const text = chatInput.value.trim();
   
     try {
-      await fetch(`${API_BASE_URL}/chat/send`, {
+      const response = await fetch(`${API_BASE_URL}/chat/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ buyer, seller, text })
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error("Server returned error");
+      }
   
       chatInput.value = "";
-      loadChatMessages(seller);
+      // Reload messages to show the new one
+      await loadChatMessages(seller);
     } catch (err) {
       console.error("❌ Failed to send message", err);
+      alert("Failed to send message. Please try again.");
     }
   }  
 
