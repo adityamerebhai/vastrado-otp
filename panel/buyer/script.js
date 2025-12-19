@@ -1008,7 +1008,6 @@ function checkProductUpdates() {
 }
 
 // Check for product updates every second
-setInterval(checkProductUpdates, 1000);
 
 // Sync from cloud every 2 seconds
 window.__productSyncInterval = setInterval(async () => {
