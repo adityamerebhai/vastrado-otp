@@ -854,13 +854,23 @@ if (refreshProducts) {
   refreshProducts.onclick = async () => {
     refreshProducts.textContent = "⏳ Syncing...";
     refreshProducts.disabled = true;
-    await syncProductsFromCloud();
-    displayProducts();
-    refreshProducts.textContent = "✓ Refreshed!";
+    try {
+      const success = await syncProductsFromCloud();
+      displayProducts();
+      checkProductUpdates();
+      if (success) {
+        refreshProducts.textContent = "✓ Refreshed!";
+      } else {
+        refreshProducts.textContent = "⚠️ Check connection";
+      }
+    } catch (err) {
+      console.error('Refresh error:', err);
+      refreshProducts.textContent = "❌ Error";
+    }
     setTimeout(() => {
       refreshProducts.textContent = "🔄 Refresh";
       refreshProducts.disabled = false;
-    }, 1500);
+    }, 2000);
   };
 }
 
@@ -997,17 +1007,27 @@ function checkProductUpdates() {
   }
 }
 
+// Check for product updates every second
 setInterval(checkProductUpdates, 1000);
+
+// Sync from cloud every 2 seconds
 window.__productSyncInterval = setInterval(async () => {
-  await syncProductsFromCloud();
-  checkProductUpdates();
+  try {
+    await syncProductsFromCloud();
+    checkProductUpdates();
+  } catch (err) {
+    // Silently handle errors, don't break the interval
+    console.warn('Sync interval error (will retry):', err.message);
+  }
 }, 2000);
 
-// Initial sync on page load
+// Initial sync on page load - do it immediately
 (async () => {
+  console.log('🚀 [INIT] Buyer panel initializing...');
   await syncProductsFromCloud();
   displayProducts();
   checkProductUpdates();
+  console.log('✅ [INIT] Buyer panel initialized');
 })();
 
 /* ===============================

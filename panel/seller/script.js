@@ -281,30 +281,34 @@ async function getItemsFromCloud() {
   return getStoredItems();
 }
 
-function saveItem(item) {
+async function saveItem(item) {
   console.log('💾 [SAVE] saveItem() called with:', item);
   const items = getStoredItems();
   console.log('💾 [SAVE] Current items count:', items.length);
   items.push(item);
   console.log('💾 [SAVE] New items count:', items.length);
   
-  // Save to localStorage
+  // Save to localStorage first
   localStorage.setItem('sellerListings', JSON.stringify(items));
   console.log('💾 [SAVE] Saved to localStorage');
   
-  // Sync ALL items to cloud (async, don't wait)
+  // Sync ALL items to cloud - WAIT for it to complete
   console.log('💾 [SAVE] Syncing ALL items to cloud...');
-  syncToCloud(items).then((success) => {
+  try {
+    const success = await syncToCloud(items);
     if (success) {
       console.log('💾 [SAVE] ✅ Successfully synced all items to API');
     } else {
-      console.log('💾 [SAVE] ⚠️ Failed to sync to API, but saved locally');
+      console.error('💾 [SAVE] ⚠️ Failed to sync to API, but saved locally');
+      console.error('💾 [SAVE] Check network connection and server logs');
     }
-  }).catch((error) => {
+  } catch (error) {
     console.error('💾 [SAVE] ❌ Error syncing to cloud:', error);
-  });
+    console.error('💾 [SAVE] Error details:', error.message);
+  }
   
   updateStats();
+  displayListings();
 }
 
 // Update stats cards
@@ -497,7 +501,7 @@ if (modalOverlay) {
 }
 
 // Form submission handler
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
   if (e) e.preventDefault();
   
   if (!uploadForm) return;
@@ -515,7 +519,8 @@ function handleFormSubmit(e) {
     });
   });
 
-  Promise.all(filePromises).then(photoData => {
+  try {
+    const photoData = await Promise.all(filePromises);
     const sellerUsername = localStorage.getItem('username') || 'Unknown Seller';
     const data = {
       id: Date.now(),
@@ -535,42 +540,42 @@ function handleFormSubmit(e) {
       return;
     }
 
-    // Save to localStorage
-    try {
-      saveItem(data);
-      
-      // Verify it was saved
-      const savedItems = getStoredItems();
-      const wasSaved = savedItems.some(item => item.id === data.id);
-      
-      if (!wasSaved) {
-        console.error('Failed to save item to localStorage');
-        return;
-      }
-      
-      // Reset form and close
-      closeUploadForm();
-      
-      // Hide upload section
-      const uploadSection = document.querySelector('.content-section[data-section="upload"]');
-      if (uploadSection) {
-        uploadSection.style.display = 'none';
-      }
-      
-      // Switch to listings section
-      const listingsMenuItem = document.querySelector('.menu-item[data-section="listings"]');
-      if (listingsMenuItem) {
-        listingsMenuItem.click();
-      }
-      
-      // Display listings
-      displayListings();
-    } catch (error) {
-      console.error('Error saving item:', error);
+    // Save to localStorage and sync to cloud - WAIT for it
+    console.log('📝 [FORM] Saving item and syncing to cloud...');
+    await saveItem(data);
+    
+    // Verify it was saved
+    const savedItems = getStoredItems();
+    const wasSaved = savedItems.some(item => item.id === data.id);
+    
+    if (!wasSaved) {
+      console.error('❌ Failed to save item to localStorage');
+      return;
     }
-  }).catch(error => {
-    console.error('Error processing files:', error);
-  });
+    
+    console.log('✅ [FORM] Item saved and synced successfully');
+    
+    // Reset form and close
+    closeUploadForm();
+    
+    // Hide upload section
+    const uploadSection = document.querySelector('.content-section[data-section="upload"]');
+    if (uploadSection) {
+      uploadSection.style.display = 'none';
+    }
+    
+    // Switch to listings section
+    const listingsMenuItem = document.querySelector('.menu-item[data-section="listings"]');
+    if (listingsMenuItem) {
+      listingsMenuItem.click();
+    }
+    
+    // Display listings
+    displayListings();
+  } catch (error) {
+    console.error('❌ Error saving item:', error);
+    console.error('❌ Error details:', error.message, error.stack);
+  }
 }
 
 // Form submission
