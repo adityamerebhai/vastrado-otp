@@ -144,23 +144,33 @@ async function syncProductsFromCloud() {
   try {
     const url = `${API_BASE_URL}/listings`;
     console.log(`🔄 Fetching products from: ${url}`);
+    
     const res = await fetch(url, { 
+      method: 'GET',
       cache: "no-cache",
       headers: {
         'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
+        'Pragma': 'no-cache',
+        'Accept': 'application/json'
+      },
+      mode: 'cors',
+      credentials: 'omit'
     });
+    
     if (!res.ok) {
       console.warn(`❌ Failed to fetch listings: ${res.status} ${res.statusText}`);
+      // Don't break the loop, just return false
       return false;
     }
+    
     const data = await res.json();
     console.log(`📦 Received ${Array.isArray(data) ? data.length : 0} products from server`);
+    
     if (Array.isArray(data)) {
       const oldData = localStorage.getItem("sellerListings");
       const oldProducts = oldData ? JSON.parse(oldData) : [];
       localStorage.setItem("sellerListings", JSON.stringify(data));
+      
       // If data changed, trigger display update
       if (oldData !== JSON.stringify(data)) {
         console.log(`✅ Synced ${data.length} products from server (was ${oldProducts.length})`);
@@ -176,12 +186,21 @@ async function syncProductsFromCloud() {
       return true;
     } else {
       console.warn("❌ Server returned non-array data:", data);
+      return false;
     }
   } catch (err) {
-    console.error("❌ Failed to sync products from cloud:", err);
-    // Cloud sync failed, using localStorage
+    // Network errors are expected sometimes, don't spam the console
+    if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      // Only log network errors occasionally to avoid spam
+      if (Math.random() < 0.1) { // Log 10% of network errors
+        console.warn("⚠️ Network error fetching products (this is normal if server is unreachable)");
+      }
+    } else {
+      console.error("❌ Failed to sync products from cloud:", err);
+    }
+    // Continue using localStorage data, don't break the sync loop
+    return false;
   }
-  return false;
 }
 
 /* ===============================
