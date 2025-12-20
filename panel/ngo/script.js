@@ -133,9 +133,40 @@ function getStoredItems() {
   return [];
 }
 
+// Get available items (excluding ordered items)
+function getAvailableItems() {
+  const allItems = getStoredItems();
+  const orders = getStoredOrders();
+  
+  // Get all donation IDs that have been ordered
+  const orderedIds = new Set();
+  orders.forEach(order => {
+    // Check donationId first (this is the ID of the original donation item)
+    if (order.donationId !== undefined && order.donationId !== null) {
+      orderedIds.add(order.donationId.toString());
+    }
+    // Also check order.id as fallback (in case donationId wasn't set properly)
+    if (order.id !== undefined && order.id !== null && !order.donationId) {
+      orderedIds.add(order.id.toString());
+    }
+  });
+  
+  // Filter out items that have been ordered
+  return allItems.filter(item => {
+    // Match by item.id if it exists (primary matching method)
+    if (item.id !== undefined && item.id !== null) {
+      return !orderedIds.has(item.id.toString());
+    }
+    // If item has no ID, we can't reliably match it, so include it
+    // (This handles edge cases where items don't have IDs)
+    // Note: Items from donation panel should always have IDs
+    return true;
+  });
+}
+
 // Update stats cards
 function updateStats() {
-  const items = getStoredItems();
+  const items = getAvailableItems(); // Use available items instead of all items
   const listingsCount = items.length;
   
   // Count items by condition
@@ -161,7 +192,7 @@ function displayListings() {
   const listingsGrid = document.getElementById('listingsGrid');
   if (!listingsGrid) return;
 
-  const items = getStoredItems();
+  const items = getAvailableItems(); // Use available items (excluding ordered ones)
   listingsGrid.innerHTML = '';
 
   if (items.length === 0) {
@@ -550,6 +581,10 @@ function confirmOrder(item, index) {
       successModal.style.display = 'none';
     }, 2000);
   }
+  
+  // Refresh listings to remove the ordered item
+  displayListings();
+  updateStats();
   
   // Update orders display if orders section is visible
   const ordersSection = document.querySelector('.content-section[data-section="orders"]');
