@@ -301,7 +301,7 @@ function displayProducts() {
     const liked = wishlist.some((w) => w.id === p.id);
 
     card.innerHTML = `
-      <button class="wishlist-btn ${liked ? "active" : ""}" data-id="${p.id}"><img src="images/heart.png" alt="Wishlist" class="btn-icon"></button>
+      <button class="wishlist-btn ${liked ? "active" : ""}" data-id="${p.id}"><img src="images/wishlist.png" alt="Wishlist" class="btn-icon"></button>
       <div class="product-image">
         <img src="${p.photos?.[0] || ""}" alt="${p.fabricType || "Product"}" />
       </div>
@@ -720,7 +720,7 @@ function displayWishlist() {
     card.className = "product-card";
     
     card.innerHTML = `
-      <button class="wishlist-btn active" data-product-id="${product.id}"><img src="images/heart.png" alt="Wishlist" class="btn-icon"></button>
+      <button class="wishlist-btn active" data-product-id="${product.id}"><img src="images/wishlist.png" alt="Wishlist" class="btn-icon"></button>
       <div class="product-image">
         <img src="${product.photos?.[0] || ""}" alt="${product.fabricType || "Product"}" />
       </div>
