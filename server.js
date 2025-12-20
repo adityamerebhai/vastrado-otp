@@ -129,6 +129,15 @@ app.post("/api/listings", (req, res) => {
 // 🔥 Chat store (FIXED)
 let chats = {}; 
 // key: buyer_seller → [{ from, text, createdAt }]
+  
+
+// ================= NGO ORDERS =================
+let ngoOrders = [];
+
+app.get("/api/ngo-orders", (req, res) => {
+  res.json(ngoOrders);
+});
+
 
 // 👉 Buyer chat list
 app.get("/api/chat/buyer/:buyer", (req, res) => {
