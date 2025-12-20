@@ -10,14 +10,9 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
     const targetSection = btn.dataset.section;
     document.querySelectorAll('.content-section').forEach((section) => {
       if (section.dataset.section === targetSection) {
-        // Chat section needs 'block' display, others use 'flex'
-        if (targetSection === 'chat') {
-          section.style.display = 'block';
-        } else {
-          section.style.display = 'flex';
-          section.style.flexDirection = 'column';
-          section.style.gap = '16px';
-        }
+        section.style.display = 'flex';
+        section.style.flexDirection = 'column';
+        section.style.gap = '16px';
         
         // Refresh listings when listings section is shown
         if (targetSection === 'listings') {
@@ -29,23 +24,9 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
           updateStats();
         }
         
-        // Load chat list when chat section is shown
-        if (targetSection === 'chat') {
-          // Load chat list after a small delay to ensure DOM is ready
-          setTimeout(() => {
-            console.log('💬 Loading chat list for donation...');
-            loadChatList();
-          }, 100);
-        }
-        
         // Load notifications when notifications section is shown
         if (targetSection === 'notifications') {
           displayNotifications();
-        }
-        
-        // Load payments when payments section is shown
-        if (targetSection === 'payments') {
-          displayDonationPayments();
         }
         
         // Load orders when orders section is shown
@@ -373,7 +354,6 @@ function displayListings() {
       </div>
       <div class="listing-info">
         <p class="listing-fabric"><strong>Fabric:</strong> ${item.fabricType || 'N/A'}</p>
-        <p class="listing-cost"><strong>Cost:</strong> ₹${item.expectedCost || '0'}</p>
         <p class="listing-condition"><strong>Condition:</strong> ${item.clothCondition || 'N/A'}</p>
       </div>
     `;
@@ -473,10 +453,6 @@ function showItemDetails(item, index) {
         <span class="detail-value">${item.fabricType || 'N/A'}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Expected Cost:</span>
-        <span class="detail-value">₹${item.expectedCost || '0'}</span>
-      </div>
-      <div class="detail-row">
         <span class="detail-label">Condition:</span>
         <span class="detail-value">${item.clothCondition || 'N/A'}</span>
       </div>
@@ -537,14 +513,13 @@ async function handleFormSubmit(e) {
       sellerUsername: sellerUsername,
       photos: photoData.filter(p => p !== null),
       fabricType: formData.get('fabricType'),
-      expectedCost: formData.get('expectedCost'),
       clothCondition: formData.get('clothCondition'),
       phoneNumber: formData.get('phoneNumber'),
       dateAdded: new Date().toISOString()
     };
 
     // Validate data before saving
-    if (!data.fabricType || !data.expectedCost || !data.clothCondition) {
+    if (!data.fabricType || !data.clothCondition) {
       console.error('Missing required fields');
       return;
     }
@@ -779,212 +754,13 @@ if (logoutConfirmModal) {
     }
   });
 }
-// =====================
-// CHAT FUNCTIONALITY (SELLER - API BASED)
-// =====================
-
-let currentChatUser = null;
-// ================= CHAT + NOTIFICATIONS STORE =================
-let chats = {};
-let notifications = [];
-
 /* ===============================
-   LOAD CHAT LIST (SELLER)
+   NOTIFICATIONS (DONATION)
 ================================ */
-async function loadChatList() {
-  console.log('💬 [CHAT] loadChatList() called');
-  const el = document.getElementById("chatList");
-  if (!el) {
-    console.error('💬 [CHAT] chatList element not found!');
-    return;
-  }
-  console.log('💬 [CHAT] chatList element found');
-
-  const seller = localStorage.getItem("username");
-  if (!seller) {
-    console.warn('💬 [CHAT] No seller username found');
-    el.innerHTML = '<p class="muted">Please log in to view chats</p>';
-    return;
-  }
-  console.log('💬 [CHAT] Seller username:', seller);
-
-  try {
-    const url = `${API_BASE_URL}/chat/seller/${encodeURIComponent(seller)}`;
-    console.log('💬 [CHAT] Fetching from:', url);
-    
-    const res = await fetch(url);
-    
-    if (!res.ok) {
-      console.error(`💬 [CHAT] HTTP error! status: ${res.status}`);
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    
-    const buyers = await res.json();
-    console.log('💬 [CHAT] Received buyers:', buyers);
-
-    if (!buyers || !buyers.length) {
-      console.log('💬 [CHAT] No buyers found');
-      el.innerHTML = `<p class="muted" style="padding:20px;text-align:center">No chats yet. Start a conversation from a buyer's message!</p>`;
-      return;
-    }
-
-    console.log(`💬 [CHAT] Displaying ${buyers.length} buyers`);
-    el.innerHTML = "";
-    buyers.forEach((buyer) => {
-      const div = document.createElement("div");
-      div.className = "chat-list-item";
-      div.textContent = buyer;
-      div.onclick = () => {
-        console.log('💬 [CHAT] Opening chat with:', buyer);
-        loadChatMessages(buyer);
-      };
-      // Mobile touch support
-      div.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        console.log('💬 [CHAT] Touch: Opening chat with:', buyer);
-        loadChatMessages(buyer);
-      }, { passive: false });
-      el.appendChild(div);
-    });
-    console.log('💬 [CHAT] Chat list loaded successfully');
-
-  } catch (err) {
-    console.error("💬 [CHAT] Failed to load chat list:", err);
-    el.innerHTML = `<p class="muted" style="padding:20px;text-align:center">Chat service unavailable. Please try again later.<br><small>Error: ${err.message}</small></p>`;
-  }
+async function displayNotifications() {
+  await loadNotifications();
 }
 
-/* ===============================
-   LOAD CHAT MESSAGES
-================================ */
-async function loadChatMessages(buyer) {
-  currentChatUser = buyer;
-
-  const seller = localStorage.getItem("username");
-  if (!seller) {
-    console.error("Seller username not found");
-    return;
-  }
-
-  const header = document.getElementById("chatHeader");
-  const messagesEl = document.getElementById("chatMessages");
-  const inputArea = document.getElementById("chatInputArea");
-
-  if (header) header.innerHTML = `<h4>Chat with ${buyer}</h4>`;
-  if (inputArea) inputArea.style.display = "flex";
-
-  try {
-    const res = await fetch(
-      `${API_BASE_URL}/chat/messages?buyer=${encodeURIComponent(buyer)}&seller=${encodeURIComponent(seller)}`
-    );
-    
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    
-    const messages = await res.json();
-
-    if (messagesEl) {
-      if (!messages || messages.length === 0) {
-        messagesEl.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No messages yet. Start the conversation!</p>';
-      } else {
-        messagesEl.innerHTML = messages.map(m => `
-          <div class="chat-message ${m.from === seller ? "sent" : "received"}">
-            <p>${m.text}</p>
-            <span class="chat-time">${new Date(m.createdAt).toLocaleTimeString()}</span>
-          </div>
-        `).join("");
-        
-        // Scroll to bottom after a short delay to ensure DOM is updated
-        setTimeout(() => {
-          if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
-        }, 100);
-      }
-    }
-
-  } catch (err) {
-    console.error("Failed to load messages:", err);
-    if (messagesEl) {
-      messagesEl.innerHTML = `<p class="muted">Failed to load messages. Please refresh.</p>`;
-    }
-  }
-}
-
-/* ===============================
-   SEND MESSAGE
-================================ */
-async function sendMessage() {
-  const input = document.getElementById("chatInput");
-  if (!input || !input.value.trim() || !currentChatUser) return;
-
-  const seller = localStorage.getItem("username");
-  if (!seller) {
-    console.error("Seller username not found");
-    return;
-  }
-
-  const text = input.value.trim();
-  input.value = ""; // Clear input immediately for better UX
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/chat/send`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: seller,
-        to: currentChatUser,
-        text: text
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error("Server returned error");
-    }
-
-    // Reload messages to show the new one
-    await loadChatMessages(currentChatUser);
-  } catch (err) {
-    console.error("❌ Failed to send message", err);
-    alert("Failed to send message. Please try again.");
-    // Restore the message text if sending failed
-    input.value = text;
-  }
-}
-
-/* ===============================
-   INPUT HANDLERS
-================================ */
-const sendMessageBtn = document.getElementById("sendMessageBtn");
-const chatInput = document.getElementById("chatInput");
-
-if (sendMessageBtn) {
-  sendMessageBtn.onclick = sendMessage;
-  sendMessageBtn.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    sendMessage();
-  });
-}
-
-if (chatInput) {
-  chatInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMessage();
-  });
-}
-
-/* ===============================
-   INIT
-================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  loadChatList();
-});
-/* ===============================
-   NOTIFICATIONS (SELLER)
-================================ */
 async function loadNotifications() {
   const notificationsList = document.getElementById("notificationsList");
   const notifBadge = document.getElementById("notifBadge");
@@ -1020,9 +796,6 @@ async function loadNotifications() {
             ${new Date(n.timestamp).toLocaleTimeString()}
           </div>
         </div>
-        <button onclick="openNotificationChat('${n.from}', ${n.id})">
-          Chat
-        </button>
       </div>
     `).join("");
 
@@ -1032,325 +805,9 @@ async function loadNotifications() {
   }
 }
 
-async function openNotificationChat(buyer, notifId) {
-  await fetch(`${API_BASE_URL}/notifications/read`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: notifId })
-  });
-
-  openChatWith(buyer);
-  loadNotifications();
-}
-
 // =====================
-// Payment Functionality
+// Orders Functionality
 // =====================
-let currentPaymentToReview = null;
-
-// Get payments from localStorage only (no server fetch)
-function getDonationPayments() {
-  const sellerUsername = localStorage.getItem('username');
-  if (!sellerUsername) return [];
-  
-  // Only use localStorage - no automatic server fetch
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  return allPayments.filter(p => p.seller === sellerUsername);
-}
-
-// Fetch payments from server (only called when refresh button is clicked)
-async function fetchDonationPaymentsFromServer() {
-  const sellerUsername = localStorage.getItem('username');
-  if (!sellerUsername) return [];
-  
-  try {
-    // Fetch payments from server API (only when refresh button is clicked)
-    const res = await fetch(`${API_BASE_URL}/payments?seller=${encodeURIComponent(sellerUsername)}`, {
-      cache: 'no-cache',
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
-    });
-    if (res.ok) {
-      const serverPayments = await res.json();
-      // Also get from localStorage as fallback
-      const localPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-      const localFiltered = localPayments.filter(p => p.seller === sellerUsername);
-      
-      // Merge and deduplicate (server takes priority)
-      const allPayments = [...serverPayments];
-      localFiltered.forEach(local => {
-        if (!allPayments.find(p => p.id === local.id)) {
-          allPayments.push(local);
-        }
-      });
-      
-      // Update localStorage with merged data
-      localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
-      
-      return allPayments;
-    }
-  } catch (err) {
-    // Silent error - don't log unless it's a critical issue
-    // console.error('💳 Failed to fetch payments from server:', err);
-  }
-  
-  // Fallback to localStorage only
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  return allPayments.filter(p => p.seller === sellerUsername);
-}
-
-function displayDonationPayments() {
-  const paymentsList = document.getElementById('donationPaymentsList');
-  if (!paymentsList) return;
-  
-  // Get payments from localStorage only (no server fetch)
-  const allPayments = getDonationPayments();
-  const payments = allPayments.filter(p => p.status === 'pending');
-  
-  if (payments.length === 0) {
-    paymentsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No pending payments.</p>';
-    return;
-  }
-  
-  // Sort by newest first
-  payments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
-  paymentsList.innerHTML = payments.map(payment => {
-    // Handle both old format (payment.product) and new format (direct properties)
-    const product = payment.product || payment;
-    const mainImage = product.photos && product.photos.length > 0 ? product.photos[0] : '';
-    const productName = product.fabricType || payment.productName || 'Item';
-    
-    return `
-      <div class="payment-item pending" data-id="${payment.id}">
-        <img src="${mainImage}" alt="Product" class="payment-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'60\\' height=\\'60\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'60\\' height=\\'60\\'/%3E%3C/svg%3E'">
-        <div class="payment-item-info">
-          <p class="payment-item-title">${productName}</p>
-          <p class="payment-item-buyer">Buyer: ${payment.buyer}</p>
-        </div>
-        <div class="payment-item-amount">₹${payment.amount}</div>
-        <span class="payment-status pending">Pending</span>
-      </div>
-    `;
-  }).join('');
-  
-  // Add click handlers
-  paymentsList.querySelectorAll('.payment-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const paymentId = parseInt(item.dataset.id);
-      showPaymentDetails(paymentId);
-    });
-  });
-}
-
-function showPaymentDetails(paymentId) {
-  // Get payment data from localStorage (no server fetch)
-  const allPayments = getDonationPayments();
-  const payment = allPayments.find(p => p.id === paymentId);
-  
-  if (!payment) {
-    console.error('Payment not found:', paymentId);
-    return;
-  }
-  
-  currentPaymentToReview = payment;
-  
-  const modal = document.getElementById('paymentDetailModal');
-  const modalBody = document.getElementById('paymentDetailBody');
-  
-  if (!modal || !modalBody) return;
-  
-  // Handle both old format (payment.product) and new format (direct properties)
-  const product = payment.product || payment;
-  const mainImage = product.photos && product.photos.length > 0 ? product.photos[0] : '';
-  const productName = product.fabricType || payment.productName || 'Item';
-  const productCondition = product.clothCondition || 'N/A';
-  
-  modalBody.innerHTML = `
-    <h2>Payment Review</h2>
-    
-    <div class="payment-detail-section">
-      <h4>Buyer Information</h4>
-      <div class="buyer-info">
-        <div class="buyer-avatar">${payment.buyer.charAt(0).toUpperCase()}</div>
-        <span class="buyer-name">${payment.buyer}</span>
-      </div>
-    </div>
-    
-    <div class="payment-detail-section">
-      <h4>Product Details</h4>
-      <div class="payment-product-card">
-        <img src="${mainImage}" alt="Product" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'100\\' height=\\'100\\'/%3E%3C/svg%3E'">
-        <div class="payment-product-card-info">
-          <h5>${productName}</h5>
-          <p>Condition: ${productCondition}</p>
-          <p class="payment-amount-display">₹${payment.amount}</p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="payment-detail-section">
-      <h4>Payment Screenshot</h4>
-      <div class="payment-screenshot-container">
-        <img src="${payment.screenshot}" alt="Payment Screenshot" class="payment-screenshot">
-      </div>
-    </div>
-    
-    <div class="payment-actions">
-      <button class="confirm-payment-btn" id="confirmPaymentBtn">✓ Confirm Payment</button>
-      <button class="reject-payment-btn" id="rejectPaymentBtn">✕ Reject</button>
-    </div>
-  `;
-  
-  // Add button handlers (support both click and touch for mobile)
-  const confirmBtn = document.getElementById('confirmPaymentBtn');
-  const rejectBtn = document.getElementById('rejectPaymentBtn');
-  
-  if (confirmBtn) {
-    const handleConfirm = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      confirmPayment(paymentId);
-    };
-    confirmBtn.addEventListener('click', handleConfirm);
-    confirmBtn.addEventListener('touchend', handleConfirm);
-  }
-  
-  if (rejectBtn) {
-    const handleReject = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      rejectPayment(paymentId);
-    };
-    rejectBtn.addEventListener('click', handleReject);
-    rejectBtn.addEventListener('touchend', handleReject);
-  }
-  
-  modal.style.display = 'flex';
-}
-
-async function confirmPayment(paymentId) {
-  // Update on server first
-  try {
-    const res = await fetch(`${API_BASE_URL}/payments/${paymentId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        status: 'confirmed',
-        confirmedAt: new Date().toISOString()
-      })
-    });
-    
-    if (res.ok) {
-      console.log('💳 Payment confirmed on server');
-    } else {
-      console.error('💳 Failed to confirm payment on server:', res.status);
-    }
-  } catch (err) {
-    console.error('💳 Failed to update payment on server:', err);
-  }
-  
-  // Update localStorage
-  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  allPayments = allPayments.map(p => {
-    if (p.id === paymentId) {
-      return { ...p, status: 'confirmed', confirmedAt: new Date().toISOString() };
-    }
-    return p;
-  });
-  localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
-  
-  // Close modal
-  const modal = document.getElementById('paymentDetailModal');
-  if (modal) modal.style.display = 'none';
-  
-  // Update display (no server fetch, just refresh from localStorage)
-  displayDonationPayments();
-  updateStats();
-  
-  // Also refresh orders if orders section is visible
-  const ordersSection = document.querySelector('.content-section[data-section="orders"]');
-  if (ordersSection && ordersSection.style.display !== 'none') {
-    displayDonationOrders();
-  }
-  
-  // Show success modal
-  showSuccessModal('Payment Confirmed!', 'The sale has been recorded successfully. Check your Orders tab for details.');
-}
-
-async function rejectPayment(paymentId) {
-  // Update on server
-  try {
-    const res = await fetch(`${API_BASE_URL}/payments/${paymentId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        status: 'rejected',
-        rejectedAt: new Date().toISOString()
-      })
-    });
-    
-    if (res.ok) {
-      console.log('💳 Payment rejected on server');
-    }
-  } catch (err) {
-    console.error('💳 Failed to update payment on server:', err);
-  }
-  
-  // Update localStorage
-  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  allPayments = allPayments.map(p => {
-    if (p.id === paymentId) {
-      return { ...p, status: 'rejected', rejectedAt: new Date().toISOString() };
-    }
-    return p;
-  });
-  localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
-  
-  // Close modal
-  const modal = document.getElementById('paymentDetailModal');
-  if (modal) modal.style.display = 'none';
-  
-  // Update display (no server fetch, just refresh from localStorage)
-  displayDonationPayments();
-  updateStats();
-  
-  // Show info message
-  showSuccessModal('Payment Rejected', 'The payment has been rejected and the buyer will be notified.');
-}
-
-// Success Modal functionality
-function showSuccessModal(title, message) {
-  const modal = document.getElementById('successModal');
-  const titleEl = document.getElementById('successTitle');
-  const messageEl = document.getElementById('successMessage');
-  
-  if (modal && titleEl && messageEl) {
-    titleEl.textContent = title;
-    messageEl.textContent = message;
-    modal.style.display = 'flex';
-  }
-}
-
-const successModal = document.getElementById('successModal');
-const successOkBtn = document.getElementById('successOkBtn');
-
-if (successOkBtn) {
-  successOkBtn.addEventListener('click', () => {
-    if (successModal) successModal.style.display = 'none';
-  });
-}
-
-if (successModal) {
-  successModal.addEventListener('click', (e) => {
-    if (e.target === successModal) {
-      successModal.style.display = 'none';
-    }
-  });
-}
-
 function displayDonationOrders() {
   const ordersList = document.getElementById('donationOrdersList');
   if (!ordersList) {
@@ -1358,139 +815,8 @@ function displayDonationOrders() {
     return;
   }
   
-  console.log('📦 [ORDERS] Loading completed sales...');
-  const allPayments = getDonationPayments();
-  console.log('📦 [ORDERS] Total payments:', allPayments.length);
-  console.log('📦 [ORDERS] All payments:', allPayments);
-  
-  const payments = allPayments.filter(p => p.status === 'confirmed');
-  console.log('📦 [ORDERS] Confirmed payments:', payments.length);
-  console.log('📦 [ORDERS] Confirmed payments data:', payments);
-  
-  if (payments.length === 0) {
-    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed sales yet. Confirm a payment to see it here.</p>';
-    return;
-  }
-  
-  // Sort by newest first
-  payments.sort((a, b) => {
-    const dateA = new Date(a.confirmedAt || a.createdAt || a.timestamp || 0);
-    const dateB = new Date(b.confirmedAt || b.createdAt || b.timestamp || 0);
-    return dateB - dateA;
-  });
-  
-  ordersList.innerHTML = payments.map(order => {
-    // Handle both old format (order.product) and new format (direct properties)
-    const product = order.product || order;
-    const mainImage = product.photos && product.photos.length > 0 ? product.photos[0] : '';
-    const productName = product.fabricType || order.productName || 'Item';
-    const productCondition = product.clothCondition || 'N/A';
-    const date = new Date(order.confirmedAt || order.createdAt || order.timestamp).toLocaleDateString();
-    const time = new Date(order.confirmedAt || order.createdAt || order.timestamp).toLocaleTimeString();
-    
-    return `
-      <div class="order-item">
-        <img src="${mainImage}" alt="Product" class="order-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'80\\' height=\\'80\\'/%3E%3C/svg%3E'">
-        <div class="order-item-info">
-          <p class="order-item-title"><strong>${productName}</strong></p>
-          <p class="order-item-buyer">Buyer: <strong>${order.buyer || 'Unknown'}</strong></p>
-          <p class="order-item-condition">Condition: ${productCondition}</p>
-          <p class="order-item-date">Sold: ${date} at ${time}</p>
-          <span class="sale-confirmed-badge">✓ Sale Complete</span>
-        </div>
-        <div class="order-item-amount">₹${order.amount || '0'}</div>
-      </div>
-    `;
-  }).join('');
-  
-  console.log('📦 [ORDERS] Successfully displayed', payments.length, 'completed orders');
-}
-
-// Payment detail modal close handlers
-const paymentDetailModal = document.getElementById('paymentDetailModal');
-const closePaymentDetailModal = document.getElementById('closePaymentDetailModal');
-
-if (closePaymentDetailModal) {
-  closePaymentDetailModal.addEventListener('click', () => {
-    if (paymentDetailModal) paymentDetailModal.style.display = 'none';
-    currentPaymentToReview = null;
-  });
-}
-
-if (paymentDetailModal) {
-  paymentDetailModal.addEventListener('click', (e) => {
-    if (e.target === paymentDetailModal) {
-      paymentDetailModal.style.display = 'none';
-      currentPaymentToReview = null;
-    }
-  });
-}
-
-// Check for payment updates
-let lastPaymentCount = 0;
-
-async function checkPaymentUpdates() {
-  try {
-    // Fetch fresh payments from server (only when refresh button is clicked)
-    const payments = await fetchDonationPaymentsFromServer();
-    const pendingCount = payments.filter(p => p.status === 'pending').length;
-    
-    const paymentBadge = document.getElementById('paymentBadge');
-    if (paymentBadge) {
-      if (pendingCount > 0) {
-        paymentBadge.style.display = 'inline-flex';
-        paymentBadge.textContent = pendingCount;
-      } else {
-        paymentBadge.style.display = 'none';
-      }
-    }
-    
-    // Update stats
-    updateStats();
-    
-    return true; // Success
-  } catch (err) {
-    console.error('Payment update error:', err);
-    return false; // Failure
-  }
-}
-
-// No automatic payment updates - use refresh button instead
-
-// Refresh button for payments (same functionality as buyer product refresh)
-const refreshDonationPaymentsBtn = document.getElementById('refreshDonationPaymentsBtn');
-if (refreshDonationPaymentsBtn) {
-  refreshDonationPaymentsBtn.onclick = async () => {
-    refreshDonationPaymentsBtn.textContent = "⏳ Fetching...";
-    refreshDonationPaymentsBtn.disabled = true;
-    try {
-      // Fetch payments from server (only once when clicked)
-      const success = await checkPaymentUpdates();
-      // Update display with fetched payments (from localStorage after server sync)
-      displayDonationPayments();
-      if (success) {
-        refreshDonationPaymentsBtn.textContent = "✓ Refreshed!";
-      } else {
-        refreshDonationPaymentsBtn.textContent = "⚠️ Check connection";
-      }
-    } catch (err) {
-      console.error('Payment refresh error:', err);
-      refreshDonationPaymentsBtn.textContent = "❌ Error";
-    }
-    setTimeout(() => {
-      refreshDonationPaymentsBtn.textContent = "🔄 Refresh";
-      refreshDonationPaymentsBtn.disabled = false;
-    }, 2000);
-  };
-  
-  // Mobile touch support
-  refreshDonationPaymentsBtn.addEventListener('touchend', async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!refreshDonationPaymentsBtn.disabled) {
-      refreshDonationPaymentsBtn.onclick();
-    }
-  }, { passive: false });
+  // Since payments are removed, orders section will be empty
+  ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed orders yet.</p>';
 }
 
 // =====================
@@ -1554,8 +880,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Load and display listings
   displayListings();
-  
-  // Load chat list
-  loadChatList();
 });
 
