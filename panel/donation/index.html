@@ -69,6 +69,11 @@
                             <h2 class="stat-value" id="pendingCount">0</h2>
                             <p class="stat-sub">Awaiting approval</p>
                         </article>
+                        <article class="card stat-card donor-status-card" id="donorStatusCard" style="cursor: pointer;">
+                            <p class="stat-label">Donor Status</p>
+                            <h2 class="stat-value" id="donorStatusLevel">-</h2>
+                            <p class="stat-sub" id="donorStatusSub">Click to view level</p>
+                        </article>
                     </section>
 
                     <section class="upload-highlight card">
@@ -215,6 +220,16 @@
                             <h2 id="successTitle">Success!</h2>
                             <p id="successMessage">Your action was completed successfully.</p>
                             <button class="success-ok-btn" id="successOkBtn">OK</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Donor Status Modal -->
+                <div class="modal-overlay" id="donorStatusModal" style="display: none;">
+                    <div class="modal-content donor-status-modal">
+                        <button class="modal-close" id="closeDonorStatusModal">×</button>
+                        <div class="donor-status-body" id="donorStatusBody">
+                            <!-- Donor status content will be inserted here -->
                         </div>
                     </div>
                 </div>

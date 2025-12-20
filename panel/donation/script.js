@@ -302,6 +302,65 @@ async function saveItem(item) {
 }
 
 // Update stats cards
+// Calculate donor level based on donation count
+function getDonorLevel(donationCount) {
+  if (donationCount >= 100) {
+    return {
+      level: 'Elite Donor',
+      range: '100+',
+      color: '#FFD700',
+      gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+      icon: '👑',
+      description: 'The highest tier of donors'
+    };
+  } else if (donationCount >= 60) {
+    return {
+      level: 'Prime Donor',
+      range: '60-100',
+      color: '#C0C0C0',
+      gradient: 'linear-gradient(135deg, #E8E8E8 0%, #C0C0C0 100%)',
+      icon: '💎',
+      description: 'An exceptional contributor'
+    };
+  } else if (donationCount >= 30) {
+    return {
+      level: 'Gold Donor',
+      range: '30-60',
+      color: '#FFD700',
+      gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+      icon: '⭐',
+      description: 'A valued supporter'
+    };
+  } else if (donationCount >= 10) {
+    return {
+      level: 'Silver Donor',
+      range: '10-30',
+      color: '#C0C0C0',
+      gradient: 'linear-gradient(135deg, #E8E8E8 0%, #C0C0C0 100%)',
+      icon: '🥈',
+      description: 'A dedicated contributor'
+    };
+  } else if (donationCount >= 1) {
+    return {
+      level: 'Supporter Donor',
+      range: '1-10',
+      color: '#CD7F32',
+      gradient: 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)',
+      icon: '🤝',
+      description: 'Thank you for your support'
+    };
+  } else {
+    return {
+      level: 'New Donor',
+      range: '0',
+      color: '#95a5a6',
+      gradient: 'linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%)',
+      icon: '🌱',
+      description: 'Start your donation journey'
+    };
+  }
+}
+
 function updateStats() {
   const items = getStoredItems();
   const listingsCount = items.length;
@@ -313,9 +372,15 @@ function updateStats() {
   const salesCount = sellerPayments.filter(p => p.status === 'confirmed').length;
   const pendingCount = sellerPayments.filter(p => p.status === 'pending').length;
   
+  // Calculate donor level based on total donations (listings count)
+  const donorInfo = getDonorLevel(listingsCount);
+  
   const listingsCountEl = document.getElementById('listingsCount');
   const salesCountEl = document.getElementById('salesCount');
   const pendingCountEl = document.getElementById('pendingCount');
+  const donorStatusLevelEl = document.getElementById('donorStatusLevel');
+  const donorStatusSubEl = document.getElementById('donorStatusSub');
+  const donorStatusCard = document.getElementById('donorStatusCard');
   
   if (listingsCountEl) {
     listingsCountEl.textContent = listingsCount;
@@ -325,6 +390,16 @@ function updateStats() {
   }
   if (pendingCountEl) {
     pendingCountEl.textContent = pendingCount;
+  }
+  if (donorStatusLevelEl) {
+    donorStatusLevelEl.textContent = donorInfo.icon;
+    donorStatusLevelEl.style.color = donorInfo.color;
+  }
+  if (donorStatusSubEl) {
+    donorStatusSubEl.textContent = donorInfo.level;
+  }
+  if (donorStatusCard) {
+    donorStatusCard.style.borderTop = `3px solid ${donorInfo.color}`;
   }
 }
 
@@ -887,6 +962,129 @@ async function syncListingsFromCloud() {
     return true;
   }
   return false;
+}
+
+// Display donor status modal
+function showDonorStatusModal() {
+  const modal = document.getElementById('donorStatusModal');
+  const modalBody = document.getElementById('donorStatusBody');
+  if (!modal || !modalBody) return;
+  
+  const items = getStoredItems();
+  const donationCount = items.length;
+  const currentLevel = getDonorLevel(donationCount);
+  
+  // All levels for display
+  const allLevels = [
+    { count: 100, ...getDonorLevel(100) },
+    { count: 60, ...getDonorLevel(60) },
+    { count: 30, ...getDonorLevel(30) },
+    { count: 10, ...getDonorLevel(10) },
+    { count: 1, ...getDonorLevel(1) }
+  ];
+  
+  modalBody.innerHTML = `
+    <div class="donor-status-header" style="text-align: center; margin-bottom: 32px;">
+      <div class="donor-status-icon-large" style="font-size: 80px; margin-bottom: 16px;">${currentLevel.icon}</div>
+      <h2 style="margin: 0 0 8px; color: var(--text); font-size: 2rem;">${currentLevel.level}</h2>
+      <p style="margin: 0; color: var(--muted); font-size: 1.1rem;">${currentLevel.description}</p>
+      <div style="margin-top: 16px; padding: 12px 24px; background: ${currentLevel.gradient}; border-radius: 12px; display: inline-block;">
+        <div style="font-size: 2.5rem; font-weight: 700; color: white; margin-bottom: 4px;">${donationCount}</div>
+        <div style="font-size: 0.9rem; color: rgba(255,255,255,0.9);">Total Donations</div>
+      </div>
+    </div>
+    
+    <div class="donor-levels-list" style="margin-top: 32px;">
+      <h3 style="margin: 0 0 20px; color: var(--text); font-size: 1.2rem; text-align: center;">Donor Status Levels</h3>
+      ${allLevels.map((level, index) => {
+        // Determine if this is the current level
+        let isCurrent = false;
+        if (index === 0) {
+          // Elite Donor (highest)
+          isCurrent = donationCount >= 100;
+        } else if (index === allLevels.length - 1) {
+          // Supporter Donor (lowest)
+          isCurrent = donationCount >= 1 && donationCount < 10;
+        } else {
+          // Middle levels
+          const nextLevel = allLevels[index - 1];
+          isCurrent = donationCount >= level.count && donationCount < nextLevel.count;
+        }
+        
+        const isUnlocked = donationCount >= level.count;
+        const nextLevel = index > 0 ? allLevels[index - 1] : null;
+        const progress = nextLevel && donationCount < nextLevel.count ? Math.min(100, Math.max(0, ((donationCount - level.count) / (nextLevel.count - level.count)) * 100)) : (donationCount >= level.count ? 100 : 0);
+        
+        return `
+          <div class="donor-level-item ${isCurrent ? 'current' : ''} ${isUnlocked ? 'unlocked' : 'locked'}" 
+               style="padding: 20px; margin-bottom: 16px; border-radius: 12px; border: 2px solid ${isCurrent ? level.color : 'var(--border-color)'}; 
+                      background: ${isCurrent ? `${level.color}15` : isUnlocked ? 'var(--card)' : 'var(--menu-bg)'};
+                      position: relative; overflow: hidden;">
+            ${isCurrent ? `<div style="position: absolute; top: 8px; right: 8px; background: ${level.color}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">CURRENT</div>` : ''}
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="font-size: 48px; opacity: ${isUnlocked ? '1' : '0.3'};">${level.icon}</div>
+              <div style="flex: 1;">
+                <div style="font-size: 1.3rem; font-weight: 700; color: ${isUnlocked ? level.color : 'var(--muted)'}; margin-bottom: 4px;">
+                  ${level.level}
+                </div>
+                <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 8px;">
+                  ${level.range} donations
+                </div>
+                ${nextLevel && donationCount < nextLevel.count ? `
+                  <div style="margin-top: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px;">
+                      <span>Progress to next level</span>
+                      <span>${donationCount}/${nextLevel.count}</span>
+                    </div>
+                    <div style="height: 6px; background: var(--menu-bg); border-radius: 3px; overflow: hidden;">
+                      <div style="height: 100%; background: ${level.color}; width: ${progress}%; transition: width 0.3s ease;"></div>
+                    </div>
+                  </div>
+                ` : donationCount >= level.count ? `
+                  <div style="margin-top: 8px; color: ${level.color}; font-size: 0.85rem; font-weight: 600;">✓ Unlocked</div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+  
+  modal.style.display = 'flex';
+}
+
+// Donor status card click handler
+const donorStatusCard = document.getElementById('donorStatusCard');
+if (donorStatusCard) {
+  donorStatusCard.addEventListener('click', () => {
+    showDonorStatusModal();
+  });
+  
+  // Touch support for mobile
+  donorStatusCard.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    showDonorStatusModal();
+  });
+}
+
+// Close donor status modal
+const closeDonorStatusModal = document.getElementById('closeDonorStatusModal');
+if (closeDonorStatusModal) {
+  closeDonorStatusModal.addEventListener('click', () => {
+    const modal = document.getElementById('donorStatusModal');
+    if (modal) modal.style.display = 'none';
+  });
+}
+
+// Close modal on overlay click
+const donorStatusModalOverlay = document.getElementById('donorStatusModal');
+if (donorStatusModalOverlay) {
+  donorStatusModalOverlay.addEventListener('click', (e) => {
+    if (e.target === donorStatusModalOverlay) {
+      donorStatusModalOverlay.style.display = 'none';
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

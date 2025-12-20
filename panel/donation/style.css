@@ -341,10 +341,71 @@ body {
 .stat-card:nth-child(1) { animation-delay: 0.1s; }
 .stat-card:nth-child(2) { animation-delay: 0.15s; }
 .stat-card:nth-child(3) { animation-delay: 0.2s; }
+.stat-card:nth-child(4) { animation-delay: 0.25s; }
 
 .stat-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.donor-status-card {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.donor-status-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+}
+
+.donor-status-card .stat-value {
+    font-size: 2.5rem;
+    transition: transform 0.3s ease;
+}
+
+.donor-status-card:hover .stat-value {
+    transform: scale(1.1);
+}
+
+/* Donor Status Modal */
+.donor-status-modal {
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.donor-status-body {
+    padding: 32px;
+}
+
+.donor-level-item {
+    transition: all 0.3s ease;
+}
+
+.donor-level-item.current {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: scale(1.02);
+}
+
+.donor-level-item.locked {
+    opacity: 0.6;
+}
+
+.donor-level-item:hover:not(.locked) {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @keyframes statCardFadeIn {
