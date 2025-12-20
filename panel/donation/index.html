@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NGO Dashboard | Vastrado</title>
+    <title>Donation Dashboard | Vastrado</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,8 +18,8 @@
                     <img src="images/notification.png" alt="Notifications" class="topbar-icon">
                 </button>
                 <div class="profile" id="profileDropdown">
-                    <span class="avatar" id="avatar">N</span>
-                    <span class="profile-name" id="profileName">NGO</span>
+                    <span class="avatar" id="avatar">D</span>
+                    <span class="profile-name" id="profileName">Donation</span>
                     <div class="profile-dropdown" id="profileDropdownMenu" style="display: none;">
                         <button class="dropdown-item" id="logoutBtn">
                             <span>🚪</span>
@@ -36,17 +36,20 @@
                     <button class="menu-item active" data-section="profile">
                         <img src="images/profile.png" alt="Profile" class="menu-icon"> Profile
                     </button>
-                    <button class="menu-item" data-section="donation">
-                        <img src="images/browse.png" alt="Donation" class="menu-icon"> Make a Donation
-                    </button>
                     <button class="menu-item" data-section="listings">
-                        <img src="images/order.png" alt="Listings" class="menu-icon"> My Donations
+                        <img src="images/browse.png" alt="Listings" class="menu-icon"> My Listings
                     </button>
                     <button class="menu-item" data-section="notifications">
                         <img src="images/notification.png" alt="Notifications" class="menu-icon"> Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
                     </button>
+                    <button class="menu-item" data-section="chat">
+                        <img src="images/chat.png" alt="Chat" class="menu-icon"> Chats
+                    </button>
+                    <button class="menu-item" data-section="payments">
+                        <img src="images/payment.png" alt="Payments" class="menu-icon"> Payments <span class="payment-badge" id="paymentBadge" style="display:none;">0</span>
+                    </button>
                     <button class="menu-item" data-section="orders">
-                        <img src="images/order.png" alt="Orders" class="menu-icon"> Confirmed Donations
+                        <img src="images/order.png" alt="Orders" class="menu-icon"> Orders
                     </button>
                     <button class="menu-item" data-section="settings">
                         <img src="images/settings.png" alt="Settings" class="menu-icon"> Settings
@@ -58,44 +61,44 @@
                 <div class="content-section" data-section="profile">
                     <section class="stats-grid">
                         <article class="card stat-card">
-                            <p class="stat-label">Total Donations Made</p>
-                            <h2 class="stat-value" id="donationsCount">0</h2>
-                            <p class="stat-sub">Items donated</p>
+                            <p class="stat-label">Listings</p>
+                            <h2 class="stat-value" id="listingsCount">0</h2>
+                            <p class="stat-sub">Total items listed</p>
                         </article>
                         <article class="card stat-card">
-                            <p class="stat-label">Total Amount Donated</p>
-                            <h2 class="stat-value" id="amountDonated">₹0</h2>
-                            <p class="stat-sub">Total value</p>
+                            <p class="stat-label">Sales</p>
+                            <h2 class="stat-value" id="salesCount">0</h2>
+                            <p class="stat-sub">Total sales</p>
                         </article>
                         <article class="card stat-card">
-                            <p class="stat-label">New Items</p>
-                            <h2 class="stat-value" id="newItemsCount">0</h2>
-                            <p class="stat-sub">Quality: New</p>
+                            <p class="stat-label">Pending</p>
+                            <h2 class="stat-value" id="pendingCount">0</h2>
+                            <p class="stat-sub">Awaiting approval</p>
                         </article>
                     </section>
 
                     <section class="upload-highlight card">
                         <div>
                             <p class="muted">Quick action</p>
-                            <h3>Make a donation</h3>
-                            <p class="subtext">Donate quality clothing items to help those in need.</p>
+                            <h3>Upload your cloth for resell</h3>
+                            <p class="subtext">Add photos, set price, and publish to your storefront.</p>
                         </div>
-                        <button class="upload-btn" id="donateAction" aria-label="Make a donation">+</button>
+                        <button class="upload-btn" id="uploadAction" aria-label="Upload cloth">+</button>
                     </section>
 
                     <section class="card list-placeholder">
-                        <h3>Recent Activity</h3>
-                        <p class="muted">No recent activity yet. Make your first donation to see your history here.</p>
+                        <h3>Recent Orders</h3>
+                        <p class="muted">No orders to show yet. Once customers buy, you'll see them here.</p>
                     </section>
                 </div>
 
-                <div class="content-section" data-section="donation" style="display: none;">
-                    <section class="card upload-form-card" id="donateFormCard" style="display: none;">
+                <div class="content-section" data-section="upload" style="display: none;">
+                    <section class="card upload-form-card" id="uploadFormCard" style="display: none;">
                         <div class="form-header">
-                            <h3>Make a Donation</h3>
+                            <h3>Upload Your Cloth</h3>
                             <button class="close-form-btn" id="closeFormBtn" aria-label="Close form">×</button>
                         </div>
-                        <form class="upload-form" id="donateForm">
+                        <form class="upload-form" id="uploadForm">
                             <div class="form-group">
                                 <label for="photos">Upload Photos</label>
                                 <div class="file-upload-area" id="fileUploadArea">
@@ -111,9 +114,9 @@
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="clothType">Cloth Type</label>
-                                    <select id="clothType" name="clothType" class="form-input" required>
-                                        <option value="">Select cloth type</option>
+                                    <label for="fabricType">Fabric Type</label>
+                                    <select id="fabricType" name="fabricType" class="form-input" required>
+                                        <option value="">Select fabric type</option>
                                         <option value="cotton">Cotton</option>
                                         <option value="polyester">Polyester</option>
                                         <option value="silk">Silk</option>
@@ -126,9 +129,16 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="quality">Quality</label>
-                                    <select id="quality" name="quality" class="form-input" required>
-                                        <option value="">Select quality</option>
+                                    <label for="expectedCost">Expected Cost (₹)</label>
+                                    <input type="number" id="expectedCost" name="expectedCost" class="form-input" placeholder="Enter expected cost in rupees" min="0" step="0.01" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clothCondition">Cloth Condition</label>
+                                    <select id="clothCondition" name="clothCondition" class="form-input" required>
+                                        <option value="">Select condition</option>
                                         <option value="new">New</option>
                                         <option value="like-new">Like New</option>
                                         <option value="good">Good</option>
@@ -136,16 +146,16 @@
                                         <option value="poor">Poor</option>
                                     </select>
                                 </div>
-                            </div>
 
-                            <div class="form-group">
-                                <label for="description">Description</label>
-                                <textarea id="description" name="description" class="form-input" rows="4" placeholder="Describe the item(s) you're donating..." required></textarea>
+                                <div class="form-group">
+                                    <label for="phoneNumber">Phone Number</label>
+                                    <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="Enter phone number" required>
+                                </div>
                             </div>
 
                             <div class="form-actions">
                                 <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
-                                <button type="submit" class="submit-btn">Submit Donation</button>
+                                <button type="submit" class="submit-btn">Submit</button>
                             </div>
                         </form>
                     </section>
@@ -153,10 +163,10 @@
 
                 <div class="content-section" data-section="listings" style="display: none;">
                     <section class="card listings-container">
-                        <h3>My Donations</h3>
-                        <p class="muted">Manage your donation listings.</p>
+                        <h3>My Listings</h3>
+                        <p class="muted">Manage your clothing listings.</p>
                         <div class="listings-grid" id="listingsGrid">
-                            <!-- Donation items will be displayed here -->
+                            <!-- Uploaded items will be displayed here -->
                         </div>
                     </section>
                 </div>
@@ -175,8 +185,8 @@
                 <div class="modal-overlay" id="deleteConfirmModal" style="display: none;">
                     <div class="modal-content confirm-modal">
                         <div class="confirm-icon">⚠️</div>
-                        <h3 class="confirm-title">Remove Donation</h3>
-                        <p class="confirm-message">Are you sure you want to remove this donation listing? This action cannot be undone.</p>
+                        <h3 class="confirm-title">Remove Listing</h3>
+                        <p class="confirm-message">Are you sure you want to remove this listing? This action cannot be undone.</p>
                         <div class="confirm-actions">
                             <button class="confirm-btn cancel-confirm-btn" id="cancelDeleteBtn">Cancel</button>
                             <button class="confirm-btn delete-confirm-btn" id="confirmDeleteBtn">Remove</button>
@@ -200,19 +210,83 @@
                 <div class="content-section" data-section="notifications" style="display: none;">
                     <section class="card">
                         <h3>Notifications</h3>
-                        <p class="muted">Updates and messages about your donations.</p>
+                        <p class="muted">Chat requests and updates from buyers.</p>
                         <div class="notifications-list" id="notificationsList">
                             <p class="muted" style="padding: 20px; text-align: center;">No notifications yet</p>
                         </div>
                     </section>
                 </div>
 
+                <div class="content-section" data-section="chat" style="display: none;">
+                    <section class="card chat-container">
+                        <div class="chat-layout">
+                            <div class="chat-sidebar">
+                                <h4>Conversations</h4>
+                                <div class="chat-list" id="chatList">
+                                    <p class="muted" style="padding: 20px; text-align: center;">No conversations yet</p>
+                                </div>
+                            </div>
+                            <div class="chat-main">
+                                <div class="chat-header" id="chatHeader">
+                                    <p class="muted">Select a conversation to start chatting</p>
+                                </div>
+                                <div class="chat-messages" id="chatMessages">
+                                    <!-- Messages will appear here -->
+                                </div>
+                                <div class="chat-input-area" id="chatInputArea" style="display: none;">
+                                    <input type="text" id="chatInput" placeholder="Type a message..." class="chat-input">
+                                    <button id="sendMessageBtn" class="send-message-btn">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="payments" style="display: none;">
+                    <section class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <div>
+                                <h3 style="margin: 0;">Payment Requests</h3>
+                                <p class="muted" style="margin: 4px 0 0 0;">Review and confirm payments from buyers.</p>
+                            </div>
+                            <button id="refreshDonationPaymentsBtn" class="refresh-btn" title="Refresh payments">
+                                <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
+                            </button>
+                        </div>
+                        <div class="payments-list" id="donationPaymentsList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No pending payments.</p>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Payment Detail Modal -->
+                <div class="modal-overlay" id="paymentDetailModal" style="display: none;">
+                    <div class="modal-content payment-detail-modal">
+                        <button class="modal-close" id="closePaymentDetailModal">×</button>
+                        <div class="payment-detail-body" id="paymentDetailBody">
+                            <!-- Payment details will be shown here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Modal -->
+                <div class="modal-overlay" id="successModal" style="display: none;">
+                    <div class="modal-content success-modal">
+                        <div class="success-modal-body">
+                            <div class="success-icon">✓</div>
+                            <h2 id="successTitle">Success!</h2>
+                            <p id="successMessage">Your action was completed successfully.</p>
+                            <button class="success-ok-btn" id="successOkBtn">OK</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="content-section" data-section="orders" style="display: none;">
                     <section class="card">
-                        <h3>Confirmed Donations</h3>
-                        <p class="muted">Your confirmed donations will appear here.</p>
-                        <div class="orders-list" id="ngoOrdersList">
-                            <p class="muted" style="padding: 20px; text-align: center;">No confirmed donations yet.</p>
+                        <h3>Completed Sales</h3>
+                        <p class="muted">Your confirmed sales will appear here.</p>
+                        <div class="orders-list" id="donationOrdersList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No completed sales yet.</p>
                         </div>
                     </section>
                 </div>
@@ -237,7 +311,7 @@
                         <div class="setting-row">
                             <div>
                                 <p class="setting-label">Notifications</p>
-                                <p class="muted small">Get updates about your donations.</p>
+                                <p class="muted small">Stay updated about orders.</p>
                             </div>
                             <label class="toggle">
                                 <input type="checkbox" id="notifyToggle" checked>
