@@ -76,7 +76,9 @@ async function fetchDonationsFromAPI() {
     });
     
     if (!res.ok) {
+      const errorText = await res.text().catch(() => 'Unknown error');
       console.warn(`❌ [NGO] Failed to fetch donations: ${res.status} ${res.statusText}`);
+      console.warn(`❌ [NGO] Error response:`, errorText);
       return null;
     }
     
@@ -89,28 +91,38 @@ async function fetchDonationsFromAPI() {
     
     // Parse JSON with error handling
     let data;
+    let responseText = '';
     try {
-      const text = await res.text();
-      if (!text || text.trim() === '') {
-        console.warn('⚠️ [NGO] Server returned empty response');
-        return null;
+      responseText = await res.text();
+      if (!responseText || responseText.trim() === '') {
+        // Empty response is valid - means no donations yet
+        console.log('ℹ️ [NGO] Server returned empty response (no donations in database)');
+        data = [];
+      } else {
+        data = JSON.parse(responseText);
       }
-      data = JSON.parse(text);
     } catch (parseError) {
       console.error('❌ [NGO] JSON parse error:', parseError);
+      console.error('❌ [NGO] Response text that failed to parse:', responseText?.substring(0, 200) || 'No response text');
       return null;
     }
     
     console.log(`📦 [NGO] Received ${Array.isArray(data) ? data.length : 0} donations from server`);
     
-    if (Array.isArray(data) && data.length > 0) {
-      // Update localStorage with fetched data for offline access
+    if (Array.isArray(data)) {
+      // Update localStorage with fetched data for offline access (even if empty)
       localStorage.setItem('donationListings', JSON.stringify(data));
       localStorage.setItem('donationListings_sync', Date.now().toString());
-      console.log('✅ [NGO] Donations synced to localStorage');
-      return data;
+      if (data.length > 0) {
+        console.log('✅ [NGO] Donations synced to localStorage');
+      } else {
+        console.log('✅ [NGO] API returned empty array (no donations yet)');
+      }
+      return data; // Return array even if empty (successful fetch)
     }
     
+    // If data is not an array, something went wrong
+    console.warn('⚠️ [NGO] Server returned non-array data:', data);
     return null;
   } catch (error) {
     console.error('❌ [NGO] Error fetching donations from API:', error);
@@ -662,13 +674,14 @@ if (refreshDonationsBtn) {
       const donations = await fetchDonationsFromAPI();
       
       if (donations !== null) {
-        // Update display with fetched donations
+        // API call succeeded (even if empty array)
         displayListings();
         updateStats();
         refreshDonationsBtn.innerHTML = '✓ Refreshed!';
         console.log('✅ [NGO] Donations refreshed successfully');
       } else {
-        // Fallback to localStorage if API fails
+        // API call failed (network error, server error, etc.)
+        // Fallback to localStorage
         displayListings();
         updateStats();
         refreshDonationsBtn.innerHTML = originalContent;
