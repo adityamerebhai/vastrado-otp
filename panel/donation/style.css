@@ -373,6 +373,13 @@ body {
     max-height: 90vh;
     overflow-y: auto;
     animation: modalSlideIn 0.3s ease-out;
+    margin-top: 80px;
+}
+
+/* Adjust modal overlay alignment for donor status modal */
+#donorStatusModal.modal-overlay {
+    align-items: flex-start;
+    padding-top: 80px;
 }
 
 .donor-status-body {
@@ -1282,6 +1289,12 @@ select.form-input {
     .modal-content {
         max-width: 100%;
         margin: 10px;
+    }
+    .donor-status-modal {
+        margin-top: 60px;
+    }
+    #donorStatusModal.modal-overlay {
+        padding-top: 60px;
     }
     .modal-body {
         padding: 24px;
