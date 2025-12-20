@@ -157,8 +157,17 @@
 
                 <div class="content-section" data-section="listings" style="display: none;">
                     <section class="card listings-container">
-                        <h3>My Donation</h3>
-                        <p class="muted">Manage your clothing donations.</p>
+                        <div class="browse-header">
+                            <div>
+                                <h3>My Donation</h3>
+                                <p class="muted">Manage your clothing donations.</p>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="refresh-btn" id="refreshDonations" title="Refresh donations">
+                                    <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
+                                </button>
+                            </div>
+                        </div>
                         <div class="listings-grid" id="listingsGrid">
                             <!-- Uploaded items will be displayed here -->
                         </div>

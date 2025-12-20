@@ -264,6 +264,79 @@ async function syncToCloud(items) {
   }
 }
 
+// Fetch donations from API for cross-device sync
+async function fetchDonationsFromAPI() {
+  try {
+    const url = `${API_BASE_URL}/listings`;
+    console.log(`🔄 [DONATION] Fetching donations from: ${url}`);
+    
+    const res = await fetch(url, { 
+      method: 'GET',
+      cache: "no-cache",
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Accept': 'application/json'
+      },
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => 'Unknown error');
+      console.warn(`❌ [DONATION] Failed to fetch donations: ${res.status} ${res.statusText}`);
+      console.warn(`❌ [DONATION] Error response:`, errorText);
+      return null;
+    }
+    
+    // Check if response is actually JSON
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('❌ [DONATION] Server did not return JSON. Content-Type:', contentType);
+      return null;
+    }
+    
+    // Parse JSON with error handling
+    let data;
+    let responseText = '';
+    try {
+      responseText = await res.text();
+      if (!responseText || responseText.trim() === '') {
+        // Empty response is valid - means no donations yet
+        console.log('ℹ️ [DONATION] Server returned empty response (no donations in database)');
+        data = [];
+      } else {
+        data = JSON.parse(responseText);
+      }
+    } catch (parseError) {
+      console.error('❌ [DONATION] JSON parse error:', parseError);
+      console.error('❌ [DONATION] Response text that failed to parse:', responseText?.substring(0, 200) || 'No response text');
+      return null;
+    }
+    
+    console.log(`📦 [DONATION] Received ${Array.isArray(data) ? data.length : 0} donations from server`);
+    
+    if (Array.isArray(data)) {
+      // Update localStorage with fetched data for offline access (even if empty)
+      localStorage.setItem('donationListings', JSON.stringify(data));
+      localStorage.setItem('donationListings_sync', Date.now().toString());
+      if (data.length > 0) {
+        console.log('✅ [DONATION] Donations synced to localStorage');
+      } else {
+        console.log('✅ [DONATION] API returned empty array (no donations yet)');
+      }
+      return data; // Return array even if empty (successful fetch)
+    }
+    
+    // If data is not an array, something went wrong
+    console.warn('⚠️ [DONATION] Server returned non-array data:', data);
+    return null;
+  } catch (error) {
+    console.error('❌ [DONATION] Error fetching donations from API:', error);
+    return null;
+  }
+}
+
 // Get items from cloud storage
 async function getItemsFromCloud() {
   // For now, return local storage items
@@ -1118,6 +1191,56 @@ if (donorStatusModalOverlay) {
     if (e.target === donorStatusModalOverlay) {
       donorStatusModalOverlay.style.display = 'none';
     }
+  });
+}
+
+// =====================
+// REFRESH BUTTON HANDLER
+// =====================
+const refreshDonationsBtn = document.getElementById('refreshDonations');
+if (refreshDonationsBtn) {
+  refreshDonationsBtn.addEventListener('click', async () => {
+    const originalContent = refreshDonationsBtn.innerHTML;
+    refreshDonationsBtn.innerHTML = '⏳ Fetching...';
+    refreshDonationsBtn.disabled = true;
+    
+    try {
+      // Fetch donations from API
+      const donations = await fetchDonationsFromAPI();
+      
+      if (donations !== null) {
+        // API call succeeded (even if empty array)
+        displayListings();
+        updateStats();
+        refreshDonationsBtn.innerHTML = '✓ Refreshed!';
+        console.log('✅ [DONATION] Donations refreshed successfully');
+      } else {
+        // API call failed (network error, server error, etc.)
+        // Fallback to localStorage
+        displayListings();
+        updateStats();
+        refreshDonationsBtn.innerHTML = originalContent;
+        console.warn('⚠️ [DONATION] API fetch failed, using localStorage');
+      }
+    } catch (err) {
+      console.error('❌ [DONATION] Refresh error:', err);
+      refreshDonationsBtn.innerHTML = '❌ Error';
+      // Still show localStorage data
+      displayListings();
+      updateStats();
+    }
+    
+    // Reset button after 2 seconds
+    setTimeout(() => {
+      refreshDonationsBtn.innerHTML = originalContent;
+      refreshDonationsBtn.disabled = false;
+    }, 2000);
+  });
+  
+  // Also support touch events for mobile
+  refreshDonationsBtn.addEventListener('touchend', async (e) => {
+    e.preventDefault();
+    refreshDonationsBtn.click();
   });
 }
 

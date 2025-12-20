@@ -955,6 +955,18 @@ select.form-input {
     gap: 20px;
 }
 
+.browse-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.browse-header h3 {
+    margin: 0 0 4px;
+}
+
 .listings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -2056,7 +2068,7 @@ select.form-input {
     width: 16px;
     height: 16px;
     object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(72%) sepia(90%) saturate(1352%) hue-rotate(358deg) brightness(98%) contrast(96%);
+    filter: brightness(0) invert(1);
 }
 
 .refresh-btn {
