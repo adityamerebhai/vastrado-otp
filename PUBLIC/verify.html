@@ -49,6 +49,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     overflow-y: auto;
 }
 .verify-dashboard .header-section {
@@ -227,66 +228,132 @@
 
 /* Mobile */
 @media (max-width: 600px) {
-    body {
-        height: 100vh;
-        min-height: 100vh;
+    * {
+        box-sizing: border-box;
+    }
+    
+    html, body {
+        height: 100%;
+        min-height: 100%;
+        margin: 0;
+        padding: 0;
         overflow-x: hidden;
+        overflow-y: auto;
     }
     
     .verify-dashboard {
         height: 100vh;
         min-height: 100vh;
+        max-height: 100vh;
         align-items: stretch;
+        overflow: hidden;
     }
     
     .verify-dashboard .split-right {
         min-height: 100vh;
         height: 100vh;
+        max-height: 100vh;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
     }
     
     .verify-dashboard .verify-heading { 
-        font-size: 1.8em;
-        margin-bottom: 8px;
+        font-size: 1.6em;
+        margin-bottom: 6px;
+        line-height: 1.2;
     }
     .verify-dashboard .verify-subheading { 
-        font-size: 0.95em;
-        margin-bottom: 20px;
-    }
-    .verify-dashboard .otp-input {
-        width: 42px;
-        height: 50px;
-        font-size: 1.2em;
-    }
-    .verify-dashboard .verify-button,
-    .verify-dashboard .back-to-role-button {
-        padding: 14px 20px;
-        font-size: 1em;
-        width: 100%;
-    }
-    .verify-dashboard .social-icons { 
-        gap: 12px;
-    }
-    .verify-dashboard .verify-container {
-        padding: 30px 20px;
-        min-height: 100vh;
-        height: 100vh;
-        max-width: 100%;
-        width: 100%;
-        justify-content: center;
+        font-size: 0.9em;
+        margin-bottom: 15px;
+        line-height: 1.3;
     }
     
-    .verify-dashboard .header-section {
-        margin-bottom: 15px;
+    #debugEmail {
+        font-size: 0.75em !important;
+        margin-bottom: 12px !important;
+        padding: 0 10px;
+        word-break: break-all;
     }
     
     .verify-dashboard .otp-container {
-        margin-bottom: 20px;
+        gap: 8px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .verify-dashboard .otp-input {
+        width: 40px;
+        height: 48px;
+        font-size: 1.1em;
+        flex-shrink: 0;
+    }
+    
+    .verify-dashboard .verify-button,
+    .verify-dashboard .back-to-role-button {
+        padding: 12px 18px;
+        font-size: 0.95em;
+        width: 100%;
+        margin-bottom: 10px;
     }
     
     .verify-dashboard .social-signin {
-        margin-top: 25px;
+        margin-top: 20px;
+    }
+    
+    .verify-dashboard .social-signin p {
+        font-size: 0.85em;
+        margin-bottom: 12px;
+    }
+    
+    .verify-dashboard .social-icons { 
+        gap: 10px;
+    }
+    
+    .verify-dashboard .social-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .verify-dashboard .verify-container {
+        padding: 15px 16px;
+        min-height: 100vh;
+        height: 100vh;
+        max-height: 100vh;
+        max-width: 100%;
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .verify-dashboard .header-section {
+        margin-bottom: 10px;
+        flex-shrink: 0;
+    }
+    
+    .verify-dashboard .header-logo {
+        font-size: 1.2em;
+    }
+    
+    .verify-dashboard .verify-form {
+        width: 100%;
+        max-width: 100%;
+        flex-shrink: 0;
+    }
+    
+    .verify-dashboard .verify-heading,
+    .verify-dashboard .verify-subheading,
+    #debugEmail {
+        flex-shrink: 0;
+    }
+    
+    .verify-dashboard .social-signin {
+        flex-shrink: 0;
+        margin-top: 15px;
     }
 }
 </style>
@@ -307,7 +374,7 @@
                 document.getElementById('debugEmail').textContent = 'Verifying: ' + (localStorage.getItem('email') || 'No email found') + ' (Role: ' + (localStorage.getItem('role') || 'None') + ')';
             </script>
 
-            <form class="verify-form">
+            <form class="verify-form" style="width: 100%; max-width: 100%;">
                 <div class="otp-container">
                     <input type="text" inputmode="numeric" maxlength="1" class="otp-input" aria-label="Digit 1">
                     <input type="text" inputmode="numeric" maxlength="1" class="otp-input" aria-label="Digit 2">
