@@ -28,7 +28,7 @@ body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
-    animation: fadeIn 0.6s ease-out;
+    animation: fadeIn 0.4s ease-out;
 }
 
 @keyframes fadeIn {
@@ -57,12 +57,12 @@ body {
     position: sticky;
     top: 0;
     z-index: 10;
-    animation: slideDown 0.5s ease-out;
+    animation: slideDown 0.3s ease-out;
 }
 
 @keyframes slideDown {
     from {
-        transform: translateY(-100%);
+        transform: translateY(-20px);
         opacity: 0;
     }
     to {
@@ -215,12 +215,12 @@ body {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 14px;
-    animation: slideInLeft 0.6s ease-out 0.2s both;
+    animation: slideInLeft 0.4s ease-out 0.1s both;
 }
 
 @keyframes slideInLeft {
     from {
-        transform: translateX(-100%);
+        transform: translateX(-30px);
         opacity: 0;
     }
     to {
@@ -245,25 +245,25 @@ body {
     text-align: left;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     display: flex;
     align-items: center;
     gap: 10px;
-    animation: fadeInUp 0.5s ease-out both;
+    animation: fadeInUp 0.3s ease-out both;
 }
 
-.menu-item:nth-child(1) { animation-delay: 0.3s; }
-.menu-item:nth-child(2) { animation-delay: 0.35s; }
-.menu-item:nth-child(3) { animation-delay: 0.4s; }
-.menu-item:nth-child(4) { animation-delay: 0.45s; }
-.menu-item:nth-child(5) { animation-delay: 0.5s; }
-.menu-item:nth-child(6) { animation-delay: 0.55s; }
-.menu-item:nth-child(7) { animation-delay: 0.6s; }
-.menu-item:nth-child(8) { animation-delay: 0.65s; }
+.menu-item:nth-child(1) { animation-delay: 0.05s; }
+.menu-item:nth-child(2) { animation-delay: 0.1s; }
+.menu-item:nth-child(3) { animation-delay: 0.15s; }
+.menu-item:nth-child(4) { animation-delay: 0.2s; }
+.menu-item:nth-child(5) { animation-delay: 0.25s; }
+.menu-item:nth-child(6) { animation-delay: 0.3s; }
+.menu-item:nth-child(7) { animation-delay: 0.35s; }
+.menu-item:nth-child(8) { animation-delay: 0.4s; }
 
 @keyframes fadeInUp {
     from {
-        transform: translateY(20px);
+        transform: translateY(10px);
         opacity: 0;
     }
     to {
@@ -280,55 +280,26 @@ body {
 }
 
 .menu-item:hover {
-    transform: translateY(-2px) scale(1.02);
+    transform: translateY(-1px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
-    animation: menuItemPulse 0.3s ease-out;
-}
-
-@keyframes menuItemPulse {
-    0% {
-        transform: translateY(-1px) scale(1);
-    }
-    50% {
-        transform: translateY(-3px) scale(1.03);
-    }
-    100% {
-        transform: translateY(-2px) scale(1.02);
-    }
 }
 
 .menu-item.active {
     background: var(--primary);
     color: #fff;
     box-shadow: 0 10px 20px rgba(247, 183, 49, 0.35);
-    animation: activeMenuPulse 0.4s ease-out;
-}
-
-@keyframes activeMenuPulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 10px 20px rgba(247, 183, 49, 0.35);
-    }
-    50% {
-        transform: scale(1.05);
-        box-shadow: 0 15px 30px rgba(247, 183, 49, 0.5);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 10px 20px rgba(247, 183, 49, 0.35);
-    }
 }
 
 .content {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    animation: fadeInRight 0.6s ease-out 0.3s both;
+    animation: fadeInRight 0.4s ease-out 0.15s both;
 }
 
 @keyframes fadeInRight {
     from {
-        transform: translateX(30px);
+        transform: translateX(20px);
         opacity: 0;
     }
     to {
@@ -348,12 +319,12 @@ body {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 16px 18px;
-    animation: cardFadeIn 0.5s ease-out both;
+    animation: cardFadeIn 0.4s ease-out both;
 }
 
 @keyframes cardFadeIn {
     from {
-        transform: translateY(20px);
+        transform: translateY(10px);
         opacity: 0;
     }
     to {
@@ -370,40 +341,27 @@ body {
 
 .stat-card {
     padding: 18px;
-    animation: statCardFadeIn 0.6s ease-out both;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: statCardFadeIn 0.4s ease-out both;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.stat-card:nth-child(1) { animation-delay: 0.4s; }
-.stat-card:nth-child(2) { animation-delay: 0.5s; }
-.stat-card:nth-child(3) { animation-delay: 0.6s; }
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.15s; }
+.stat-card:nth-child(3) { animation-delay: 0.2s; }
 
 .stat-card:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
-    animation: statCardHover 0.4s ease-out;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes statCardFadeIn {
     from {
-        transform: translateY(30px);
+        transform: translateY(15px);
         opacity: 0;
     }
     to {
         transform: translateY(0);
         opacity: 1;
-    }
-}
-
-@keyframes statCardHover {
-    0% {
-        transform: translateY(0) scale(1);
-    }
-    50% {
-        transform: translateY(-6px) scale(1.03);
-    }
-    100% {
-        transform: translateY(-4px) scale(1.02);
     }
 }
 .stat-label {
@@ -473,24 +431,8 @@ body {
 }
 
 .browse-btn:hover {
-    transform: translateY(-4px) rotate(5deg);
+    transform: translateY(-2px);
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
-    animation: browseBtnBounce 0.5s ease-out;
-}
-
-@keyframes browseBtnBounce {
-    0%, 100% {
-        transform: translateY(-2px) rotate(0deg);
-    }
-    25% {
-        transform: translateY(-6px) rotate(5deg);
-    }
-    50% {
-        transform: translateY(-4px) rotate(-3deg);
-    }
-    75% {
-        transform: translateY(-5px) rotate(4deg);
-    }
 }
 
 .list-placeholder h3 {
@@ -636,16 +578,19 @@ body {
     background: var(--primary);
     color: white;
     border-color: var(--primary);
-    transform: translateY(-2px) rotate(180deg);
-    animation: refreshSpin 0.6s ease-out;
+    transform: translateY(-1px);
+}
+
+.refresh-btn:hover .refresh-icon {
+    animation: refreshSpin 0.6s linear;
 }
 
 @keyframes refreshSpin {
     from {
-        transform: translateY(-1px) rotate(0deg);
+        transform: rotate(0deg);
     }
     to {
-        transform: translateY(-2px) rotate(180deg);
+        transform: rotate(360deg);
     }
 }
 
@@ -668,40 +613,27 @@ body {
     box-shadow: var(--shadow);
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s ease;
     border: 1px solid transparent;
     position: relative;
-    animation: productCardFadeIn 0.6s ease-out both;
+    animation: productCardFadeIn 0.4s ease-out both;
 }
 
 @keyframes productCardFadeIn {
     from {
-        transform: translateY(30px) scale(0.95);
+        transform: translateY(15px);
         opacity: 0;
     }
     to {
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
         opacity: 1;
     }
 }
 
 .product-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     border-color: var(--primary);
-    animation: productCardHover 0.3s ease-out;
-}
-
-@keyframes productCardHover {
-    0% {
-        transform: translateY(-4px) scale(1);
-    }
-    50% {
-        transform: translateY(-10px) scale(1.03);
-    }
-    100% {
-        transform: translateY(-8px) scale(1.02);
-    }
 }
 
 .wishlist-btn {
@@ -733,56 +665,12 @@ body {
     animation: wishlistBtnFadeIn 0.5s ease-out both;
 }
 
-@keyframes wishlistBtnFadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0) rotate(-180deg);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) rotate(0deg);
-    }
-}
 
-.wishlist-btn:hover {
-    animation: wishlistBtnBounce 0.5s ease-out;
-}
-
-@keyframes wishlistBtnBounce {
-    0%, 100% {
-        transform: scale(1);
-    }
-    25% {
-        transform: scale(1.3) rotate(10deg);
-    }
-    50% {
-        transform: scale(1.2) rotate(-10deg);
-    }
-    75% {
-        transform: scale(1.25) rotate(5deg);
-    }
-}
-
-.wishlist-btn.active {
-    animation: wishlistBtnActive 0.4s ease-out;
-}
-
-@keyframes wishlistBtnActive {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.4) rotate(360deg);
-    }
-    100% {
-        transform: scale(1.2);
-    }
-}
 
 .wishlist-btn:hover,
 .wishlist-btn.active {
     color: #e74c3c;
-    transform: scale(1.1);
+    transform: scale(1.05);
     opacity: 1;
 }
 
@@ -877,16 +765,13 @@ body {
 }
 
 @keyframes modalSlideIn {
-    0% {
+    from {
         opacity: 0;
-        transform: translateY(50px) scale(0.9);
+        transform: translateY(20px);
     }
-    50% {
-        transform: translateY(-10px) scale(1.02);
-    }
-    100% {
+    to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
 }
 
@@ -914,7 +799,7 @@ body {
     background: var(--primary);
     color: white;
     border-color: var(--primary);
-    transform: rotate(90deg);
+    transform: rotate(90deg) scale(1.05);
 }
 
 .modal-body {
@@ -1517,20 +1402,7 @@ body {
 .chat-seller-btn:active {
     background: var(--primary-strong);
     box-shadow: 0 6px 16px rgba(247, 183, 49, 0.4);
-    transform: translateY(-2px) scale(1.02);
-    animation: buttonPress 0.3s ease-out;
-}
-
-@keyframes buttonPress {
-    0% {
-        transform: translateY(0) scale(1);
-    }
-    50% {
-        transform: translateY(-3px) scale(1.05);
-    }
-    100% {
-        transform: translateY(-2px) scale(1.02);
-    }
+    transform: translateY(-1px);
 }
 
 /* Buy Now button in product details */
@@ -1567,23 +1439,7 @@ body {
 .buy-now-btn:active {
     background: #f7b731;
     box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
-    transform: translateY(-2px) scale(1.02);
-    animation: buyNowPulse 0.4s ease-out;
-}
-
-@keyframes buyNowPulse {
-    0% {
-        transform: translateY(0) scale(1);
-        box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
-    }
-    50% {
-        transform: translateY(-4px) scale(1.05);
-        box-shadow: 0 8px 20px rgba(39, 174, 96, 0.5);
-    }
-    100% {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
-    }
+    transform: translateY(-1px);
 }
 
 /* Chat badge */
