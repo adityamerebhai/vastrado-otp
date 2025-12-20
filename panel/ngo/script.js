@@ -38,141 +38,13 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
       }
     });
     
-    // Hide upload form when switching sections
-    if (uploadFormCard && targetSection !== 'upload') {
-      uploadFormCard.style.display = 'none';
-    }
   });
 });
 
 // =====================
-// Upload form handling
+// NGO panel reads donations from donation panel
+// No upload functionality - only viewing donations
 // =====================
-const uploadAction = document.getElementById('uploadAction');
-const uploadFormCard = document.getElementById('uploadFormCard');
-const closeFormBtn = document.getElementById('closeFormBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-const uploadForm = document.getElementById('uploadForm');
-const fileInput = document.getElementById('photos');
-const fileUploadArea = document.getElementById('fileUploadArea');
-const filePreview = document.getElementById('filePreview');
-
-// Open upload form when + button is clicked
-if (uploadAction) {
-  uploadAction.addEventListener('click', () => {
-    // Show form in the upload section (which is now hidden but still exists)
-    if (uploadFormCard) {
-      // Make sure upload section is visible
-      const uploadSection = document.querySelector('.content-section[data-section="upload"]');
-      if (uploadSection) {
-        uploadSection.style.display = 'flex';
-        uploadSection.style.flexDirection = 'column';
-        uploadSection.style.gap = '16px';
-      }
-      uploadFormCard.style.display = 'block';
-    }
-  });
-}
-
-// Close form handlers
-function closeUploadForm() {
-  if (uploadFormCard) {
-    uploadFormCard.style.display = 'none';
-  }
-  if (uploadForm) {
-    uploadForm.reset();
-  }
-  if (filePreview) {
-    filePreview.innerHTML = '';
-  }
-  // Hide upload section
-  const uploadSection = document.querySelector('.content-section[data-section="upload"]');
-  if (uploadSection) {
-    uploadSection.style.display = 'none';
-  }
-}
-
-if (closeFormBtn) {
-  closeFormBtn.addEventListener('click', closeUploadForm);
-}
-
-if (cancelBtn) {
-  cancelBtn.addEventListener('click', closeUploadForm);
-}
-
-// File upload handling
-if (fileUploadArea && fileInput) {
-  // Click to browse
-  fileUploadArea.addEventListener('click', () => {
-    fileInput.click();
-  });
-
-  // Drag and drop
-  fileUploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    fileUploadArea.style.borderColor = 'var(--primary)';
-    fileUploadArea.style.backgroundColor = 'rgba(247, 183, 49, 0.05)';
-  });
-
-  fileUploadArea.addEventListener('dragleave', () => {
-    fileUploadArea.style.borderColor = '';
-    fileUploadArea.style.backgroundColor = '';
-  });
-
-  fileUploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    fileUploadArea.style.borderColor = '';
-    fileUploadArea.style.backgroundColor = '';
-    
-    if (e.dataTransfer.files.length > 0) {
-      fileInput.files = e.dataTransfer.files;
-      handleFileSelection(e.dataTransfer.files);
-    }
-  });
-
-  // File input change
-  fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-      handleFileSelection(e.target.files);
-    }
-  });
-}
-
-function handleFileSelection(files) {
-  if (!filePreview) return;
-  
-  filePreview.innerHTML = '';
-  const fileArray = Array.from(files);
-  
-  fileArray.forEach((file, index) => {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const previewItem = document.createElement('div');
-        previewItem.className = 'preview-item';
-        previewItem.innerHTML = `
-          <img src="${e.target.result}" alt="Preview ${index + 1}">
-          <button type="button" class="remove-preview" data-index="${index}">×</button>
-          <p class="preview-name">${file.name}</p>
-        `;
-        filePreview.appendChild(previewItem);
-
-        // Remove preview handler
-        const removeBtn = previewItem.querySelector('.remove-preview');
-        removeBtn.addEventListener('click', () => {
-          previewItem.remove();
-          // Create new FileList without this file
-          const dt = new DataTransfer();
-          fileArray.forEach((f, i) => {
-            if (i !== index) dt.items.add(f);
-          });
-          fileInput.files = dt.files;
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-}
 
 // =====================
 // Store and display uploaded items
@@ -184,134 +56,29 @@ function handleFileSelection(files) {
 // In production, replace with your backend API endpoint
 
 function getStoredItems() {
-  // First try localStorage
-  const localItems = localStorage.getItem('ngoListings');
-  if (localItems) {
+  // Read donations from donation panel's localStorage
+  const donationItems = localStorage.getItem('donationListings');
+  if (donationItems) {
     try {
-      return JSON.parse(localItems);
+      return JSON.parse(donationItems);
     } catch (e) {
-      console.error('Error parsing local storage:', e);
+      console.error('Error parsing donation listings:', e);
     }
   }
   return [];
 }
 
-// Sync to cloud storage using backend API
-// Railway server URL
-const API_BASE_URL = "https://vastrado-otp-production.up.railway.app/api";
-async function syncToCloud(items) {
-  console.log('🔍 [DEBUG] syncToCloud() called');
-  console.log('🔍 [DEBUG] Items to sync:', items);
-  console.log('🔍 [DEBUG] Items count:', items.length);
-  console.log('🔍 [DEBUG] API_BASE_URL:', API_BASE_URL);
-  
-  try {
-    // Save to localStorage first (always works)
-    localStorage.setItem('ngoListings', JSON.stringify(items));
-    localStorage.setItem('ngoListings_sync', Date.now().toString());
-    console.log('✅ Saved to localStorage');
-    
-    // Try to sync to backend API for cross-device sync
-    try {
-      const apiUrl = `${API_BASE_URL}/listings`;
-      console.log('🔍 [DEBUG] Posting to:', apiUrl);
-      console.log('🔍 [DEBUG] Items to sync:', items.length);
-      console.log('🔍 [DEBUG] Payload preview:', JSON.stringify(items).substring(0, 200) + '...');
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
-        body: JSON.stringify(items),
-        cache: 'no-cache'
-      });
-      
-      console.log('🔍 [DEBUG] Response status:', response.status, response.statusText);
-      console.log('🔍 [DEBUG] Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('🔍 [DEBUG] Response data:', result);
-        if (result.success) {
-          console.log(`✅ Synced ${items.length} listings to backend API (cross-device enabled)`);
-          return true;
-        } else {
-          console.error(`❌ Backend API returned success: false`, result);
-        }
-      } else {
-        const errorText = await response.text();
-        console.error(`❌ Backend API error: ${response.status} - ${errorText}`);
-        console.error('❌ Full error response:', errorText);
-        return false;
-      }
-    } catch (apiError) {
-      // Backend not available - use local storage only
-      console.error('❌ Backend API POST failed:', apiError);
-      console.error('❌ Error name:', apiError.name);
-      console.error('❌ Error message:', apiError.message);
-      console.error('❌ Error stack:', apiError.stack);
-      console.log('💡 Using local storage only (cross-device sync unavailable)');
-      return false; // Return false if API sync failed
-    }
-    
-    return true; // Only return true if everything succeeded
-  } catch (error) {
-    console.error('❌ Sync failed:', error);
-    console.error('❌ Error details:', error.message, error.stack);
-    return false;
-  }
-}
-
-// Get items from cloud storage
-async function getItemsFromCloud() {
-  // For now, return local storage items
-  // In production, fetch from your backend API
-  return getStoredItems();
-}
-
-async function saveItem(item) {
-  console.log('💾 [SAVE] saveItem() called with:', item);
-  const items = getStoredItems();
-  console.log('💾 [SAVE] Current items count:', items.length);
-  items.push(item);
-  console.log('💾 [SAVE] New items count:', items.length);
-  
-  // Save to localStorage first
-  localStorage.setItem('ngoListings', JSON.stringify(items));
-  console.log('💾 [SAVE] Saved to localStorage');
-  
-  // Sync ALL items to cloud - WAIT for it to complete
-  console.log('💾 [SAVE] Syncing ALL items to cloud...');
-  try {
-    const success = await syncToCloud(items);
-    if (success) {
-      console.log('💾 [SAVE] ✅ Successfully synced all items to API');
-    } else {
-      console.error('💾 [SAVE] ⚠️ Failed to sync to API, but saved locally');
-      console.error('💾 [SAVE] Check network connection and server logs');
-    }
-  } catch (error) {
-    console.error('💾 [SAVE] ❌ Error syncing to cloud:', error);
-    console.error('💾 [SAVE] Error details:', error.message);
-  }
-  
-  updateStats();
-  displayListings();
-}
+// NGO panel only reads donations from donation panel
+// No save/sync functionality needed
 
 // Update stats cards
 function updateStats() {
   const items = getStoredItems();
   const listingsCount = items.length;
-  const sellerUsername = localStorage.getItem('username');
   
-  // Get payments for this seller
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  const sellerPayments = allPayments.filter(p => p.seller === sellerUsername);
-  const salesCount = sellerPayments.filter(p => p.status === 'confirmed').length;
-  const pendingCount = sellerPayments.filter(p => p.status === 'pending').length;
+  // Count items by condition
+  const newItemsCount = items.filter(item => item.clothCondition === 'new').length;
+  const likeNewItemsCount = items.filter(item => item.clothCondition === 'like-new').length;
   
   const listingsCountEl = document.getElementById('listingsCount');
   const salesCountEl = document.getElementById('salesCount');
@@ -321,10 +88,10 @@ function updateStats() {
     listingsCountEl.textContent = listingsCount;
   }
   if (salesCountEl) {
-    salesCountEl.textContent = salesCount;
+    salesCountEl.textContent = newItemsCount;
   }
   if (pendingCountEl) {
-    pendingCountEl.textContent = pendingCount;
+    pendingCountEl.textContent = likeNewItemsCount;
   }
 }
 
@@ -336,7 +103,7 @@ function displayListings() {
   listingsGrid.innerHTML = '';
 
   if (items.length === 0) {
-    listingsGrid.innerHTML = '<p class="muted" style="text-align: center; padding: 40px;">No listings yet. Upload your first item!</p>';
+    listingsGrid.innerHTML = '<p class="muted" style="text-align: center; padding: 40px;">No donations available yet. Donations uploaded in the donation panel will appear here.</p>';
     return;
   }
 
@@ -348,9 +115,8 @@ function displayListings() {
     const mainImage = item.photos && item.photos.length > 0 ? item.photos[0] : '';
     
     card.innerHTML = `
-      <button class="delete-listing-btn" data-index="${index}" aria-label="Delete listing">×</button>
       <div class="listing-image">
-        <img src="${mainImage}" alt="Listing ${index + 1}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'200\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'18\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+        <img src="${mainImage}" alt="Donation ${index + 1}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'200\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'18\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'">
       </div>
       <div class="listing-info">
         <p class="listing-fabric"><strong>Fabric:</strong> ${item.fabricType || 'N/A'}</p>
@@ -358,77 +124,13 @@ function displayListings() {
       </div>
     `;
 
-    // Delete button handler
-    const deleteBtn = card.querySelector('.delete-listing-btn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent card click
-        removeListing(index);
-      });
-    }
-
     // Card click handler for viewing details
     card.addEventListener('click', () => showItemDetails(item, index));
     listingsGrid.appendChild(card);
   });
 }
 
-// Remove listing function
-let pendingDeleteIndex = null;
-
-function removeListing(index) {
-  pendingDeleteIndex = index;
-  const deleteModal = document.getElementById('deleteConfirmModal');
-  if (deleteModal) {
-    deleteModal.style.display = 'flex';
-  }
-}
-
-// Handle delete confirmation
-const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-const deleteConfirmModal = document.getElementById('deleteConfirmModal');
-
-if (confirmDeleteBtn) {
-  confirmDeleteBtn.addEventListener('click', () => {
-    if (pendingDeleteIndex !== null) {
-      const items = getStoredItems();
-      if (pendingDeleteIndex >= 0 && pendingDeleteIndex < items.length) {
-        items.splice(pendingDeleteIndex, 1);
-        localStorage.setItem('ngoListings', JSON.stringify(items));
-
-        // 🔥 IMPORTANT: sync deletion to server
-        syncToCloud(items);
-        displayListings();
-        updateStats();
-
-      }
-      pendingDeleteIndex = null;
-    }
-    if (deleteConfirmModal) {
-      deleteConfirmModal.style.display = 'none';
-    }
-  });
-}
-
-if (cancelDeleteBtn) {
-  cancelDeleteBtn.addEventListener('click', () => {
-    pendingDeleteIndex = null;
-    if (deleteConfirmModal) {
-      deleteConfirmModal.style.display = 'none';
-    }
-  });
-}
-
-// Close modal on overlay click
-if (deleteConfirmModal) {
-  deleteConfirmModal.addEventListener('click', (e) => {
-    if (e.target === deleteConfirmModal) {
-      pendingDeleteIndex = null;
-      deleteConfirmModal.style.display = 'none';
-    }
-  });
-}
+// NGO panel cannot delete donations - they are managed by the donation panel
 
 function showItemDetails(item, index) {
   const modal = document.getElementById('detailModal');
@@ -485,102 +187,7 @@ if (modalOverlay) {
   });
 }
 
-// Form submission handler
-async function handleFormSubmit(e) {
-  if (e) e.preventDefault();
-  
-  if (!uploadForm) return;
-  
-  const formData = new FormData(uploadForm);
-  const photos = [];
-  
-  // Convert file inputs to base64
-  const filePromises = Array.from(fileInput.files).map(file => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(file);
-    });
-  });
-
-  try {
-    const photoData = await Promise.all(filePromises);
-    const sellerUsername = localStorage.getItem('username') || 'Unknown Seller';
-    const data = {
-      id: Date.now(),
-      
-      sellerUsername: sellerUsername,
-      photos: photoData.filter(p => p !== null),
-      fabricType: formData.get('fabricType'),
-      clothCondition: formData.get('clothCondition'),
-      phoneNumber: formData.get('phoneNumber'),
-      dateAdded: new Date().toISOString()
-    };
-
-    // Validate data before saving
-    if (!data.fabricType || !data.clothCondition) {
-      console.error('Missing required fields');
-      return;
-    }
-
-    // Save to localStorage and sync to cloud - WAIT for it
-    console.log('📝 [FORM] Saving item and syncing to cloud...');
-    await saveItem(data);
-    
-    // Verify it was saved
-    const savedItems = getStoredItems();
-    const wasSaved = savedItems.some(item => item.id === data.id);
-    
-    if (!wasSaved) {
-      console.error('❌ Failed to save item to localStorage');
-      return;
-    }
-    
-    console.log('✅ [FORM] Item saved and synced successfully');
-    
-    // Reset form and close
-    closeUploadForm();
-    
-    // Hide upload section
-    const uploadSection = document.querySelector('.content-section[data-section="upload"]');
-    if (uploadSection) {
-      uploadSection.style.display = 'none';
-    }
-    
-    // Switch to listings section
-    const listingsMenuItem = document.querySelector('.menu-item[data-section="listings"]');
-    if (listingsMenuItem) {
-      listingsMenuItem.click();
-    }
-    
-    // Display listings
-    displayListings();
-  } catch (error) {
-    console.error('❌ Error saving item:', error);
-    console.error('❌ Error details:', error.message, error.stack);
-  }
-}
-
-// Form submission
-if (uploadForm) {
-  uploadForm.addEventListener('submit', handleFormSubmit);
-  
-  // Also add direct handler to submit button for mobile compatibility
-  const submitBtn = uploadForm.querySelector('.submit-btn');
-  if (submitBtn) {
-    submitBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      handleFormSubmit(e);
-    });
-    submitBtn.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      handleFormSubmit(e);
-    });
-  }
-}
+// NGO panel has no upload form - donations are managed by donation panel
 
 // =====================
 // Profile name/avatar from stored username
@@ -822,28 +429,8 @@ function displayNgoOrders() {
 // =====================
 // Initialize: show profile section by default and load listings
 // =====================
-// Sync listings from cloud on startup
-async function syncListingsFromCloud() {
-  const cloudItems = await getItemsFromCloud();
-  if (cloudItems && cloudItems.length > 0) {
-    // Merge with local items (avoid duplicates)
-    const localItems = getStoredItems();
-    const merged = [...localItems];
-    
-    cloudItems.forEach(cloudItem => {
-      if (!merged.some(item => item.id === cloudItem.id)) {
-        merged.push(cloudItem);
-      }
-    });
-    
-    // Save merged list
-    localStorage.setItem('ngoListings', JSON.stringify(merged));
-    displayListings();
-    updateStats();
-    return true;
-  }
-  return false;
-}
+// NGO panel reads donations from donation panel's localStorage
+// No cloud sync needed - donations are managed by donation panel
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 [INIT] NGO panel initialized');
@@ -854,26 +441,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     profileSection.style.gap = '16px';
   }
   
-  // Get current listings from localStorage FIRST
-  const localItems = getStoredItems();
-  console.log('🚀 [INIT] Local items count:', localItems.length);
-  
-  // CRITICAL: Sync ALL local items to cloud API on startup
-  // This ensures any listings created get synced to the API
-  if (localItems.length > 0) {
-    console.log('🚀 [INIT] Syncing ALL local items to cloud API...');
-    const syncSuccess = await syncToCloud(localItems);
-    if (syncSuccess) {
-      console.log('🚀 [INIT] ✅ Successfully synced all items to API');
-    } else {
-      console.log('🚀 [INIT] ⚠️ Failed to sync to API - check console for errors');
-    }
-  } else {
-    console.log('🚀 [INIT] No local items to sync');
-  }
-  
-  // Then sync from cloud (to get items from other devices)
-  await syncListingsFromCloud();
+  // Get donations from donation panel's localStorage
+  const donations = getStoredItems();
+  console.log('🚀 [INIT] Donations available:', donations.length);
   
   // Update stats
   updateStats();

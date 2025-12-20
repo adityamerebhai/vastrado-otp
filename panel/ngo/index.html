@@ -37,7 +37,7 @@
                         <img src="images/profile.png" alt="Profile" class="menu-icon"> Profile
                     </button>
                     <button class="menu-item" data-section="listings">
-                        <img src="images/browse.png" alt="Listings" class="menu-icon"> My Donation
+                        <img src="images/browse.png" alt="Listings" class="menu-icon"> Browse Donations
                     </button>
                     <button class="menu-item" data-section="notifications">
                         <img src="images/notification.png" alt="Notifications" class="menu-icon"> Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
@@ -55,107 +55,34 @@
                 <div class="content-section" data-section="profile">
                     <section class="stats-grid">
                         <article class="card stat-card">
-                            <p class="stat-label">Listings</p>
-                            <h2 class="stat-value" id="listingsCount">0</h2>
-                            <p class="stat-sub">Total items listed</p>
+                        <p class="stat-label">Donations</p>
+                        <h2 class="stat-value" id="listingsCount">0</h2>
+                        <p class="stat-sub">Total donations available</p>
                         </article>
                         <article class="card stat-card">
-                            <p class="stat-label">Sales</p>
-                            <h2 class="stat-value" id="salesCount">0</h2>
-                            <p class="stat-sub">Total sales</p>
+                        <p class="stat-label">New Items</p>
+                        <h2 class="stat-value" id="salesCount">0</h2>
+                        <p class="stat-sub">Items in new condition</p>
                         </article>
                         <article class="card stat-card">
-                            <p class="stat-label">Pending</p>
-                            <h2 class="stat-value" id="pendingCount">0</h2>
-                            <p class="stat-sub">Awaiting approval</p>
+                        <p class="stat-label">Like New</p>
+                        <h2 class="stat-value" id="pendingCount">0</h2>
+                        <p class="stat-sub">Items in like new condition</p>
                         </article>
-                    </section>
-
-                    <section class="upload-highlight card">
-                        <div>
-                            <p class="muted">Quick action</p>
-                            <h3>Upload your cloth for resell</h3>
-                            <p class="subtext">Add photos, set price, and publish to your storefront.</p>
-                        </div>
-                        <button class="upload-btn" id="uploadAction" aria-label="Upload cloth">+</button>
                     </section>
 
                     <section class="card list-placeholder">
-                        <h3>Recent Orders</h3>
-                        <p class="muted">No orders to show yet. Once customers buy, you'll see them here.</p>
-                    </section>
-                </div>
-
-                <div class="content-section" data-section="upload" style="display: none;">
-                    <section class="card upload-form-card" id="uploadFormCard" style="display: none;">
-                        <div class="form-header">
-                            <h3>Upload Your Cloth</h3>
-                            <button class="close-form-btn" id="closeFormBtn" aria-label="Close form">×</button>
-                        </div>
-                        <form class="upload-form" id="uploadForm">
-                            <div class="form-group">
-                                <label for="photos">Upload Photos</label>
-                                <div class="file-upload-area" id="fileUploadArea">
-                                    <input type="file" id="photos" name="photos" accept="image/*" multiple style="display: none;">
-                                    <div class="file-upload-content">
-                                        <span class="upload-icon">📷</span>
-                                        <p class="upload-text">Click to browse or drag and drop</p>
-                                        <p class="upload-hint">Supports JPG, PNG, GIF (Max 10MB per image)</p>
-                                    </div>
-                                    <div class="file-preview" id="filePreview"></div>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="fabricType">Fabric Type</label>
-                                    <select id="fabricType" name="fabricType" class="form-input" required>
-                                        <option value="">Select fabric type</option>
-                                        <option value="cotton">Cotton</option>
-                                        <option value="polyester">Polyester</option>
-                                        <option value="silk">Silk</option>
-                                        <option value="wool">Wool</option>
-                                        <option value="linen">Linen</option>
-                                        <option value="denim">Denim</option>
-                                        <option value="leather">Leather</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="clothCondition">Cloth Condition</label>
-                                    <select id="clothCondition" name="clothCondition" class="form-input" required>
-                                        <option value="">Select condition</option>
-                                        <option value="new">New</option>
-                                        <option value="like-new">Like New</option>
-                                        <option value="good">Good</option>
-                                        <option value="fair">Fair</option>
-                                        <option value="poor">Poor</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="phoneNumber">Phone Number</label>
-                                    <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="Enter phone number" required>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
-                                <button type="submit" class="submit-btn">Submit</button>
-                            </div>
-                        </form>
+                        <h3>Available Donations</h3>
+                        <p class="muted">View donations made by users. Donations uploaded in the donation panel will appear here.</p>
                     </section>
                 </div>
 
                 <div class="content-section" data-section="listings" style="display: none;">
                     <section class="card listings-container">
-                        <h3>My Donation</h3>
-                        <p class="muted">Manage your clothing donations.</p>
+                        <h3>Available Donations</h3>
+                        <p class="muted">View donations made by users from the donation panel.</p>
                         <div class="listings-grid" id="listingsGrid">
-                            <!-- Uploaded items will be displayed here -->
+                            <!-- Donations from donation panel will be displayed here -->
                         </div>
                     </section>
                 </div>
@@ -170,18 +97,6 @@
                     </div>
                 </div>
 
-                <!-- Delete Confirmation Modal -->
-                <div class="modal-overlay" id="deleteConfirmModal" style="display: none;">
-                    <div class="modal-content confirm-modal">
-                        <div class="confirm-icon">⚠️</div>
-                        <h3 class="confirm-title">Remove Listing</h3>
-                        <p class="confirm-message">Are you sure you want to remove this listing? This action cannot be undone.</p>
-                        <div class="confirm-actions">
-                            <button class="confirm-btn cancel-confirm-btn" id="cancelDeleteBtn">Cancel</button>
-                            <button class="confirm-btn delete-confirm-btn" id="confirmDeleteBtn">Remove</button>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Logout Confirmation Modal -->
                 <div class="modal-overlay" id="logoutConfirmModal" style="display: none;">
