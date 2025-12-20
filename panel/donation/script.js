@@ -1198,7 +1198,7 @@ if (donorStatusModalOverlay) {
 
 // Fetch NGO orders from API for cross-device sync
 async function fetchNgoOrdersFromAPI() {
-  // Get existing orders from localStorage first (to preserve them if API fails)
+  // Get existing orders from localStorage as fallback
   let existingOrders = [];
   try {
     existingOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
@@ -1206,9 +1206,10 @@ async function fetchNgoOrdersFromAPI() {
     console.error('❌ [DONATION] Error reading existing orders from localStorage:', error);
   }
   
-  // Try to fetch from API, but handle 404 gracefully (endpoint might not exist yet)
+  // Try to fetch from API (API is source of truth for cross-device sync)
   try {
     const url = `${API_BASE_URL}/ngo-orders`;
+    console.log(`🔄 [DONATION] Fetching NGO orders from API: ${url}`);
     
     const res = await fetch(url, { 
       method: 'GET',
@@ -1229,37 +1230,32 @@ async function fetchNgoOrdersFromAPI() {
         if (responseText && responseText.trim() !== '') {
           const data = JSON.parse(responseText);
           if (Array.isArray(data)) {
-            // Only update localStorage if API returned actual data (not empty)
-            // This prevents overwriting existing orders with empty API response
-            if (data.length > 0) {
-              localStorage.setItem('ngoOrders', JSON.stringify(data));
-              console.log(`✅ [DONATION] Fetched ${data.length} NGO orders from API`);
-              return data;
-            } else {
-              // API returned empty array - preserve existing localStorage orders
-              console.log('ℹ️ [DONATION] API returned empty array, preserving existing localStorage orders');
-              return existingOrders;
-            }
+            // API is source of truth - always update localStorage with API data
+            localStorage.setItem('ngoOrders', JSON.stringify(data));
+            console.log(`✅ [DONATION] Fetched ${data.length} NGO orders from API and updated localStorage`);
+            return data;
           }
         } else {
-          // Empty response - preserve existing orders
-          console.log('ℹ️ [DONATION] API returned empty response, preserving existing localStorage orders');
-          return existingOrders;
+          // Empty response from API - API says no orders, so clear localStorage
+          localStorage.setItem('ngoOrders', JSON.stringify([]));
+          console.log('ℹ️ [DONATION] API returned empty response (no orders on server)');
+          return [];
         }
       }
     }
     
     // If we get here, API endpoint doesn't exist or returned error
-    // Silently fallback to localStorage (404 is expected if endpoint doesn't exist)
+    // Fallback to localStorage (404 is expected if endpoint doesn't exist)
     if (res && res.status === 404) {
-      // Endpoint doesn't exist yet - this is expected, don't log as error
+      console.log('ℹ️ [DONATION] API endpoint not found (404), using localStorage');
     }
   } catch (apiError) {
     // Network error or other issue - silently fallback
+    console.log('ℹ️ [DONATION] API fetch failed, using localStorage');
   }
   
-  // Fallback to localStorage (preserve existing orders)
-  console.log(`📦 [DONATION] Retrieved ${existingOrders.length} NGO orders from localStorage`);
+  // Fallback to localStorage
+  console.log(`📦 [DONATION] Retrieved ${existingOrders.length} NGO orders from localStorage (fallback)`);
   return existingOrders;
 }
 
@@ -1339,10 +1335,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Then sync from cloud (to get items from other devices)
   await syncListingsFromCloud();
   
+  // Fetch NGO orders from API for cross-device sync
+  await fetchNgoOrdersFromAPI();
+  
   // Update stats
   updateStats();
   
   // Load and display listings
   displayListings();
+  
+  // Load and display orders (if orders section exists)
+  displayDonationOrders();
 });
 

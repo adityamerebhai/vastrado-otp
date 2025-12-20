@@ -126,6 +126,30 @@ app.post("/api/listings", (req, res) => {
 // ================= CHAT SYSTEM ===================
 // =================================================
 
+// ================= NOTIFICATIONS STORE =================
+let notifications = [];
+
+// Get notifications for a user
+app.get("/api/notifications/:username", (req, res) => {
+  const { username } = req.params;
+  const userNotifications = notifications.filter(
+    n => n.to === username && !n.read
+  );
+  res.json(userNotifications);
+});
+
+// Mark notification as read
+app.post("/api/notifications/read", (req, res) => {
+  const { id } = req.body;
+
+  notifications = notifications.map(n =>
+    n.id === id ? { ...n, read: true } : n
+  );
+
+  res.json({ success: true });
+});
+
+
 // 🔥 Chat store (FIXED)
 let chats = {}; 
 // key: buyer_seller → [{ from, text, createdAt }]
@@ -135,7 +159,28 @@ let chats = {};
 let ngoOrders = [];
 
 app.get("/api/ngo-orders", (req, res) => {
+  console.log(`📤 GET /api/ngo-orders - Returning ${ngoOrders.length} orders`);
   res.json(ngoOrders);
+});
+
+app.post("/api/ngo-orders", (req, res) => {
+  console.log(`📥 POST /api/ngo-orders - Received request`);
+  console.log(`📥 Request body type:`, typeof req.body, Array.isArray(req.body));
+  console.log(`📥 Request body length:`, Array.isArray(req.body) ? req.body.length : 'not an array');
+  
+  if (Array.isArray(req.body)) {
+    ngoOrders = req.body;
+    console.log(`💾 POST /api/ngo-orders - Saved ${ngoOrders.length} orders`);
+    // Log first order if exists
+    if (ngoOrders.length > 0) {
+      console.log(`📦 First order:`, JSON.stringify(ngoOrders[0]).substring(0, 100) + '...');
+    }
+  } else {
+    console.error(`❌ POST /api/ngo-orders - Invalid data format, expected array, got:`, typeof req.body);
+    ngoOrders = [];
+  }
+  
+  res.json({ success: true, count: ngoOrders.length });
 });
 
 

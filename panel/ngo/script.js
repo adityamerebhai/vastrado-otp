@@ -574,7 +574,7 @@ function getStoredOrders() {
 async function syncNgoOrdersToAPI(orders) {
   try {
     const apiUrl = `${API_BASE_URL}/ngo-orders`;
-    console.log('🔄 [NGO] Syncing orders to API:', apiUrl);
+    console.log(`🔄 [NGO] Syncing ${orders.length} orders to API: ${apiUrl}`);
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -583,17 +583,23 @@ async function syncNgoOrdersToAPI(orders) {
         'Cache-Control': 'no-cache'
       },
       body: JSON.stringify(orders),
-      cache: 'no-cache'
+      cache: 'no-cache',
+      mode: 'cors'
     });
     
     if (response.ok) {
       const result = await response.json();
       if (result.success) {
-        console.log(`✅ [NGO] Synced ${orders.length} orders to API`);
+        console.log(`✅ [NGO] Successfully synced ${orders.length} orders to API`);
         return true;
+      } else {
+        console.warn(`⚠️ [NGO] API returned success: false`, result);
+        return false;
       }
+    } else {
+      console.error(`❌ [NGO] API returned status ${response.status}: ${response.statusText}`);
+      return false;
     }
-    return false;
   } catch (error) {
     console.error('❌ [NGO] Failed to sync orders to API:', error);
     return false;
