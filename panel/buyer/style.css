@@ -1260,6 +1260,43 @@ body {
     transform: translateY(-1px);
 }
 
+/* Buy Now button in product details */
+.detail-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.buy-now-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: #27ae60;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 1;
+}
+
+.buy-now-btn:hover,
+.buy-now-btn:active {
+    background: #229954;
+    box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
+    transform: translateY(-1px);
+}
+
 /* Chat badge */
 .chat-badge {
     display: inline-flex;
