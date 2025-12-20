@@ -428,7 +428,7 @@ function getDonorLevel(donationCount) {
       range: '0',
       color: '#95a5a6',
       gradient: 'linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%)',
-      icon: '❤️',
+      icon: '🤝',
       description: 'Start your donation journey'
     };
   }
