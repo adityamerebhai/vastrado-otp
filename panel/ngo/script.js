@@ -56,61 +56,90 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
       }
     });
     
-    // Hide request form when switching sections
-    if (requestFormCard && targetSection !== 'request') {
-      requestFormCard.style.display = 'none';
+    // Hide donate form when switching sections
+    if (donateFormCard && targetSection !== 'donate') {
+      donateFormCard.style.display = 'none';
     }
   });
 });
 
 // =====================
-// Request form handling
+// Donate form handling
 // =====================
-const requestAction = document.getElementById('requestAction');
-const requestFormCard = document.getElementById('requestFormCard');
+const donateAction = document.getElementById('donateAction');
+const donateFormCard = document.getElementById('donateFormCard');
 const closeFormBtn = document.getElementById('closeFormBtn');
 const cancelBtn = document.getElementById('cancelBtn');
-const requestForm = document.getElementById('requestForm');
+const donateForm = document.getElementById('donateForm');
 
-// Open request form when + button is clicked
-if (requestAction) {
-  requestAction.addEventListener('click', () => {
-    if (requestFormCard) {
-      const requestSection = document.querySelector('.content-section[data-section="request"]');
-      if (requestSection) {
-        requestSection.style.display = 'flex';
-        requestSection.style.flexDirection = 'column';
-        requestSection.style.gap = '16px';
+// Open donate form when + button is clicked
+if (donateAction) {
+  donateAction.addEventListener('click', () => {
+    if (donateFormCard) {
+      const donateSection = document.querySelector('.content-section[data-section="donate"]');
+      if (donateSection) {
+        donateSection.style.display = 'flex';
+        donateSection.style.flexDirection = 'column';
+        donateSection.style.gap = '16px';
       }
-      requestFormCard.style.display = 'block';
+      donateFormCard.style.display = 'block';
     }
   });
 }
 
 // Close form handlers
-function closeRequestForm() {
-  if (requestFormCard) {
-    requestFormCard.style.display = 'none';
+function closeDonateForm() {
+  if (donateFormCard) {
+    donateFormCard.style.display = 'none';
   }
-  if (requestForm) {
-    requestForm.reset();
+  if (donateForm) {
+    donateForm.reset();
   }
-  const requestSection = document.querySelector('.content-section[data-section="request"]');
-  if (requestSection) {
-    requestSection.style.display = 'none';
+  const donateSection = document.querySelector('.content-section[data-section="donate"]');
+  if (donateSection) {
+    donateSection.style.display = 'none';
   }
 }
 
 if (closeFormBtn) {
-  closeFormBtn.addEventListener('click', closeRequestForm);
+  closeFormBtn.addEventListener('click', closeDonateForm);
 }
 
 if (cancelBtn) {
-  cancelBtn.addEventListener('click', closeRequestForm);
+  cancelBtn.addEventListener('click', closeDonateForm);
+}
+
+// Show/hide required indicators based on donation type
+const donationTypeSelect = document.getElementById('donationType');
+if (donationTypeSelect) {
+  donationTypeSelect.addEventListener('change', function() {
+    const type = this.value;
+    const amountRequired = document.getElementById('amountRequired');
+    const quantityRequired = document.getElementById('quantityRequired');
+    const amountInput = document.getElementById('amount');
+    const quantityInput = document.getElementById('quantity');
+    
+    if (type === 'money') {
+      if (amountRequired) amountRequired.style.display = 'inline';
+      if (quantityRequired) quantityRequired.style.display = 'none';
+      if (amountInput) amountInput.required = true;
+      if (quantityInput) quantityInput.required = false;
+    } else if (type && type !== '') {
+      if (amountRequired) amountRequired.style.display = 'none';
+      if (quantityRequired) quantityRequired.style.display = 'inline';
+      if (amountInput) amountInput.required = false;
+      if (quantityInput) quantityInput.required = true;
+    } else {
+      if (amountRequired) amountRequired.style.display = 'none';
+      if (quantityRequired) quantityRequired.style.display = 'none';
+      if (amountInput) amountInput.required = false;
+      if (quantityInput) quantityInput.required = false;
+    }
+  });
 }
 
 // =====================
-// Store and display donation requests
+// Store and display donations made
 // =====================
 const API_BASE_URL = "https://vastrado-otp-production.up.railway.app/api";
 
@@ -146,7 +175,7 @@ async function syncToCloud(donations) {
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          console.log(`✅ Synced ${donations.length} donation requests to backend API`);
+          console.log(`✅ Synced ${donations.length} donations to backend API`);
           return true;
         }
       }
@@ -169,10 +198,27 @@ async function saveDonation(donation) {
   
   localStorage.setItem('ngoDonations', JSON.stringify(donations));
   
+  // Also create a payment entry for tracking
+  const payment = {
+    id: Date.now().toString(),
+    ngo: donation.ngoName,
+    donor: localStorage.getItem('username') || 'Donor',
+    amount: donation.amount || 0,
+    itemName: donation.donationType,
+    quantity: donation.quantity || 1,
+    status: 'pending',
+    date: new Date().toISOString(),
+    description: donation.description || ''
+  };
+  
+  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  allPayments.push(payment);
+  localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
+  
   try {
     const success = await syncToCloud(donations);
     if (success) {
-      console.log('✅ Successfully synced donation request to API');
+      console.log('✅ Successfully synced donation to API');
     } else {
       console.error('⚠️ Failed to sync to API, but saved locally');
     }
@@ -188,23 +234,23 @@ async function saveDonation(donation) {
 function updateStats() {
   const donations = getStoredDonations();
   const donationsCount = donations.length;
-  const ngoUsername = localStorage.getItem('username');
+  const donorUsername = localStorage.getItem('username');
   
-  // Get payments for this NGO
+  // Get payments made by this donor
   const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  const ngoPayments = allPayments.filter(p => p.ngo === ngoUsername);
-  const itemsCount = ngoPayments.filter(p => p.status === 'confirmed').length;
-  const pendingCount = ngoPayments.filter(p => p.status === 'pending').length;
+  const donorPayments = allPayments.filter(p => p.donor === donorUsername);
+  const totalAmount = donorPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  const pendingCount = donorPayments.filter(p => p.status === 'pending').length;
   
   const donationsCountEl = document.getElementById('donationsCount');
-  const itemsCountEl = document.getElementById('itemsCount');
+  const amountCountEl = document.getElementById('amountCount');
   const pendingCountEl = document.getElementById('pendingCount');
   
   if (donationsCountEl) {
     donationsCountEl.textContent = donationsCount;
   }
-  if (itemsCountEl) {
-    itemsCountEl.textContent = itemsCount;
+  if (amountCountEl) {
+    amountCountEl.textContent = `₹${totalAmount.toFixed(2)}`;
   }
   if (pendingCountEl) {
     pendingCountEl.textContent = pendingCount;
@@ -219,7 +265,7 @@ function displayDonations() {
   donationsGrid.innerHTML = '';
 
   if (donations.length === 0) {
-    donationsGrid.innerHTML = '<p class="muted" style="text-align: center; padding: 40px;">No donation requests yet. Create your first request!</p>';
+    donationsGrid.innerHTML = '<p class="muted" style="text-align: center; padding: 40px;">No donations yet. Make your first donation!</p>';
     return;
   }
 
@@ -229,11 +275,12 @@ function displayDonations() {
     card.dataset.index = index;
     
     card.innerHTML = `
-      <button class="delete-listing-btn" data-index="${index}" aria-label="Delete request">×</button>
+      <button class="delete-listing-btn" data-index="${index}" aria-label="Delete donation">×</button>
       <div class="listing-info">
-        <p class="listing-category"><strong>Category:</strong> ${donation.category || 'N/A'}</p>
-        <p class="listing-quantity"><strong>Item:</strong> ${donation.itemName || 'N/A'}</p>
-        <p class="listing-condition"><strong>Quantity:</strong> ${donation.quantity || '0'}</p>
+        <p class="listing-category"><strong>NGO:</strong> ${donation.ngoName || 'N/A'}</p>
+        <p class="listing-quantity"><strong>Type:</strong> ${donation.donationType || 'N/A'}</p>
+        <p class="listing-condition"><strong>Amount:</strong> ₹${donation.amount || '0'}</p>
+        ${donation.quantity ? `<p><strong>Quantity:</strong> ${donation.quantity}</p>` : ''}
         <p style="margin-top: 8px; font-size: 0.85rem; color: var(--muted);">${donation.description ? (donation.description.substring(0, 100) + (donation.description.length > 100 ? '...' : '')) : 'No description'}</p>
       </div>
     `;
@@ -312,21 +359,27 @@ function showDonationDetails(donation, index) {
 
   modalBody.innerHTML = `
     <div class="detail-header">
-      <h2>Donation Request Details</h2>
+      <h2>Donation Details</h2>
     </div>
     <div class="detail-info">
       <div class="detail-row">
-        <span class="detail-label">Item Name:</span>
-        <span class="detail-value">${donation.itemName || 'N/A'}</span>
+        <span class="detail-label">NGO/Organization:</span>
+        <span class="detail-value">${donation.ngoName || 'N/A'}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Category:</span>
-        <span class="detail-value">${donation.category || 'N/A'}</span>
+        <span class="detail-label">Donation Type:</span>
+        <span class="detail-value">${donation.donationType || 'N/A'}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Quantity Needed:</span>
-        <span class="detail-value">${donation.quantity || '0'}</span>
+        <span class="detail-label">Amount:</span>
+        <span class="detail-value">₹${donation.amount || '0'}</span>
       </div>
+      ${donation.quantity ? `
+      <div class="detail-row">
+        <span class="detail-label">Quantity:</span>
+        <span class="detail-value">${donation.quantity}</span>
+      </div>
+      ` : ''}
       <div class="detail-row">
         <span class="detail-label">Description:</span>
         <span class="detail-value">${donation.description || 'N/A'}</span>
@@ -334,6 +387,10 @@ function showDonationDetails(donation, index) {
       <div class="detail-row">
         <span class="detail-label">Contact Number:</span>
         <span class="detail-value">${donation.phoneNumber || 'N/A'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Date:</span>
+        <span class="detail-value">${new Date(donation.date || Date.now()).toLocaleDateString()}</span>
       </div>
     </div>
   `;
@@ -362,41 +419,56 @@ if (detailModal) {
 }
 
 // Form submission
-if (requestForm) {
-  requestForm.addEventListener('submit', async (e) => {
+if (donateForm) {
+  donateForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const itemName = document.getElementById('itemName').value;
-    const description = document.getElementById('description').value;
-    const category = document.getElementById('category').value;
+    const ngoName = document.getElementById('ngoName').value;
+    const donationType = document.getElementById('donationType').value;
+    const amount = document.getElementById('amount').value;
     const quantity = document.getElementById('quantity').value;
+    const description = document.getElementById('description').value;
     const phoneNumber = document.getElementById('phoneNumber').value;
     
-    if (!itemName || !description || !category || !quantity || !phoneNumber) {
-      alert('Please fill in all fields');
+    if (!ngoName || !donationType || !phoneNumber) {
+      alert('Please fill in all required fields (NGO name, donation type, and contact number)');
       return;
     }
     
+    if (donationType === 'money') {
+      if (!amount || parseFloat(amount) <= 0) {
+        alert('Please enter a valid donation amount');
+        return;
+      }
+    } else {
+      // For non-money donations, quantity is recommended
+      if (!quantity || parseInt(quantity) <= 0) {
+        alert('Please enter the quantity of items you are donating');
+        return;
+      }
+    }
+    
     const donation = {
-      itemName,
+      ngoName,
+      donationType,
+      amount: parseFloat(amount) || 0,
+      quantity: quantity ? parseInt(quantity) : null,
       description,
-      category,
-      quantity: parseInt(quantity),
       phoneNumber,
       date: new Date().toISOString(),
-      ngo: localStorage.getItem('username') || 'NGO'
+      donor: localStorage.getItem('username') || 'Donor'
     };
     
     await saveDonation(donation);
-    closeRequestForm();
+    closeDonateForm();
     
     // Show success modal
     const successModal = document.getElementById('successModal');
     const successTitle = document.getElementById('successTitle');
     const successMessage = document.getElementById('successMessage');
     if (successModal && successTitle && successMessage) {
-      successTitle.textContent = 'Request Created!';
-      successMessage.textContent = 'Your donation request has been created successfully.';
+      successTitle.textContent = 'Donation Submitted!';
+      successMessage.textContent = 'Your donation has been submitted successfully. Thank you for your generosity!';
       successModal.style.display = 'flex';
     }
   });
@@ -628,8 +700,8 @@ function sendMessage() {
 // =====================
 function getNgoPayments() {
   const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  const ngoUsername = localStorage.getItem('username');
-  return allPayments.filter(p => p.ngo === ngoUsername);
+  const donorUsername = localStorage.getItem('username');
+  return allPayments.filter(p => p.donor === donorUsername);
 }
 
 function displayNgoPayments() {
@@ -647,7 +719,7 @@ function displayNgoPayments() {
     <div class="payment-item ${payment.status}" onclick="showPaymentDetails('${payment.id}')">
       <div class="payment-item-info">
         <p class="payment-item-title">${payment.itemName || 'Donation'}</p>
-        <p class="payment-item-buyer">From: ${payment.donor || 'Unknown'}</p>
+        <p class="payment-item-buyer">To: ${payment.ngo || 'NGO'}</p>
       </div>
       <div>
         <p class="payment-item-amount">₹${payment.amount || '0'}</p>
@@ -671,61 +743,23 @@ function showPaymentDetails(paymentId) {
     <h2>Payment Details</h2>
     <div class="payment-detail-section">
       <h4>Donation Information</h4>
-      <p><strong>Item:</strong> ${payment.itemName || 'N/A'}</p>
+      <p><strong>Type:</strong> ${payment.itemName || 'N/A'}</p>
       <p><strong>Amount:</strong> <span class="payment-amount-display">₹${payment.amount || '0'}</span></p>
+      <p><strong>NGO:</strong> ${payment.ngo || 'N/A'}</p>
+      ${payment.description ? `<p><strong>Description:</strong> ${payment.description}</p>` : ''}
     </div>
     <div class="payment-detail-section">
-      <h4>Donor Information</h4>
-      <div class="buyer-info">
-        <div class="buyer-avatar">${(payment.donor || 'D').charAt(0).toUpperCase()}</div>
-        <div class="buyer-name">${payment.donor || 'Unknown'}</div>
-      </div>
-    </div>
-    <div class="payment-actions">
-      <button class="confirm-payment-btn" onclick="confirmPayment('${payment.id}')">Confirm Payment</button>
-      <button class="reject-payment-btn" onclick="rejectPayment('${payment.id}')">Reject</button>
+      <h4>Status</h4>
+      <p><strong>Status:</strong> <span class="payment-status ${payment.status}">${payment.status}</span></p>
+      <p><strong>Date:</strong> ${new Date(payment.date || Date.now()).toLocaleString()}</p>
     </div>
   `;
   
   modal.style.display = 'flex';
 }
 
-window.confirmPayment = function(paymentId) {
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  const payment = allPayments.find(p => p.id === paymentId);
-  if (payment) {
-    payment.status = 'confirmed';
-    localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
-    displayNgoPayments();
-    updateStats();
-    
-    const modal = document.getElementById('paymentDetailModal');
-    if (modal) modal.style.display = 'none';
-    
-    const successModal = document.getElementById('successModal');
-    const successTitle = document.getElementById('successTitle');
-    const successMessage = document.getElementById('successMessage');
-    if (successModal && successTitle && successMessage) {
-      successTitle.textContent = 'Payment Confirmed!';
-      successMessage.textContent = 'The payment has been confirmed successfully.';
-      successModal.style.display = 'flex';
-    }
-  }
-};
-
-window.rejectPayment = function(paymentId) {
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  const payment = allPayments.find(p => p.id === paymentId);
-  if (payment) {
-    payment.status = 'rejected';
-    localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
-    displayNgoPayments();
-    updateStats();
-    
-    const modal = document.getElementById('paymentDetailModal');
-    if (modal) modal.style.display = 'none';
-  }
-};
+// Payment confirmation is handled by the NGO receiving the donation, not the donor
+// Donors can only view their payment status
 
 const closePaymentDetailModal = document.getElementById('closePaymentDetailModal');
 const paymentDetailModal = document.getElementById('paymentDetailModal');
@@ -784,7 +818,7 @@ function displayNgoOrders() {
   const confirmedPayments = payments.filter(p => p.status === 'confirmed');
   
   if (confirmedPayments.length === 0) {
-    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed donations yet.</p>';
+    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No confirmed donations yet.</p>';
     return;
   }
   
@@ -792,7 +826,7 @@ function displayNgoOrders() {
     <div class="order-item">
       <div class="order-item-info">
         <p class="order-item-title">${payment.itemName || 'Donation'}</p>
-        <p class="order-item-buyer">From: ${payment.donor || 'Unknown'}</p>
+        <p class="order-item-buyer">To: ${payment.ngo || 'NGO'}</p>
         <p class="order-item-date">${new Date(payment.date || Date.now()).toLocaleString()}</p>
         <span class="sale-confirmed-badge">✓ Confirmed</span>
       </div>

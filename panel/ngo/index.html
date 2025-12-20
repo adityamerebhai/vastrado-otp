@@ -63,79 +63,85 @@
                         <article class="card stat-card">
                             <p class="stat-label">Donations</p>
                             <h2 class="stat-value" id="donationsCount">0</h2>
-                            <p class="stat-sub">Total donations received</p>
+                            <p class="stat-sub">Total donations made</p>
                         </article>
                         <article class="card stat-card">
-                            <p class="stat-label">Items</p>
-                            <h2 class="stat-value" id="itemsCount">0</h2>
-                            <p class="stat-sub">Total items collected</p>
+                            <p class="stat-label">Amount</p>
+                            <h2 class="stat-value" id="amountCount">₹0</h2>
+                            <p class="stat-sub">Total amount donated</p>
                         </article>
                         <article class="card stat-card">
                             <p class="stat-label">Pending</p>
                             <h2 class="stat-value" id="pendingCount">0</h2>
-                            <p class="stat-sub">Awaiting approval</p>
+                            <p class="stat-sub">Awaiting confirmation</p>
                         </article>
                     </section>
 
                     <section class="upload-highlight card">
                         <div>
                             <p class="muted">Quick action</p>
-                            <h3>Request donations</h3>
-                            <p class="subtext">Create a donation request for items you need.</p>
+                            <h3>Make a donation</h3>
+                            <p class="subtext">Support a cause by making a donation.</p>
                         </div>
-                        <button class="upload-btn" id="requestAction" aria-label="Request donation">+</button>
+                        <button class="upload-btn" id="donateAction" aria-label="Make donation">+</button>
                     </section>
 
                     <section class="card list-placeholder">
                         <h3>Recent Donations</h3>
-                        <p class="muted">No donations to show yet. Once donors contribute, you'll see them here.</p>
+                        <p class="muted">No donations to show yet. Make your first donation to see it here.</p>
                     </section>
                 </div>
 
-                <div class="content-section" data-section="request" style="display: none;">
-                    <section class="card upload-form-card" id="requestFormCard" style="display: none;">
+                <div class="content-section" data-section="donate" style="display: none;">
+                    <section class="card upload-form-card" id="donateFormCard" style="display: none;">
                         <div class="form-header">
-                            <h3>Create Donation Request</h3>
+                            <h3>Make a Donation</h3>
                             <button class="close-form-btn" id="closeFormBtn" aria-label="Close form">×</button>
                         </div>
-                        <form class="upload-form" id="requestForm">
+                        <form class="upload-form" id="donateForm">
                             <div class="form-group">
-                                <label for="itemName">Item Name</label>
-                                <input type="text" id="itemName" name="itemName" class="form-input" placeholder="Enter item name" required>
+                                <label for="ngoName">NGO/Organization Name</label>
+                                <input type="text" id="ngoName" name="ngoName" class="form-input" placeholder="Enter NGO or organization name" required>
                             </div>
 
                             <div class="form-group">
-                                <label for="description">Description</label>
-                                <textarea id="description" name="description" class="form-input" rows="4" placeholder="Describe what you need and why" required></textarea>
+                                <label for="donationType">Donation Type</label>
+                                <select id="donationType" name="donationType" class="form-input" required>
+                                    <option value="">Select donation type</option>
+                                    <option value="money">Money</option>
+                                    <option value="clothing">Clothing</option>
+                                    <option value="food">Food</option>
+                                    <option value="medical">Medical Supplies</option>
+                                    <option value="educational">Educational Materials</option>
+                                    <option value="other">Other</option>
+                                </select>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="category">Category</label>
-                                    <select id="category" name="category" class="form-input" required>
-                                        <option value="">Select category</option>
-                                        <option value="clothing">Clothing</option>
-                                        <option value="food">Food</option>
-                                        <option value="medical">Medical Supplies</option>
-                                        <option value="educational">Educational Materials</option>
-                                        <option value="other">Other</option>
-                                    </select>
+                                    <label for="amount">Amount (₹) <span id="amountRequired" style="color: #e74c3c; display: none;">*</span></label>
+                                    <input type="number" id="amount" name="amount" class="form-input" placeholder="Enter amount" min="0" step="0.01">
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="quantity">Quantity Needed</label>
-                                    <input type="number" id="quantity" name="quantity" class="form-input" placeholder="Enter quantity" min="1" required>
+                                    <label for="quantity">Quantity <span id="quantityRequired" style="color: #e74c3c; display: none;">*</span></label>
+                                    <input type="number" id="quantity" name="quantity" class="form-input" placeholder="Enter quantity" min="1">
                                 </div>
                             </div>
 
                             <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" name="description" class="form-input" rows="4" placeholder="Describe your donation (optional)"></textarea>
+                            </div>
+
+                            <div class="form-group">
                                 <label for="phoneNumber">Contact Number</label>
-                                <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="Enter contact number" required>
+                                <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="Enter your contact number" required>
                             </div>
 
                             <div class="form-actions">
                                 <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
-                                <button type="submit" class="submit-btn">Submit Request</button>
+                                <button type="submit" class="submit-btn">Submit Donation</button>
                             </div>
                         </form>
                     </section>
@@ -143,10 +149,10 @@
 
                 <div class="content-section" data-section="donations" style="display: none;">
                     <section class="card listings-container">
-                        <h3>Donation Requests</h3>
-                        <p class="muted">Manage your donation requests.</p>
+                        <h3>My Donations</h3>
+                        <p class="muted">View and manage your donations.</p>
                         <div class="listings-grid" id="donationsGrid">
-                            <!-- Donation requests will be displayed here -->
+                            <!-- Donations will be displayed here -->
                         </div>
                     </section>
                 </div>
@@ -165,8 +171,8 @@
                 <div class="modal-overlay" id="deleteConfirmModal" style="display: none;">
                     <div class="modal-content confirm-modal">
                         <div class="confirm-icon">⚠️</div>
-                        <h3 class="confirm-title">Remove Request</h3>
-                        <p class="confirm-message">Are you sure you want to remove this donation request? This action cannot be undone.</p>
+                        <h3 class="confirm-title">Remove Donation</h3>
+                        <p class="confirm-message">Are you sure you want to remove this donation? This action cannot be undone.</p>
                         <div class="confirm-actions">
                             <button class="confirm-btn cancel-confirm-btn" id="cancelDeleteBtn">Cancel</button>
                             <button class="confirm-btn delete-confirm-btn" id="confirmDeleteBtn">Remove</button>
@@ -226,15 +232,15 @@
                     <section class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                             <div>
-                                <h3 style="margin: 0;">Payment Requests</h3>
-                                <p class="muted" style="margin: 4px 0 0 0;">Review and confirm payments from donors.</p>
+                                <h3 style="margin: 0;">Payment Status</h3>
+                                <p class="muted" style="margin: 4px 0 0 0;">Track the status of your donation payments.</p>
                             </div>
                             <button id="refreshNgoPaymentsBtn" class="refresh-btn" title="Refresh payments">
                                 <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
                             </button>
                         </div>
                         <div class="payments-list" id="ngoPaymentsList">
-                            <p class="muted" style="padding: 20px; text-align: center;">No pending payments.</p>
+                            <p class="muted" style="padding: 20px; text-align: center;">No payments yet.</p>
                         </div>
                     </section>
                 </div>
@@ -263,10 +269,10 @@
 
                 <div class="content-section" data-section="orders" style="display: none;">
                     <section class="card">
-                        <h3>Completed Donations</h3>
+                        <h3>Confirmed Donations</h3>
                         <p class="muted">Your confirmed donations will appear here.</p>
                         <div class="orders-list" id="ngoOrdersList">
-                            <p class="muted" style="padding: 20px; text-align: center;">No completed donations yet.</p>
+                            <p class="muted" style="padding: 20px; text-align: center;">No confirmed donations yet.</p>
                         </div>
                     </section>
                 </div>
@@ -291,7 +297,7 @@
                         <div class="setting-row">
                             <div>
                                 <p class="setting-label">Notifications</p>
-                                <p class="muted small">Stay updated about donations.</p>
+                                <p class="muted small">Stay updated about your donations.</p>
                             </div>
                             <label class="toggle">
                                 <input type="checkbox" id="notifyToggle" checked>
@@ -307,4 +313,5 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
