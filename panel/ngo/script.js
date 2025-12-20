@@ -225,7 +225,18 @@ function showItemDetails(item, index) {
         <span class="detail-value">${item.phoneNumber || 'N/A'}</span>
       </div>
     </div>
+    <div class="detail-actions" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-color);">
+      <button class="submit-btn" id="confirmOrderBtn" data-item-id="${item.id || index}">Confirm Order</button>
+    </div>
   `;
+
+  // Add event listener for confirm order button
+  const confirmOrderBtn = document.getElementById('confirmOrderBtn');
+  if (confirmOrderBtn) {
+    confirmOrderBtn.addEventListener('click', () => {
+      confirmOrder(item, index);
+    });
+  }
 
   modal.style.display = 'flex';
 }
@@ -477,6 +488,76 @@ async function loadNotifications() {
 // =====================
 // Orders Functionality
 // =====================
+// =====================
+// Order Management
+// =====================
+function getStoredOrders() {
+  const orders = localStorage.getItem('ngoOrders');
+  if (orders) {
+    try {
+      return JSON.parse(orders);
+    } catch (e) {
+      console.error('Error parsing NGO orders:', e);
+    }
+  }
+  return [];
+}
+
+function saveOrder(order) {
+  const orders = getStoredOrders();
+  // Check if order already exists
+  const existingIndex = orders.findIndex(o => o.id === order.id);
+  if (existingIndex >= 0) {
+    // Update existing order
+    orders[existingIndex] = order;
+  } else {
+    // Add new order
+    orders.push(order);
+  }
+  localStorage.setItem('ngoOrders', JSON.stringify(orders));
+  console.log('✅ [NGO] Order saved:', order);
+}
+
+function confirmOrder(item, index) {
+  const order = {
+    id: item.id || `order_${Date.now()}_${index}`,
+    donationId: item.id || index,
+    photos: item.photos || [],
+    fabricType: item.fabricType || 'N/A',
+    clothCondition: item.clothCondition || 'N/A',
+    phoneNumber: item.phoneNumber || 'N/A',
+    dateOrdered: new Date().toISOString(),
+    status: 'confirmed'
+  };
+  
+  saveOrder(order);
+  
+  // Close modal
+  const modal = document.getElementById('detailModal');
+  if (modal) modal.style.display = 'none';
+  
+  // Show success message
+  const successModal = document.getElementById('successModal');
+  const successTitle = document.getElementById('successTitle');
+  const successMessage = document.getElementById('successMessage');
+  if (successModal && successTitle && successMessage) {
+    successTitle.textContent = 'Order Confirmed!';
+    successMessage.textContent = 'The donation has been added to your orders.';
+    successModal.style.display = 'flex';
+    
+    // Auto close after 2 seconds
+    setTimeout(() => {
+      successModal.style.display = 'none';
+    }, 2000);
+  }
+  
+  // Update orders display if orders section is visible
+  const ordersSection = document.querySelector('.content-section[data-section="orders"]');
+  if (ordersSection && ordersSection.style.display !== 'none') {
+    displayNgoOrders();
+  }
+}
+
 function displayNgoOrders() {
   const ordersList = document.getElementById('ngoOrdersList');
   if (!ordersList) {
@@ -484,8 +565,45 @@ function displayNgoOrders() {
     return;
   }
   
-  // Since payments are removed, orders section will be empty
-  ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed orders yet.</p>';
+  const orders = getStoredOrders();
+  
+  if (orders.length === 0) {
+    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No orders yet.</p>';
+    return;
+  }
+  
+  ordersList.innerHTML = orders.map(order => {
+    const mainImage = order.photos && order.photos.length > 0 ? order.photos[0] : '';
+    const orderDate = new Date(order.dateOrdered).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+    
+    return `
+      <div class="order-item">
+        <img src="${mainImage}" alt="Order" class="order-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'200\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'18\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+        <div class="order-item-info">
+          <div class="order-item-title">Donation Order</div>
+          <div class="order-item-buyer">Fabric: ${order.fabricType}</div>
+          <div class="order-item-condition">Condition: ${order.clothCondition}</div>
+          <div class="order-item-date">Ordered: ${orderDate}</div>
+          <div class="order-item-status" style="margin-top: 8px; padding: 4px 8px; background: #27ae60; color: white; border-radius: 4px; display: inline-block; font-size: 0.75rem; font-weight: 600;">Confirmed</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Success modal close handler
+const successOkBtn = document.getElementById('successOkBtn');
+if (successOkBtn) {
+  successOkBtn.addEventListener('click', () => {
+    const successModal = document.getElementById('successModal');
+    if (successModal) {
+      successModal.style.display = 'none';
+    }
+  });
 }
 
 // =====================
