@@ -306,7 +306,7 @@ function displayProducts() {
         <img src="${p.photos?.[0] || ""}" alt="${p.fabricType || "Product"}" />
       </div>
       <div class="product-info">
-        <p class="product-seller"><span class="seller-badge">👤 ${p.sellerUsername || "Seller"}</span></p>
+        <p class="product-seller"><span class="seller-badge"><img src="images/profile.png" alt="Seller" class="seller-icon"> ${p.sellerUsername || "Seller"}</span></p>
         <p class="product-fabric"><strong>Fabric:</strong> ${p.fabricType || "N/A"}</p>
         <p class="product-cost"><strong>Cost:</strong> ₹${p.expectedCost || 0}</p>
         <p class="product-condition"><strong>Condition:</strong> ${p.clothCondition || "N/A"}</p>
@@ -374,7 +374,7 @@ window.showProductDetails = function(product) {
       </div>
     </div>
     <div class="detail-actions">
-      <button class="chat-seller-btn" data-seller-username="${product.sellerUsername || ""}">💬 Chat with Seller</button>
+      <button class="chat-seller-btn" data-seller-username="${product.sellerUsername || ""}"><img src="images/chat.png" alt="Chat" class="btn-icon"> Chat with Seller</button>
       <button class="buy-now-btn" data-product-id="${product.id}">🛒 Buy Now</button>
     </div>
   `;
@@ -725,7 +725,7 @@ function displayWishlist() {
         <img src="${product.photos?.[0] || ""}" alt="${product.fabricType || "Product"}" />
       </div>
       <div class="product-info">
-        <p class="product-seller"><span class="seller-badge">👤 ${product.sellerUsername || "Seller"}</span></p>
+        <p class="product-seller"><span class="seller-badge"><img src="images/profile.png" alt="Seller" class="seller-icon"> ${product.sellerUsername || "Seller"}</span></p>
         <p class="product-fabric"><strong>Fabric:</strong> ${product.fabricType || "N/A"}</p>
         <p class="product-cost"><strong>Cost:</strong> ₹${product.expectedCost || 0}</p>
       </div>

@@ -14,7 +14,9 @@
         <header class="topbar">
             <div class="brand">Vastrado</div>
             <div class="top-actions">
-                <button class="ghost-btn" aria-label="Notifications">🔔</button>
+                <button class="ghost-btn" aria-label="Notifications">
+                    <img src="images/notification.png" alt="Notifications" class="topbar-icon">
+                </button>
                 <div class="profile" id="profileDropdown">
                     <span class="avatar" id="avatar">B</span>
                     <span class="profile-name" id="profileName">Buyer</span>
@@ -31,14 +33,30 @@
         <div class="layout">
             <aside class="sidebar">
                 <nav class="menu">
-                    <button class="menu-item active" data-section="profile">👤 Profile</button>
-                    <button class="menu-item" data-section="browse">🛍️ Browse Products</button>
-                    <button class="menu-item" data-section="notifications">🔔 Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span></button>
-                    <button class="menu-item" data-section="chat">💬 Chats</button>
-                    <button class="menu-item" data-section="payments">💳 Payments <span class="payment-badge" id="paymentBadge" style="display:none;">0</span></button>
-                    <button class="menu-item" data-section="orders">🧾 My Orders</button>
-                    <button class="menu-item" data-section="wishlist">❤️ Wishlist</button>
-                    <button class="menu-item" data-section="settings">⚙️ Settings</button>
+                    <button class="menu-item active" data-section="profile">
+                        <img src="images/profile.png" alt="Profile" class="menu-icon"> Profile
+                    </button>
+                    <button class="menu-item" data-section="browse">
+                        <img src="images/browse.png" alt="Browse" class="menu-icon"> Browse Products
+                    </button>
+                    <button class="menu-item" data-section="notifications">
+                        <img src="images/notification.png" alt="Notifications" class="menu-icon"> Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                    </button>
+                    <button class="menu-item" data-section="chat">
+                        <img src="images/chat.png" alt="Chat" class="menu-icon"> Chats
+                    </button>
+                    <button class="menu-item" data-section="payments">
+                        <img src="images/payment.png" alt="Payments" class="menu-icon"> Payments <span class="payment-badge" id="paymentBadge" style="display:none;">0</span>
+                    </button>
+                    <button class="menu-item" data-section="orders">
+                        <img src="images/order.png" alt="Orders" class="menu-icon"> My Orders
+                    </button>
+                    <button class="menu-item" data-section="wishlist">
+                        <img src="images/wishlist.png" alt="Wishlist" class="menu-icon"> Wishlist
+                    </button>
+                    <button class="menu-item" data-section="settings">
+                        <img src="images/settings.png" alt="Settings" class="menu-icon"> Settings
+                    </button>
                 </nav>
             </aside>
 
@@ -68,7 +86,9 @@
                             <h3>Start exploring products</h3>
                             <p class="subtext">Discover unique items from verified sellers.</p>
                         </div>
-                        <button class="browse-btn" id="browseAction" aria-label="Browse products">🔍</button>
+                        <button class="browse-btn" id="browseAction" aria-label="Browse products">
+                            <img src="images/browse.png" alt="Browse" class="browse-btn-icon">
+                        </button>
                     </section>
 
                     <section class="card list-placeholder">
@@ -88,7 +108,9 @@
                                 </p>
                             </div>
                             <div style="display: flex; gap: 8px;">
-                                <button class="refresh-btn" id="refreshProducts" title="Refresh products">🔄 Refresh</button>
+                                <button class="refresh-btn" id="refreshProducts" title="Refresh products">
+                                    <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
+                                </button>
                             </div>
                         </div>
                         <div class="products-grid" id="productsGrid">
@@ -134,7 +156,9 @@
                                 <h3 style="margin: 0;">My Payments</h3>
                                 <p class="muted" style="margin: 4px 0 0 0;">Track your payment status here.</p>
                             </div>
-                            <button id="refreshPaymentsBtn" class="refresh-btn" title="Refresh payments">🔄 Refresh</button>
+                            <button id="refreshPaymentsBtn" class="refresh-btn" title="Refresh payments">
+                                <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
+                            </button>
                         </div>
                         <div class="payments-list" id="buyerPaymentsList">
                             <p class="muted" style="padding: 20px; text-align: center;">No payments yet. Buy a product to see your payments here.</p>

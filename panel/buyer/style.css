@@ -68,10 +68,21 @@ body {
     font-size: 1.1rem;
     cursor: pointer;
     color: var(--muted);
-    transition: transform 0.2s ease, color 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+.topbar-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
 .ghost-btn:hover {
-    color: var(--primary);
+    opacity: 0.7;
     transform: translateY(-1px);
 }
 
@@ -201,6 +212,16 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.menu-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
 .menu-item:hover {
@@ -296,7 +317,18 @@ body {
     cursor: pointer;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
     transition: transform 0.15s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
+
+.browse-btn-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
 .browse-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
@@ -433,6 +465,12 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
+}
+
+.refresh-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
 }
 
 .refresh-btn:hover {
@@ -1168,7 +1206,8 @@ body {
 }
 
 .seller-badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     padding: 4px 10px;
     background: var(--accent);
     color: var(--primary-strong);
@@ -1183,7 +1222,18 @@ body {
 }
 
 /* Chat button in product details */
+.btn-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
 .chat-seller-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-top: 24px;
     width: 100%;
     padding: 14px 24px;
