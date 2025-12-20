@@ -815,8 +815,52 @@ function displayDonationOrders() {
     return;
   }
   
-  // Since payments are removed, orders section will be empty
-  ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed orders yet.</p>';
+  // Get NGO orders from localStorage
+  const ngoOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
+  
+  if (ngoOrders.length === 0) {
+    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed orders yet.</p>';
+    return;
+  }
+  
+  // Get donation listings to match with orders for full details
+  const donationListings = getStoredItems();
+  
+  // Display orders
+  ordersList.innerHTML = ngoOrders.map(order => {
+    // Find the original donation item to get full details
+    const donationItem = donationListings.find(item => 
+      item.id && item.id.toString() === order.donationId?.toString()
+    ) || order; // Fallback to order data if donation not found
+    
+    const mainImage = (order.photos && order.photos.length > 0) 
+      ? order.photos[0] 
+      : (donationItem.photos && donationItem.photos.length > 0)
+        ? donationItem.photos[0]
+        : '';
+    
+    const orderDate = new Date(order.dateOrdered).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    return `
+      <div class="order-item">
+        <img src="${mainImage}" alt="Order" class="order-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'200\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'18\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+        <div class="order-item-info">
+          <div class="order-item-title">Donation Order Confirmed</div>
+          <div class="order-item-buyer">Fabric Type: ${order.fabricType || donationItem.fabricType || 'N/A'}</div>
+          <div class="order-item-condition">Condition: ${order.clothCondition || donationItem.clothCondition || 'N/A'}</div>
+          ${order.phoneNumber ? `<div class="order-item-buyer">Phone: ${order.phoneNumber}</div>` : ''}
+          <div class="order-item-date">Ordered: ${orderDate}</div>
+          <div style="margin-top: 8px; padding: 4px 8px; background: #27ae60; color: white; border-radius: 4px; display: inline-block; font-size: 0.75rem; font-weight: 600;">Confirmed by NGO</div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // =====================
