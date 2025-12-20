@@ -2,7 +2,7 @@
 // Section navigation: show/hide content based on menu selection
 // =====================
 document.querySelectorAll('.menu-item').forEach((btn) => {
-  btn.addEventListener('click', async () => {
+  btn.addEventListener('click', () => {
     // Update active menu item
     document.querySelectorAll('.menu-item').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
@@ -31,7 +31,7 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
         
         // Load orders when orders section is shown
         if (targetSection === 'orders') {
-          await displayDonationOrders();
+          displayDonationOrders();
         }
       } else {
         section.style.display = 'none';
@@ -990,25 +990,17 @@ async function loadNotifications() {
 // =====================
 // Orders Functionality
 // =====================
-async function displayDonationOrders() {
+function displayDonationOrders() {
   const ordersList = document.getElementById('donationOrdersList');
   if (!ordersList) {
     console.error('📦 [ORDERS] donationOrdersList element not found');
     return;
   }
   
-  // First, try to fetch from API to get latest orders (for cross-device sync)
-  let ngoOrders = await fetchNgoOrdersFromAPI();
-  
-  // If API returned empty but we have local data, use local data
-  if (ngoOrders.length === 0) {
-    const localOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
-    if (localOrders.length > 0) {
-      ngoOrders = localOrders;
-    }
-  }
-  
+  // Get NGO orders from localStorage
+  const ngoOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
   console.log('📦 [ORDERS] Displaying orders, count:', ngoOrders.length);
+  console.log('📦 [ORDERS] Orders data:', ngoOrders);
   
   if (ngoOrders.length === 0) {
     ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed orders yet.</p>';
@@ -1206,8 +1198,13 @@ if (donorStatusModalOverlay) {
 
 // Fetch NGO orders from API for cross-device sync
 async function fetchNgoOrdersFromAPI() {
-  // Get local orders first to compare
-  const localOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
+  // Get existing orders from localStorage first (to preserve them if API fails)
+  let existingOrders = [];
+  try {
+    existingOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
+  } catch (error) {
+    console.error('❌ [DONATION] Error reading existing orders from localStorage:', error);
+  }
   
   // Try to fetch from API, but handle 404 gracefully (endpoint might not exist yet)
   try {
@@ -1232,56 +1229,38 @@ async function fetchNgoOrdersFromAPI() {
         if (responseText && responseText.trim() !== '') {
           const data = JSON.parse(responseText);
           if (Array.isArray(data)) {
-            // Merge API data with local data (prioritize API, but keep local if API is empty)
+            // Only update localStorage if API returned actual data (not empty)
+            // This prevents overwriting existing orders with empty API response
             if (data.length > 0) {
-              // API has data, use it and update localStorage
               localStorage.setItem('ngoOrders', JSON.stringify(data));
               console.log(`✅ [DONATION] Fetched ${data.length} NGO orders from API`);
               return data;
-            } else if (localOrders.length > 0) {
-              // API is empty but local has data, keep local data
-              console.log(`ℹ️ [DONATION] API returned empty, keeping ${localOrders.length} local orders`);
-              return localOrders;
             } else {
-              // Both are empty
-              console.log('ℹ️ [DONATION] No orders found in API or localStorage');
-              return [];
+              // API returned empty array - preserve existing localStorage orders
+              console.log('ℹ️ [DONATION] API returned empty array, preserving existing localStorage orders');
+              return existingOrders;
             }
           }
         } else {
-          // Empty response - keep local data if it exists
-          if (localOrders.length > 0) {
-            console.log('ℹ️ [DONATION] API returned empty response, keeping local orders');
-            return localOrders;
-          }
-          return [];
+          // Empty response - preserve existing orders
+          console.log('ℹ️ [DONATION] API returned empty response, preserving existing localStorage orders');
+          return existingOrders;
         }
       }
     }
     
     // If we get here, API endpoint doesn't exist or returned error
-    // Use local data if available
-    if (localOrders.length > 0) {
-      console.log(`📦 [DONATION] API unavailable, using ${localOrders.length} local orders`);
-      return localOrders;
+    // Silently fallback to localStorage (404 is expected if endpoint doesn't exist)
+    if (res && res.status === 404) {
+      // Endpoint doesn't exist yet - this is expected, don't log as error
     }
   } catch (apiError) {
-    // Network error or other issue - use local data if available
-    if (localOrders.length > 0) {
-      console.log(`📦 [DONATION] API error, using ${localOrders.length} local orders`);
-      return localOrders;
-    }
+    // Network error or other issue - silently fallback
   }
   
-  // Final fallback to localStorage
-  try {
-    const ngoOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
-    console.log(`📦 [DONATION] Retrieved ${ngoOrders.length} NGO orders from localStorage`);
-    return ngoOrders;
-  } catch (error) {
-    console.error('❌ [DONATION] Error reading NGO orders from localStorage:', error);
-    return [];
-  }
+  // Fallback to localStorage (preserve existing orders)
+  console.log(`📦 [DONATION] Retrieved ${existingOrders.length} NGO orders from localStorage`);
+  return existingOrders;
 }
 
 // =====================
@@ -1300,12 +1279,12 @@ if (refreshOrdersBtn) {
       
       if (orders !== null) {
         // Update display with fetched orders
-        await displayDonationOrders();
+        displayDonationOrders();
         refreshOrdersBtn.innerHTML = '✓ Refreshed!';
         console.log('✅ [DONATION] Orders refreshed successfully');
       } else {
         // Fallback to localStorage
-        await displayDonationOrders();
+        displayDonationOrders();
         refreshOrdersBtn.innerHTML = originalContent;
         console.warn('⚠️ [DONATION] Orders fetch failed, using localStorage');
       }
@@ -1313,7 +1292,7 @@ if (refreshOrdersBtn) {
       console.error('❌ [DONATION] Refresh error:', err);
       refreshOrdersBtn.innerHTML = '❌ Error';
       // Still show localStorage data
-      await displayDonationOrders();
+      displayDonationOrders();
     }
     
     // Reset button after 2 seconds
