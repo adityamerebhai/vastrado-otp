@@ -101,6 +101,7 @@ body {
     width: 20px;
     height: 20px;
     object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(72%) sepia(90%) saturate(1352%) hue-rotate(358deg) brightness(98%) contrast(96%);
 }
 
 .ghost-btn:hover {
@@ -253,6 +254,7 @@ body {
     height: 20px;
     object-fit: contain;
     flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(72%) sepia(90%) saturate(1352%) hue-rotate(358deg) brightness(98%) contrast(96%);
 }
 
 @keyframes fadeInUp {
@@ -275,6 +277,10 @@ body {
     background: var(--primary);
     color: #fff;
     box-shadow: 0 10px 20px rgba(247, 183, 49, 0.35);
+}
+
+.menu-item.active .menu-icon {
+    filter: brightness(0) saturate(100%) invert(100%);
 }
 
 .content {
@@ -1976,6 +1982,7 @@ select.form-input {
     width: 16px;
     height: 16px;
     object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(72%) sepia(90%) saturate(1352%) hue-rotate(358deg) brightness(98%) contrast(96%);
 }
 
 .refresh-btn {
