@@ -42,6 +42,11 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
 });
 
 // =====================
+// API CONFIG
+// =====================
+const API_BASE_URL = "https://vastrado-otp-production.up.railway.app/api";
+
+// =====================
 // NGO panel reads donations from donation panel
 // No upload functionality - only viewing donations
 // =====================
@@ -49,12 +54,72 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
 // =====================
 // Store and display uploaded items
 // =====================
-// Cross-Device Storage using a simple approach
+// Cross-Device Storage using API + localStorage fallback
 // =====================
-// For true cross-device sync, you need a backend API
-// This implementation uses localStorage + a shared URL parameter approach
-// In production, replace with your backend API endpoint
 
+// Fetch donations from API for cross-device sync
+async function fetchDonationsFromAPI() {
+  try {
+    const url = `${API_BASE_URL}/listings`;
+    console.log(`🔄 [NGO] Fetching donations from: ${url}`);
+    
+    const res = await fetch(url, { 
+      method: 'GET',
+      cache: "no-cache",
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Accept': 'application/json'
+      },
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    if (!res.ok) {
+      console.warn(`❌ [NGO] Failed to fetch donations: ${res.status} ${res.statusText}`);
+      return null;
+    }
+    
+    // Check if response is actually JSON
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('❌ [NGO] Server did not return JSON. Content-Type:', contentType);
+      return null;
+    }
+    
+    // Parse JSON with error handling
+    let data;
+    try {
+      const text = await res.text();
+      if (!text || text.trim() === '') {
+        console.warn('⚠️ [NGO] Server returned empty response');
+        return null;
+      }
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('❌ [NGO] JSON parse error:', parseError);
+      return null;
+    }
+    
+    console.log(`📦 [NGO] Received ${Array.isArray(data) ? data.length : 0} donations from server`);
+    
+    if (Array.isArray(data) && data.length > 0) {
+      // Update localStorage with fetched data for offline access
+      localStorage.setItem('donationListings', JSON.stringify(data));
+      localStorage.setItem('donationListings_sync', Date.now().toString());
+      console.log('✅ [NGO] Donations synced to localStorage');
+      return data;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ [NGO] Error fetching donations from API:', error);
+    return null;
+  }
+}
+
+// Get stored items - reads from localStorage (fallback)
+// For API data, use fetchDonationsFromAPI() and then this will read from updated localStorage
 function getStoredItems() {
   // Read donations from donation panel's localStorage
   const donationItems = localStorage.getItem('donationListings');
@@ -67,9 +132,6 @@ function getStoredItems() {
   }
   return [];
 }
-
-// NGO panel only reads donations from donation panel
-// No save/sync functionality needed
 
 // Update stats cards
 function updateStats() {
@@ -432,6 +494,55 @@ function displayNgoOrders() {
 // NGO panel reads donations from donation panel's localStorage
 // No cloud sync needed - donations are managed by donation panel
 
+// =====================
+// REFRESH BUTTON HANDLER
+// =====================
+const refreshDonationsBtn = document.getElementById('refreshDonations');
+if (refreshDonationsBtn) {
+  refreshDonationsBtn.addEventListener('click', async () => {
+    const originalContent = refreshDonationsBtn.innerHTML;
+    refreshDonationsBtn.innerHTML = '⏳ Fetching...';
+    refreshDonationsBtn.disabled = true;
+    
+    try {
+      // Fetch donations from API
+      const donations = await fetchDonationsFromAPI();
+      
+      if (donations !== null) {
+        // Update display with fetched donations
+        displayListings();
+        updateStats();
+        refreshDonationsBtn.innerHTML = '✓ Refreshed!';
+        console.log('✅ [NGO] Donations refreshed successfully');
+      } else {
+        // Fallback to localStorage if API fails
+        displayListings();
+        updateStats();
+        refreshDonationsBtn.innerHTML = '⚠️ Check connection';
+        console.warn('⚠️ [NGO] API fetch failed, using localStorage');
+      }
+    } catch (err) {
+      console.error('❌ [NGO] Refresh error:', err);
+      refreshDonationsBtn.innerHTML = '❌ Error';
+      // Still show localStorage data
+      displayListings();
+      updateStats();
+    }
+    
+    // Reset button after 2 seconds
+    setTimeout(() => {
+      refreshDonationsBtn.innerHTML = originalContent;
+      refreshDonationsBtn.disabled = false;
+    }, 2000);
+  });
+  
+  // Also support touch events for mobile
+  refreshDonationsBtn.addEventListener('touchend', async (e) => {
+    e.preventDefault();
+    refreshDonationsBtn.click();
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 [INIT] NGO panel initialized');
   const profileSection = document.querySelector('.content-section[data-section="profile"]');
@@ -441,9 +552,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     profileSection.style.gap = '16px';
   }
   
-  // Get donations from donation panel's localStorage
+  // Get donations from donation panel's localStorage (no automatic API fetch on load)
   const donations = getStoredItems();
   console.log('🚀 [INIT] Donations available:', donations.length);
+  console.log('💡 [INIT] Click refresh button to fetch latest donations from API');
   
   // Update stats
   updateStats();

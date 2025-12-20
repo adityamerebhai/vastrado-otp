@@ -887,6 +887,18 @@ select.form-input {
     gap: 20px;
 }
 
+.browse-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.browse-header h3 {
+    margin: 0 0 4px;
+}
+
 .listings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

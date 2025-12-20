@@ -79,8 +79,17 @@
 
                 <div class="content-section" data-section="listings" style="display: none;">
                     <section class="card listings-container">
-                        <h3>Available Donations</h3>
-                        <p class="muted">View donations made by users from the donation panel.</p>
+                        <div class="browse-header">
+                            <div>
+                                <h3>Available Donations</h3>
+                                <p class="muted">View donations made by users from the donation panel.</p>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="refresh-btn" id="refreshDonations" title="Refresh donations">
+                                    <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
+                                </button>
+                            </div>
+                        </div>
                         <div class="listings-grid" id="listingsGrid">
                             <!-- Donations from donation panel will be displayed here -->
                         </div>
