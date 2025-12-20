@@ -1310,9 +1310,20 @@ select.form-input {
 @media (max-width: 720px) {
     .chat-layout {
         grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
     }
     .chat-sidebar {
-        display: none;
+        display: flex;
+        flex-direction: column;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .chat-main {
+        flex: 1;
+        min-height: 300px;
     }
     .chat-message {
         max-width: 85%;

@@ -10,9 +10,14 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
     const targetSection = btn.dataset.section;
     document.querySelectorAll('.content-section').forEach((section) => {
       if (section.dataset.section === targetSection) {
-        section.style.display = 'flex';
-        section.style.flexDirection = 'column';
-        section.style.gap = '16px';
+        // Chat section needs 'block' display, others use 'flex'
+        if (targetSection === 'chat') {
+          section.style.display = 'block';
+        } else {
+          section.style.display = 'flex';
+          section.style.flexDirection = 'column';
+          section.style.gap = '16px';
+        }
         
         // Refresh listings when listings section is shown
         if (targetSection === 'listings') {
@@ -26,7 +31,11 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
         
         // Load chat list when chat section is shown
         if (targetSection === 'chat') {
-          loadChatList();
+          // Load chat list after a small delay to ensure DOM is ready
+          setTimeout(() => {
+            console.log('💬 Loading chat list for seller...');
+            loadChatList();
+          }, 100);
         }
         
         // Load notifications when notifications section is shown
@@ -783,46 +792,65 @@ let notifications = [];
    LOAD CHAT LIST (SELLER)
 ================================ */
 async function loadChatList() {
+  console.log('💬 [CHAT] loadChatList() called');
   const el = document.getElementById("chatList");
-  if (!el) return;
+  if (!el) {
+    console.error('💬 [CHAT] chatList element not found!');
+    return;
+  }
+  console.log('💬 [CHAT] chatList element found');
 
   const seller = localStorage.getItem("username");
   if (!seller) {
+    console.warn('💬 [CHAT] No seller username found');
     el.innerHTML = '<p class="muted">Please log in to view chats</p>';
     return;
   }
+  console.log('💬 [CHAT] Seller username:', seller);
 
   try {
-    const res = await fetch(`${API_BASE_URL}/chat/seller/${encodeURIComponent(seller)}`);
+    const url = `${API_BASE_URL}/chat/seller/${encodeURIComponent(seller)}`;
+    console.log('💬 [CHAT] Fetching from:', url);
+    
+    const res = await fetch(url);
     
     if (!res.ok) {
+      console.error(`💬 [CHAT] HTTP error! status: ${res.status}`);
       throw new Error(`HTTP error! status: ${res.status}`);
     }
     
     const buyers = await res.json();
+    console.log('💬 [CHAT] Received buyers:', buyers);
 
     if (!buyers || !buyers.length) {
-      el.innerHTML = `<p class="muted" style="padding:20px;text-align:center">No chats yet</p>`;
+      console.log('💬 [CHAT] No buyers found');
+      el.innerHTML = `<p class="muted" style="padding:20px;text-align:center">No chats yet. Start a conversation from a buyer's message!</p>`;
       return;
     }
 
+    console.log(`💬 [CHAT] Displaying ${buyers.length} buyers`);
     el.innerHTML = "";
     buyers.forEach((buyer) => {
       const div = document.createElement("div");
       div.className = "chat-list-item";
       div.textContent = buyer;
-      div.onclick = () => loadChatMessages(buyer);
+      div.onclick = () => {
+        console.log('💬 [CHAT] Opening chat with:', buyer);
+        loadChatMessages(buyer);
+      };
       // Mobile touch support
       div.addEventListener('touchend', (e) => {
         e.preventDefault();
+        console.log('💬 [CHAT] Touch: Opening chat with:', buyer);
         loadChatMessages(buyer);
       }, { passive: false });
       el.appendChild(div);
     });
+    console.log('💬 [CHAT] Chat list loaded successfully');
 
   } catch (err) {
-    console.error("Failed to load chat list:", err);
-    el.innerHTML = `<p class="muted">Chat service unavailable. Please try again later.</p>`;
+    console.error("💬 [CHAT] Failed to load chat list:", err);
+    el.innerHTML = `<p class="muted" style="padding:20px;text-align:center">Chat service unavailable. Please try again later.<br><small>Error: ${err.message}</small></p>`;
   }
 }
 
