@@ -1385,36 +1385,69 @@ if (paymentDetailModal) {
 // Check for payment updates
 let lastPaymentCount = 0;
 
-function checkPaymentUpdates() {
-  const paymentBadge = document.getElementById('paymentBadge');
-  const payments = getSellerPayments();
-  const pendingCount = payments.filter(p => p.status === 'pending').length;
-  
-  if (paymentBadge) {
-    if (pendingCount > 0) {
-      paymentBadge.style.display = 'inline-flex';
-      paymentBadge.textContent = pendingCount;
-    } else {
-      paymentBadge.style.display = 'none';
-    }
-  }
-  
-  // If payment count changed, refresh the payments list if it's visible
-  if (pendingCount !== lastPaymentCount) {
-    lastPaymentCount = pendingCount;
+async function checkPaymentUpdates() {
+  try {
+    // Fetch fresh payments from server (like buyer's product refresh)
+    const payments = await getSellerPayments();
+    const pendingCount = payments.filter(p => p.status === 'pending').length;
     
-    // Refresh payments list if payments section is visible
-    const paymentsSection = document.querySelector('.content-section[data-section="payments"]');
-    if (paymentsSection && paymentsSection.style.display !== 'none') {
-      displaySellerPayments();
+    const paymentBadge = document.getElementById('paymentBadge');
+    if (paymentBadge) {
+      if (pendingCount > 0) {
+        paymentBadge.style.display = 'inline-flex';
+        paymentBadge.textContent = pendingCount;
+      } else {
+        paymentBadge.style.display = 'none';
+      }
     }
     
-    // Also update stats
+    // Update stats
     updateStats();
+    
+    return true; // Success
+  } catch (err) {
+    console.error('Payment update error:', err);
+    return false; // Failure
   }
 }
 
 // No automatic payment updates - use refresh button instead
+
+// Refresh button for payments (same functionality as buyer product refresh)
+const refreshSellerPaymentsBtn = document.getElementById('refreshSellerPaymentsBtn');
+if (refreshSellerPaymentsBtn) {
+  refreshSellerPaymentsBtn.onclick = async () => {
+    refreshSellerPaymentsBtn.textContent = "⏳ Fetching...";
+    refreshSellerPaymentsBtn.disabled = true;
+    try {
+      // Fetch payments from server (only once when clicked)
+      const success = await checkPaymentUpdates();
+      // Update display with fetched payments
+      await displaySellerPayments();
+      if (success) {
+        refreshSellerPaymentsBtn.textContent = "✓ Refreshed!";
+      } else {
+        refreshSellerPaymentsBtn.textContent = "⚠️ Check connection";
+      }
+    } catch (err) {
+      console.error('Payment refresh error:', err);
+      refreshSellerPaymentsBtn.textContent = "❌ Error";
+    }
+    setTimeout(() => {
+      refreshSellerPaymentsBtn.textContent = "🔄 Refresh";
+      refreshSellerPaymentsBtn.disabled = false;
+    }, 2000);
+  };
+  
+  // Mobile touch support
+  refreshSellerPaymentsBtn.addEventListener('touchend', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!refreshSellerPaymentsBtn.disabled) {
+      refreshSellerPaymentsBtn.onclick();
+    }
+  }, { passive: false });
+}
 
 // =====================
 // Initialize: show profile section by default and load listings
@@ -1480,29 +1513,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Load chat list
   loadChatList();
-  
-  // Refresh button for payments
-  const refreshSellerPaymentsBtn = document.getElementById('refreshSellerPaymentsBtn');
-  if (refreshSellerPaymentsBtn) {
-    refreshSellerPaymentsBtn.addEventListener('click', async () => {
-      refreshSellerPaymentsBtn.disabled = true;
-      refreshSellerPaymentsBtn.textContent = '🔄 Refreshing...';
-      await checkPaymentUpdates();
-      await displaySellerPayments();
-      refreshSellerPaymentsBtn.disabled = false;
-      refreshSellerPaymentsBtn.textContent = '🔄 Refresh';
-    });
-    
-    // Mobile touch support
-    refreshSellerPaymentsBtn.addEventListener('touchend', async (e) => {
-      e.preventDefault();
-      refreshSellerPaymentsBtn.disabled = true;
-      refreshSellerPaymentsBtn.textContent = '🔄 Refreshing...';
-      await checkPaymentUpdates();
-      await displaySellerPayments();
-      refreshSellerPaymentsBtn.disabled = false;
-      refreshSellerPaymentsBtn.textContent = '🔄 Refresh';
-    }, { passive: false });
-  }
 });
 
