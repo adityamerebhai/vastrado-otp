@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Donations | Vastrado</title>
+    <link rel="stylesheet" href="listings.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">Vastrado</div>
+            <div class="top-actions">
+                <a href="index.html" class="back-btn">← Back to Dashboard</a>
+                <div class="profile" id="profileDropdown">
+                    <span class="avatar" id="avatar">N</span>
+                    <span class="profile-name" id="profileName">NGO</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="layout">
+            <main class="content">
+                <section class="card browse-container">
+                    <div class="browse-header">
+                        <div>
+                            <h3>Browse Donations</h3>
+                            <p class="muted">Explore all available donations. <span id="donationCount"></span></p>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="refresh-btn" id="refreshDonations" title="Refresh donations">
+                                <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="donations-grid" id="donationsGrid">
+                        <p class="muted" style="text-align: center; padding: 40px;">Loading donations...</p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Donation Detail Modal -->
+    <div class="modal-overlay" id="detailModal" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">×</button>
+            <div class="modal-body" id="modalBody">
+                <!-- Details will be shown here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="listings.js"></script>
+</body>
+</html>
