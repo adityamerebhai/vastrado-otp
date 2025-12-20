@@ -1048,13 +1048,30 @@ async function openNotificationChat(buyer, notifId) {
 // =====================
 let currentPaymentToReview = null;
 
-async function getSellerPayments() {
+// Get payments from localStorage only (no server fetch)
+function getSellerPayments() {
+  const sellerUsername = localStorage.getItem('username');
+  if (!sellerUsername) return [];
+  
+  // Only use localStorage - no automatic server fetch
+  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+  return allPayments.filter(p => p.seller === sellerUsername);
+}
+
+// Fetch payments from server (only called when refresh button is clicked)
+async function fetchSellerPaymentsFromServer() {
   const sellerUsername = localStorage.getItem('username');
   if (!sellerUsername) return [];
   
   try {
-    // Fetch payments from server API
-    const res = await fetch(`${API_BASE_URL}/payments?seller=${encodeURIComponent(sellerUsername)}`);
+    // Fetch payments from server API (only when refresh button is clicked)
+    const res = await fetch(`${API_BASE_URL}/payments?seller=${encodeURIComponent(sellerUsername)}`, {
+      cache: 'no-cache',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
     if (res.ok) {
       const serverPayments = await res.json();
       // Also get from localStorage as fallback
@@ -1075,7 +1092,8 @@ async function getSellerPayments() {
       return allPayments;
     }
   } catch (err) {
-    console.error('💳 Failed to fetch payments from server:', err);
+    // Silent error - don't log unless it's a critical issue
+    // console.error('💳 Failed to fetch payments from server:', err);
   }
   
   // Fallback to localStorage only
@@ -1083,14 +1101,12 @@ async function getSellerPayments() {
   return allPayments.filter(p => p.seller === sellerUsername);
 }
 
-async function displaySellerPayments() {
+function displaySellerPayments() {
   const paymentsList = document.getElementById('sellerPaymentsList');
   if (!paymentsList) return;
   
-  // Show loading state
-  paymentsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">Loading payments...</p>';
-  
-  const allPayments = await getSellerPayments();
+  // Get payments from localStorage only (no server fetch)
+  const allPayments = getSellerPayments();
   const payments = allPayments.filter(p => p.status === 'pending');
   
   if (payments.length === 0) {
@@ -1129,9 +1145,9 @@ async function displaySellerPayments() {
   });
 }
 
-async function showPaymentDetails(paymentId) {
-  // Fetch fresh payment data
-  const allPayments = await getSellerPayments();
+function showPaymentDetails(paymentId) {
+  // Get payment data from localStorage (no server fetch)
+  const allPayments = getSellerPayments();
   const payment = allPayments.find(p => p.id === paymentId);
   
   if (!payment) {
@@ -1250,8 +1266,8 @@ async function confirmPayment(paymentId) {
   const modal = document.getElementById('paymentDetailModal');
   if (modal) modal.style.display = 'none';
   
-  // Update display
-  await displaySellerPayments();
+  // Update display (no server fetch, just refresh from localStorage)
+  displaySellerPayments();
   updateStats();
   
   // Show success modal
@@ -1291,8 +1307,8 @@ async function rejectPayment(paymentId) {
   const modal = document.getElementById('paymentDetailModal');
   if (modal) modal.style.display = 'none';
   
-  // Update display
-  await displaySellerPayments();
+  // Update display (no server fetch, just refresh from localStorage)
+  displaySellerPayments();
   updateStats();
   
   // Show info message
@@ -1387,8 +1403,8 @@ let lastPaymentCount = 0;
 
 async function checkPaymentUpdates() {
   try {
-    // Fetch fresh payments from server (like buyer's product refresh)
-    const payments = await getSellerPayments();
+    // Fetch fresh payments from server (only when refresh button is clicked)
+    const payments = await fetchSellerPaymentsFromServer();
     const pendingCount = payments.filter(p => p.status === 'pending').length;
     
     const paymentBadge = document.getElementById('paymentBadge');
@@ -1422,8 +1438,8 @@ if (refreshSellerPaymentsBtn) {
     try {
       // Fetch payments from server (only once when clicked)
       const success = await checkPaymentUpdates();
-      // Update display with fetched payments
-      await displaySellerPayments();
+      // Update display with fetched payments (from localStorage after server sync)
+      displaySellerPayments();
       if (success) {
         refreshSellerPaymentsBtn.textContent = "✓ Refreshed!";
       } else {
