@@ -142,12 +142,13 @@
         // ✅ Redirect to panel based on role from server response
         const redirectRole = data.role || localStorage.getItem("role");
         console.log("Redirecting to role:", redirectRole);
+        console.log("Role from localStorage:", localStorage.getItem("role"));
         
         const panelMap = {
-          buyer: "/panel/buyer/index.html",
-          seller: "/panel/seller/index.html",
-          ngo: "/panel/ngo/index.html",
-          donation: "/panel/donation/index.html"
+          buyer: "../panel/buyer/index.html",
+          seller: "../panel/seller/index.html",
+          ngo: "../panel/ngo/index.html",
+          donation: "../panel/donation/index.html"
         };
         
         if (redirectRole && panelMap[redirectRole]) {

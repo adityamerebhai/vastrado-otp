@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Dashboard | Vastrado</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">Vastrado</div>
+            <div class="top-actions">
+                <button class="ghost-btn" aria-label="Notifications">
+                    <img src="images/notification.png" alt="Notifications" class="topbar-icon">
+                </button>
+                <div class="profile" id="profileDropdown">
+                    <span class="avatar" id="avatar">N</span>
+                    <span class="profile-name" id="profileName">NGO</span>
+                    <div class="profile-dropdown" id="profileDropdownMenu" style="display: none;">
+                        <button class="dropdown-item" id="logoutBtn">
+                            <span>🚪</span>
+                            <span>Log Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="layout">
+            <aside class="sidebar">
+                <nav class="menu">
+                    <button class="menu-item active" data-section="profile">
+                        <img src="images/profile.png" alt="Profile" class="menu-icon"> Profile
+                    </button>
+                    <button class="menu-item" data-section="donations">
+                        <img src="images/browse.png" alt="Donations" class="menu-icon"> Donations
+                    </button>
+                    <button class="menu-item" data-section="notifications">
+                        <img src="images/notification.png" alt="Notifications" class="menu-icon"> Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                    </button>
+                    <button class="menu-item" data-section="chat">
+                        <img src="images/chat.png" alt="Chat" class="menu-icon"> Chats
+                    </button>
+                    <button class="menu-item" data-section="payments">
+                        <img src="images/payment.png" alt="Payments" class="menu-icon"> Payments <span class="payment-badge" id="paymentBadge" style="display:none;">0</span>
+                    </button>
+                    <button class="menu-item" data-section="orders">
+                        <img src="images/order.png" alt="Orders" class="menu-icon"> Orders
+                    </button>
+                    <button class="menu-item" data-section="settings">
+                        <img src="images/settings.png" alt="Settings" class="menu-icon"> Settings
+                    </button>
+                </nav>
+            </aside>
+
+            <main class="content">
+                <div class="content-section" data-section="profile">
+                    <section class="stats-grid">
+                        <article class="card stat-card">
+                            <p class="stat-label">Donations</p>
+                            <h2 class="stat-value" id="donationsCount">0</h2>
+                            <p class="stat-sub">Total donations received</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">Items</p>
+                            <h2 class="stat-value" id="itemsCount">0</h2>
+                            <p class="stat-sub">Total items collected</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">Pending</p>
+                            <h2 class="stat-value" id="pendingCount">0</h2>
+                            <p class="stat-sub">Awaiting approval</p>
+                        </article>
+                    </section>
+
+                    <section class="upload-highlight card">
+                        <div>
+                            <p class="muted">Quick action</p>
+                            <h3>Request donations</h3>
+                            <p class="subtext">Create a donation request for items you need.</p>
+                        </div>
+                        <button class="upload-btn" id="requestAction" aria-label="Request donation">+</button>
+                    </section>
+
+                    <section class="card list-placeholder">
+                        <h3>Recent Donations</h3>
+                        <p class="muted">No donations to show yet. Once donors contribute, you'll see them here.</p>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="request" style="display: none;">
+                    <section class="card upload-form-card" id="requestFormCard" style="display: none;">
+                        <div class="form-header">
+                            <h3>Create Donation Request</h3>
+                            <button class="close-form-btn" id="closeFormBtn" aria-label="Close form">×</button>
+                        </div>
+                        <form class="upload-form" id="requestForm">
+                            <div class="form-group">
+                                <label for="itemName">Item Name</label>
+                                <input type="text" id="itemName" name="itemName" class="form-input" placeholder="Enter item name" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" name="description" class="form-input" rows="4" placeholder="Describe what you need and why" required></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="category">Category</label>
+                                    <select id="category" name="category" class="form-input" required>
+                                        <option value="">Select category</option>
+                                        <option value="clothing">Clothing</option>
+                                        <option value="food">Food</option>
+                                        <option value="medical">Medical Supplies</option>
+                                        <option value="educational">Educational Materials</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="quantity">Quantity Needed</label>
+                                    <input type="number" id="quantity" name="quantity" class="form-input" placeholder="Enter quantity" min="1" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phoneNumber">Contact Number</label>
+                                <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="Enter contact number" required>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
+                                <button type="submit" class="submit-btn">Submit Request</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="donations" style="display: none;">
+                    <section class="card listings-container">
+                        <h3>Donation Requests</h3>
+                        <p class="muted">Manage your donation requests.</p>
+                        <div class="listings-grid" id="donationsGrid">
+                            <!-- Donation requests will be displayed here -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Detail Modal -->
+                <div class="modal-overlay" id="detailModal" style="display: none;">
+                    <div class="modal-content">
+                        <button class="modal-close" id="closeModal">×</button>
+                        <div class="modal-body" id="modalBody">
+                            <!-- Details will be shown here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Confirmation Modal -->
+                <div class="modal-overlay" id="deleteConfirmModal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="confirm-icon">⚠️</div>
+                        <h3 class="confirm-title">Remove Request</h3>
+                        <p class="confirm-message">Are you sure you want to remove this donation request? This action cannot be undone.</p>
+                        <div class="confirm-actions">
+                            <button class="confirm-btn cancel-confirm-btn" id="cancelDeleteBtn">Cancel</button>
+                            <button class="confirm-btn delete-confirm-btn" id="confirmDeleteBtn">Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logout Confirmation Modal -->
+                <div class="modal-overlay" id="logoutConfirmModal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="confirm-icon">🚪</div>
+                        <h3 class="confirm-title">Log Out</h3>
+                        <p class="confirm-message">Are you sure you want to log out? All your session data will be cleared.</p>
+                        <div class="confirm-actions">
+                            <button class="confirm-btn cancel-confirm-btn" id="cancelLogoutBtn">Cancel</button>
+                            <button class="confirm-btn delete-confirm-btn" id="confirmLogoutBtn">Log Out</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section" data-section="notifications" style="display: none;">
+                    <section class="card">
+                        <h3>Notifications</h3>
+                        <p class="muted">Updates and messages from donors.</p>
+                        <div class="notifications-list" id="notificationsList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No notifications yet</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="chat" style="display: none;">
+                    <section class="card chat-container">
+                        <div class="chat-layout">
+                            <div class="chat-sidebar">
+                                <h4>Conversations</h4>
+                                <div class="chat-list" id="chatList">
+                                    <p class="muted" style="padding: 20px; text-align: center;">No conversations yet</p>
+                                </div>
+                            </div>
+                            <div class="chat-main">
+                                <div class="chat-header" id="chatHeader">
+                                    <p class="muted">Select a conversation to start chatting</p>
+                                </div>
+                                <div class="chat-messages" id="chatMessages">
+                                    <!-- Messages will appear here -->
+                                </div>
+                                <div class="chat-input-area" id="chatInputArea" style="display: none;">
+                                    <input type="text" id="chatInput" placeholder="Type a message..." class="chat-input">
+                                    <button id="sendMessageBtn" class="send-message-btn">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="payments" style="display: none;">
+                    <section class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <div>
+                                <h3 style="margin: 0;">Payment Requests</h3>
+                                <p class="muted" style="margin: 4px 0 0 0;">Review and confirm payments from donors.</p>
+                            </div>
+                            <button id="refreshNgoPaymentsBtn" class="refresh-btn" title="Refresh payments">
+                                <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
+                            </button>
+                        </div>
+                        <div class="payments-list" id="ngoPaymentsList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No pending payments.</p>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Payment Detail Modal -->
+                <div class="modal-overlay" id="paymentDetailModal" style="display: none;">
+                    <div class="modal-content payment-detail-modal">
+                        <button class="modal-close" id="closePaymentDetailModal">×</button>
+                        <div class="payment-detail-body" id="paymentDetailBody">
+                            <!-- Payment details will be shown here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Modal -->
+                <div class="modal-overlay" id="successModal" style="display: none;">
+                    <div class="modal-content success-modal">
+                        <div class="success-modal-body">
+                            <div class="success-icon">✓</div>
+                            <h2 id="successTitle">Success!</h2>
+                            <p id="successMessage">Your action was completed successfully.</p>
+                            <button class="success-ok-btn" id="successOkBtn">OK</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section" data-section="orders" style="display: none;">
+                    <section class="card">
+                        <h3>Completed Donations</h3>
+                        <p class="muted">Your confirmed donations will appear here.</p>
+                        <div class="orders-list" id="ngoOrdersList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No completed donations yet.</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="settings" style="display: none;">
+                    <section class="card settings-card">
+                        <div class="settings-header">
+                            <h3>Settings</h3>
+                            <p class="muted">Personalize your workspace.</p>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Theme</p>
+                                <p class="muted small">Choose your preferred look.</p>
+                            </div>
+                            <div class="theme-pills" id="themePills">
+                                <button class="pill" data-theme="light">Light</button>
+                                <button class="pill" data-theme="grey">Grey</button>
+                                <button class="pill" data-theme="dark">Dark</button>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Notifications</p>
+                                <p class="muted small">Stay updated about donations.</p>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="notifyToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
