@@ -518,7 +518,7 @@ if (refreshDonationsBtn) {
         // Fallback to localStorage if API fails
         displayListings();
         updateStats();
-        refreshDonationsBtn.innerHTML = '⚠️ Check connection';
+        refreshDonationsBtn.innerHTML = originalContent;
         console.warn('⚠️ [NGO] API fetch failed, using localStorage');
       }
     } catch (err) {

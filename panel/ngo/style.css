@@ -1994,7 +1994,7 @@ select.form-input {
     width: 16px;
     height: 16px;
     object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(72%) sepia(90%) saturate(1352%) hue-rotate(358deg) brightness(98%) contrast(96%);
+    filter: brightness(0) invert(1);
 }
 
 .refresh-btn {
