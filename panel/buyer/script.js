@@ -1068,21 +1068,88 @@ if (cancelLogoutBtn) {
    SETTINGS
 ================================ */
 const themePills = document.querySelectorAll("#themePills .pill");
+const themeMap = {
+  light: {
+    '--bg': '#fdfaf5',
+    '--card': '#ffffff',
+    '--primary': '#f7b731',
+    '--primary-strong': '#e3a020',
+    '--accent': '#ffdca4',
+    '--text': '#2f2f2f',
+    '--muted': '#6f6f6f',
+    '--shadow': '0 12px 30px rgba(0, 0, 0, 0.08)',
+    '--menu-bg': '#fff7ea',
+    '--highlight-gradient-start': '#ffe7bd',
+    '--highlight-gradient-end': '#ffd79a',
+    '--btn-bg': '#ffffff',
+    '--pill-bg': '#fff7ea',
+    '--pill-border': '#f1e6d6',
+    '--border-color': '#f1e6d6',
+    '--toggle-bg': '#ddd'
+  },
+  grey: {
+    '--bg': '#e8e8e8',
+    '--card': '#f5f5f5',
+    '--primary': '#808080',
+    '--primary-strong': '#6b6b6b',
+    '--accent': '#d0d0d0',
+    '--text': '#2a2a2a',
+    '--muted': '#6b6b6b',
+    '--shadow': '0 10px 24px rgba(0, 0, 0, 0.12)',
+    '--menu-bg': '#e0e0e0',
+    '--highlight-gradient-start': '#d5d5d5',
+    '--highlight-gradient-end': '#c5c5c5',
+    '--btn-bg': '#f5f5f5',
+    '--pill-bg': '#e0e0e0',
+    '--pill-border': '#b8b8b8',
+    '--border-color': '#b8b8b8',
+    '--toggle-bg': '#b0b0b0'
+  },
+  dark: {
+    '--bg': '#1f1f24',
+    '--card': '#2a2a30',
+    '--primary': '#f7b731',
+    '--primary-strong': '#e3a020',
+    '--accent': '#3b2d16',
+    '--text': '#f5f5f5',
+    '--muted': '#b0b0b5',
+    '--shadow': '0 12px 30px rgba(0, 0, 0, 0.45)',
+    '--menu-bg': '#2a2a30',
+    '--highlight-gradient-start': '#3a3a40',
+    '--highlight-gradient-end': '#2f2f35',
+    '--btn-bg': '#2a2a30',
+    '--pill-bg': '#2a2a30',
+    '--pill-border': '#3a3a40',
+    '--border-color': '#3a3a40',
+    '--toggle-bg': '#555'
+  }
+};
+
+function applyTheme(name) {
+  const theme = themeMap[name] || themeMap.light;
+  Object.entries(theme).forEach(([k, v]) => {
+    document.documentElement.style.setProperty(k, v);
+  });
+  localStorage.setItem('theme', name);
+  themePills.forEach(p => p.classList.toggle('active', p.dataset.theme === name));
+}
+
 themePills.forEach((pill) => {
   pill.onclick = () => {
-    themePills.forEach((p) => p.classList.remove("active"));
-    pill.classList.add("active");
     const theme = pill.dataset.theme;
-    document.body.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+    applyTheme(theme);
   };
+  
+  // Mobile touch support
+  pill.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    const theme = pill.dataset.theme;
+    applyTheme(theme);
+  }, { passive: false });
 });
 
-const savedTheme = localStorage.getItem("theme") || "light";
-document.body.setAttribute("data-theme", savedTheme);
-themePills.forEach((p) => {
-  if (p.dataset.theme === savedTheme) p.classList.add("active");
-});
+const savedTheme = localStorage.getItem('theme') || 'light';
+applyTheme(savedTheme);
 
 /* ===============================
    PAYMENT UPDATES CHECK
