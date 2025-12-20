@@ -871,6 +871,24 @@ textarea.form-input {
     opacity: 1;
 }
 
+.listing-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: var(--bg);
+}
+
+.listing-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.listing-card:hover .listing-image img {
+    transform: scale(1.05);
+}
+
 .listing-info {
     padding: 16px;
     display: flex;
@@ -889,8 +907,8 @@ textarea.form-input {
     font-weight: 600;
 }
 
-.listing-category,
-.listing-quantity,
+.listing-fabric,
+.listing-cost,
 .listing-condition {
     display: flex;
     justify-content: space-between;

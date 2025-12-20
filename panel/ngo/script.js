@@ -274,25 +274,42 @@ function displayDonations() {
     card.className = 'listing-card';
     card.dataset.index = index;
     
+    // Create a placeholder image based on donation type
+    const donationTypeIcons = {
+      money: '💰',
+      clothing: '👕',
+      food: '🍽️',
+      medical: '🏥',
+      educational: '📚',
+      other: '📦'
+    };
+    const icon = donationTypeIcons[donation.donationType] || '📦';
+    
+    // Create SVG placeholder with icon
+    const placeholderImage = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f7b731' width='200' height='200'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='80' dy='.3em' x='50%25' y='50%25' text-anchor='middle'%3E${encodeURIComponent(icon)}%3C/text%3E%3C/svg%3E`;
+    
     card.innerHTML = `
       <button class="delete-listing-btn" data-index="${index}" aria-label="Delete donation">×</button>
+      <div class="listing-image">
+        <img src="${placeholderImage}" alt="Donation ${index + 1}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'200\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'18\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+      </div>
       <div class="listing-info">
-        <p class="listing-category"><strong>NGO:</strong> ${donation.ngoName || 'N/A'}</p>
-        <p class="listing-quantity"><strong>Type:</strong> ${donation.donationType || 'N/A'}</p>
+        <p class="listing-fabric"><strong>NGO:</strong> ${donation.ngoName || 'N/A'}</p>
+        <p class="listing-cost"><strong>Type:</strong> ${donation.donationType || 'N/A'}</p>
         <p class="listing-condition"><strong>Amount:</strong> ₹${donation.amount || '0'}</p>
-        ${donation.quantity ? `<p><strong>Quantity:</strong> ${donation.quantity}</p>` : ''}
-        <p style="margin-top: 8px; font-size: 0.85rem; color: var(--muted);">${donation.description ? (donation.description.substring(0, 100) + (donation.description.length > 100 ? '...' : '')) : 'No description'}</p>
       </div>
     `;
 
+    // Delete button handler
     const deleteBtn = card.querySelector('.delete-listing-btn');
     if (deleteBtn) {
       deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
+        e.stopPropagation(); // Prevent card click
         removeDonation(index);
       });
     }
 
+    // Card click handler for viewing details
     card.addEventListener('click', () => showDonationDetails(donation, index));
     donationsGrid.appendChild(card);
   });
