@@ -986,7 +986,7 @@ if (refreshProducts) {
       refreshProducts.textContent = "❌ Error";
     }
     setTimeout(() => {
-      refreshProducts.textContent = "🔄 Refresh";
+      refreshProducts.textContent = "<img";
       refreshProducts.disabled = false;
     }, 2000);
   };

@@ -28,6 +28,16 @@ body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .app-shell {
@@ -47,6 +57,18 @@ body {
     position: sticky;
     top: 0;
     z-index: 10;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .brand {
@@ -68,10 +90,21 @@ body {
     font-size: 1.1rem;
     cursor: pointer;
     color: var(--muted);
-    transition: transform 0.2s ease, color 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+.topbar-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
 .ghost-btn:hover {
-    color: var(--primary);
+    opacity: 0.7;
     transform: translateY(-1px);
 }
 
@@ -170,6 +203,18 @@ body {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 14px;
+    animation: slideInLeft 0.4s ease-out 0.1s both;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 .menu {
@@ -188,7 +233,37 @@ body {
     text-align: left;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: fadeInUp 0.3s ease-out both;
+}
+
+.menu-item:nth-child(1) { animation-delay: 0.05s; }
+.menu-item:nth-child(2) { animation-delay: 0.1s; }
+.menu-item:nth-child(3) { animation-delay: 0.15s; }
+.menu-item:nth-child(4) { animation-delay: 0.2s; }
+.menu-item:nth-child(5) { animation-delay: 0.25s; }
+.menu-item:nth-child(6) { animation-delay: 0.3s; }
+.menu-item:nth-child(7) { animation-delay: 0.35s; }
+
+.menu-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+@keyframes fadeInUp {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .menu-item:hover {
@@ -206,6 +281,18 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    animation: fadeInRight 0.4s ease-out 0.15s both;
+}
+
+@keyframes fadeInRight {
+    from {
+        transform: translateX(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 .content-section {
@@ -219,6 +306,18 @@ body {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 16px 18px;
+    animation: cardFadeIn 0.4s ease-out both;
+}
+
+@keyframes cardFadeIn {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .stats-grid {
@@ -229,6 +328,28 @@ body {
 
 .stat-card {
     padding: 18px;
+    animation: statCardFadeIn 0.4s ease-out both;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.15s; }
+.stat-card:nth-child(3) { animation-delay: 0.2s; }
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes statCardFadeIn {
+    from {
+        transform: translateY(15px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 .stat-label {
     color: var(--muted);
@@ -768,6 +889,21 @@ select.form-input {
 }
 
 .listing-card {
+    animation: listingCardFadeIn 0.4s ease-out both;
+}
+
+@keyframes listingCardFadeIn {
+    from {
+        transform: translateY(15px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.listing-card {
     background: var(--card);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
@@ -880,6 +1016,18 @@ select.form-input {
     backdrop-filter: blur(4px);
     touch-action: manipulation;
     -webkit-overflow-scrolling: touch;
+    animation: modalBackdropFade 0.3s ease-out;
+}
+
+@keyframes modalBackdropFade {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(4px);
+    }
 }
 
 .modal-content {
@@ -1824,6 +1972,12 @@ select.form-input {
 /* ===================== */
 /* Refresh Button */
 /* ===================== */
+.refresh-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
 .refresh-btn {
     padding: 8px 16px;
     border-radius: var(--radius-sm);
@@ -1843,9 +1997,23 @@ select.form-input {
 }
 
 .refresh-btn:hover {
-    background: var(--menu-bg);
+    background: var(--primary);
+    color: white;
     border-color: var(--primary);
     transform: translateY(-1px);
+}
+
+.refresh-btn:hover .refresh-icon {
+    animation: refreshSpin 0.6s linear;
+}
+
+@keyframes refreshSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .refresh-btn:active {
