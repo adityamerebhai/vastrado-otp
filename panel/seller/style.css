@@ -1721,6 +1721,12 @@ select.form-input {
     margin-bottom: 4px;
 }
 
+.order-item-condition {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
 .order-item-date {
     font-size: 0.8rem;
     color: var(--muted);

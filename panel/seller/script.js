@@ -1270,6 +1270,12 @@ async function confirmPayment(paymentId) {
   displaySellerPayments();
   updateStats();
   
+  // Also refresh orders if orders section is visible
+  const ordersSection = document.querySelector('.content-section[data-section="orders"]');
+  if (ordersSection && ordersSection.style.display !== 'none') {
+    displaySellerOrders();
+  }
+  
   // Show success modal
   showSuccessModal('Payment Confirmed!', 'The sale has been recorded successfully. Check your Orders tab for details.');
 }
@@ -1347,35 +1353,57 @@ if (successModal) {
 
 function displaySellerOrders() {
   const ordersList = document.getElementById('sellerOrdersList');
-  if (!ordersList) return;
+  if (!ordersList) {
+    console.error('📦 [ORDERS] sellerOrdersList element not found');
+    return;
+  }
   
-  const payments = getSellerPayments().filter(p => p.status === 'confirmed');
+  console.log('📦 [ORDERS] Loading completed sales...');
+  const allPayments = getSellerPayments();
+  console.log('📦 [ORDERS] Total payments:', allPayments.length);
+  console.log('📦 [ORDERS] All payments:', allPayments);
+  
+  const payments = allPayments.filter(p => p.status === 'confirmed');
+  console.log('📦 [ORDERS] Confirmed payments:', payments.length);
+  console.log('📦 [ORDERS] Confirmed payments data:', payments);
   
   if (payments.length === 0) {
-    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed sales yet.</p>';
+    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed sales yet. Confirm a payment to see it here.</p>';
     return;
   }
   
   // Sort by newest first
-  payments.sort((a, b) => new Date(b.confirmedAt || b.timestamp) - new Date(a.confirmedAt || a.timestamp));
+  payments.sort((a, b) => {
+    const dateA = new Date(a.confirmedAt || a.createdAt || a.timestamp || 0);
+    const dateB = new Date(b.confirmedAt || b.createdAt || b.timestamp || 0);
+    return dateB - dateA;
+  });
   
   ordersList.innerHTML = payments.map(order => {
-    const mainImage = order.product.photos && order.product.photos.length > 0 ? order.product.photos[0] : '';
-    const date = new Date(order.confirmedAt || order.timestamp).toLocaleDateString();
+    // Handle both old format (order.product) and new format (direct properties)
+    const product = order.product || order;
+    const mainImage = product.photos && product.photos.length > 0 ? product.photos[0] : '';
+    const productName = product.fabricType || order.productName || 'Item';
+    const productCondition = product.clothCondition || 'N/A';
+    const date = new Date(order.confirmedAt || order.createdAt || order.timestamp).toLocaleDateString();
+    const time = new Date(order.confirmedAt || order.createdAt || order.timestamp).toLocaleTimeString();
     
     return `
       <div class="order-item">
         <img src="${mainImage}" alt="Product" class="order-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'80\\' height=\\'80\\'/%3E%3C/svg%3E'">
         <div class="order-item-info">
-          <p class="order-item-title">${order.product.fabricType || 'Item'}</p>
-          <p class="order-item-buyer">Buyer: ${order.buyer}</p>
-          <p class="order-item-date">Sold: ${date}</p>
+          <p class="order-item-title"><strong>${productName}</strong></p>
+          <p class="order-item-buyer">Buyer: <strong>${order.buyer || 'Unknown'}</strong></p>
+          <p class="order-item-condition">Condition: ${productCondition}</p>
+          <p class="order-item-date">Sold: ${date} at ${time}</p>
           <span class="sale-confirmed-badge">✓ Sale Complete</span>
         </div>
-        <div class="order-item-amount">₹${order.amount}</div>
+        <div class="order-item-amount">₹${order.amount || '0'}</div>
       </div>
     `;
   }).join('');
+  
+  console.log('📦 [ORDERS] Successfully displayed', payments.length, 'completed orders');
 }
 
 // Payment detail modal close handlers
