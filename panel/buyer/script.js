@@ -523,18 +523,41 @@ if (submitPaymentBtn) {
       buyer: buyerUsername,
       seller: currentPaymentProduct.sellerUsername || "Unknown",
       productId: currentPaymentProduct.id,
+      product: {
+        id: currentPaymentProduct.id,
+        fabricType: currentPaymentProduct.fabricType || "Product",
+        clothCondition: currentPaymentProduct.clothCondition || "N/A",
+        photos: currentPaymentProduct.photos || [],
+        expectedCost: currentPaymentProduct.expectedCost || "0"
+      },
       productName: currentPaymentProduct.fabricType || "Product",
       amount: currentPaymentProduct.expectedCost || "0",
       screenshot: paymentPreviewImg.src,
       status: "pending",
+      timestamp: new Date().toISOString(),
       createdAt: new Date().toISOString()
     };
 
+    // Save to localStorage first
     const payments = JSON.parse(localStorage.getItem("vastradoPayments") || "[]");
     payments.push(payment);
     localStorage.setItem("vastradoPayments", JSON.stringify(payments));
 
-    // Sync to API if needed
+    // Sync to server API for cross-device sync
+    fetch(`${API_BASE_URL}/payments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payment)
+    }).then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          console.log("💳 Payment synced to server");
+        }
+      })
+      .catch(err => {
+        console.error("💳 Failed to sync payment to server:", err);
+      });
+
     paymentModal.style.display = "none";
     paymentScreenshot.value = "";
     paymentPreview.style.display = "none";

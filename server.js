@@ -188,6 +188,63 @@ app.post("/api/chat/send", (req, res) => {
 });
 
 // =================================================
+// ================= PAYMENTS SYSTEM ==================
+// =================================================
+
+let payments = []; // Store all payments
+
+app.post("/api/payments", (req, res) => {
+  const payment = req.body;
+  if (!payment.id || !payment.buyer || !payment.seller) {
+    return res.status(400).json({ success: false, message: "Invalid payment data" });
+  }
+  
+  // Check if payment already exists
+  const existingIndex = payments.findIndex(p => p.id === payment.id);
+  if (existingIndex >= 0) {
+    // Update existing payment
+    payments[existingIndex] = { ...payments[existingIndex], ...payment };
+    console.log(`💳 Updated payment ${payment.id} from ${payment.buyer} to ${payment.seller}`);
+  } else {
+    // Add new payment
+    payments.push(payment);
+    console.log(`💳 New payment ${payment.id} from ${payment.buyer} to ${payment.seller}`);
+  }
+  
+  res.json({ success: true, payment });
+});
+
+app.get("/api/payments", (req, res) => {
+  const { seller, buyer } = req.query;
+  
+  let filteredPayments = payments;
+  
+  if (seller) {
+    filteredPayments = payments.filter(p => p.seller === seller);
+  } else if (buyer) {
+    filteredPayments = payments.filter(p => p.buyer === buyer);
+  }
+  
+  console.log(`💳 GET /api/payments - Returning ${filteredPayments.length} payments (seller: ${seller || 'all'}, buyer: ${buyer || 'all'})`);
+  res.json(filteredPayments);
+});
+
+app.put("/api/payments/:id", (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+  
+  const paymentIndex = payments.findIndex(p => p.id === parseInt(id));
+  if (paymentIndex < 0) {
+    return res.status(404).json({ success: false, message: "Payment not found" });
+  }
+  
+  payments[paymentIndex] = { ...payments[paymentIndex], ...updates };
+  console.log(`💳 Updated payment ${id}:`, updates);
+  
+  res.json({ success: true, payment: payments[paymentIndex] });
+});
+
+// =================================================
 // ================= USERS SYSTEM ==================
 // =================================================
 

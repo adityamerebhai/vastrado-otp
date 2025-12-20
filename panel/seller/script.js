@@ -1048,17 +1048,50 @@ async function openNotificationChat(buyer, notifId) {
 // =====================
 let currentPaymentToReview = null;
 
-function getSellerPayments() {
+async function getSellerPayments() {
   const sellerUsername = localStorage.getItem('username');
+  if (!sellerUsername) return [];
+  
+  try {
+    // Fetch payments from server API
+    const res = await fetch(`${API_BASE_URL}/payments?seller=${encodeURIComponent(sellerUsername)}`);
+    if (res.ok) {
+      const serverPayments = await res.json();
+      // Also get from localStorage as fallback
+      const localPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+      const localFiltered = localPayments.filter(p => p.seller === sellerUsername);
+      
+      // Merge and deduplicate (server takes priority)
+      const allPayments = [...serverPayments];
+      localFiltered.forEach(local => {
+        if (!allPayments.find(p => p.id === local.id)) {
+          allPayments.push(local);
+        }
+      });
+      
+      // Update localStorage with merged data
+      localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
+      
+      return allPayments;
+    }
+  } catch (err) {
+    console.error('💳 Failed to fetch payments from server:', err);
+  }
+  
+  // Fallback to localStorage only
   const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
   return allPayments.filter(p => p.seller === sellerUsername);
 }
 
-function displaySellerPayments() {
+async function displaySellerPayments() {
   const paymentsList = document.getElementById('sellerPaymentsList');
   if (!paymentsList) return;
   
-  const payments = getSellerPayments().filter(p => p.status === 'pending');
+  // Show loading state
+  paymentsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">Loading payments...</p>';
+  
+  const allPayments = await getSellerPayments();
+  const payments = allPayments.filter(p => p.status === 'pending');
   
   if (payments.length === 0) {
     paymentsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No pending payments.</p>';
@@ -1069,13 +1102,16 @@ function displaySellerPayments() {
   payments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   
   paymentsList.innerHTML = payments.map(payment => {
-    const mainImage = payment.product.photos && payment.product.photos.length > 0 ? payment.product.photos[0] : '';
+    // Handle both old format (payment.product) and new format (direct properties)
+    const product = payment.product || payment;
+    const mainImage = product.photos && product.photos.length > 0 ? product.photos[0] : '';
+    const productName = product.fabricType || payment.productName || 'Item';
     
     return `
       <div class="payment-item pending" data-id="${payment.id}">
         <img src="${mainImage}" alt="Product" class="payment-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'60\\' height=\\'60\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'60\\' height=\\'60\\'/%3E%3C/svg%3E'">
         <div class="payment-item-info">
-          <p class="payment-item-title">${payment.product.fabricType || 'Item'}</p>
+          <p class="payment-item-title">${productName}</p>
           <p class="payment-item-buyer">Buyer: ${payment.buyer}</p>
         </div>
         <div class="payment-item-amount">₹${payment.amount}</div>
@@ -1093,11 +1129,15 @@ function displaySellerPayments() {
   });
 }
 
-function showPaymentDetails(paymentId) {
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+async function showPaymentDetails(paymentId) {
+  // Fetch fresh payment data
+  const allPayments = await getSellerPayments();
   const payment = allPayments.find(p => p.id === paymentId);
   
-  if (!payment) return;
+  if (!payment) {
+    console.error('Payment not found:', paymentId);
+    return;
+  }
   
   currentPaymentToReview = payment;
   
@@ -1106,7 +1146,11 @@ function showPaymentDetails(paymentId) {
   
   if (!modal || !modalBody) return;
   
-  const mainImage = payment.product.photos && payment.product.photos.length > 0 ? payment.product.photos[0] : '';
+  // Handle both old format (payment.product) and new format (direct properties)
+  const product = payment.product || payment;
+  const mainImage = product.photos && product.photos.length > 0 ? product.photos[0] : '';
+  const productName = product.fabricType || payment.productName || 'Item';
+  const productCondition = product.clothCondition || 'N/A';
   
   modalBody.innerHTML = `
     <h2>Payment Review</h2>
@@ -1124,8 +1168,8 @@ function showPaymentDetails(paymentId) {
       <div class="payment-product-card">
         <img src="${mainImage}" alt="Product" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'100\\' height=\\'100\\'/%3E%3C/svg%3E'">
         <div class="payment-product-card-info">
-          <h5>${payment.product.fabricType || 'Item'}</h5>
-          <p>Condition: ${payment.product.clothCondition || 'N/A'}</p>
+          <h5>${productName}</h5>
+          <p>Condition: ${productCondition}</p>
           <p class="payment-amount-display">₹${payment.amount}</p>
         </div>
       </div>
@@ -1195,16 +1239,33 @@ function confirmPayment(paymentId) {
   showSuccessModal('Payment Confirmed!', 'The sale has been recorded successfully. Check your Orders tab for details.');
 }
 
-function rejectPayment(paymentId) {
-  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+async function rejectPayment(paymentId) {
+  // Update on server
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/${paymentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'rejected',
+        rejectedAt: new Date().toISOString()
+      })
+    });
+    
+    if (res.ok) {
+      console.log('💳 Payment rejected on server');
+    }
+  } catch (err) {
+    console.error('💳 Failed to update payment on server:', err);
+  }
   
+  // Update localStorage
+  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
   allPayments = allPayments.map(p => {
     if (p.id === paymentId) {
       return { ...p, status: 'rejected', rejectedAt: new Date().toISOString() };
     }
     return p;
   });
-  
   localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
   
   // Close modal
@@ -1212,7 +1273,7 @@ function rejectPayment(paymentId) {
   if (modal) modal.style.display = 'none';
   
   // Update display
-  displaySellerPayments();
+  await displaySellerPayments();
   updateStats();
   
   // Show info message
