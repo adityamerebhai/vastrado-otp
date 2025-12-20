@@ -748,14 +748,40 @@ if (logoutBtn) {
 // Handle logout confirmation
 if (confirmLogoutBtn) {
   confirmLogoutBtn.addEventListener('click', () => {
-    // Clear all localStorage data
+    const username = localStorage.getItem('username');
+    
+    // Clear user credentials
     localStorage.removeItem('username');
     localStorage.removeItem('email');
     localStorage.removeItem('role');
     localStorage.removeItem('loggedIn');
+    
+    // Clear panel-specific data
     localStorage.removeItem('sellerListings');
+    localStorage.removeItem('sellerListings_sync');
     localStorage.removeItem('sellerTheme');
     localStorage.removeItem('sellerNotify');
+    
+    // Clear user-specific payments (filter by seller username)
+    if (username) {
+      const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+      const filteredPayments = allPayments.filter(p => p.seller !== username);
+      localStorage.setItem('vastradoPayments', JSON.stringify(filteredPayments));
+    }
+    
+    // Clear user-specific chats
+    if (username) {
+      const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '[]');
+      const filteredChats = allChats.filter(c => c.seller !== username && c.buyer !== username);
+      localStorage.setItem('vastradoChats', JSON.stringify(filteredChats));
+    }
+    
+    // Clear user-specific notifications
+    if (username) {
+      const allNotifications = JSON.parse(localStorage.getItem('vastradoNotifications') || '[]');
+      const filteredNotifications = allNotifications.filter(n => n.to !== username && n.from !== username);
+      localStorage.setItem('vastradoNotifications', JSON.stringify(filteredNotifications));
+    }
     
     // Redirect to main page
     window.location.href = 'https://vastrado-otp-production.up.railway.app/';

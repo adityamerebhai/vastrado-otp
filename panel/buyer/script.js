@@ -1026,16 +1026,43 @@ if (logoutBtn) {
 
 if (confirmLogoutBtn) {
   const handleLogout = () => {
+    const username = localStorage.getItem('username');
+    
+    // Clear user credentials
     [
       "username",
       "email",
       "role",
       "loggedIn",
       "buyerWishlist",
-      "vastradoPayments",
-      "vastradoChats",
-      "vastradoNotifications"
+      "buyerTheme",
+      "buyerNotify",
+      "buyerProducts"
     ].forEach((k) => localStorage.removeItem(k));
+    
+    // Clear user-specific payments (only this buyer's payments)
+    if (username) {
+      const allPayments = JSON.parse(localStorage.getItem("vastradoPayments") || "[]");
+      const filteredPayments = allPayments.filter(p => p.buyer !== username);
+      localStorage.setItem("vastradoPayments", JSON.stringify(filteredPayments));
+      
+      // Clear user-specific chats (only chats involving this buyer)
+      const allChats = JSON.parse(localStorage.getItem("vastradoChats") || "{}");
+      const filteredChats = {};
+      Object.keys(allChats).forEach(key => {
+        const chat = allChats[key];
+        if (chat.buyer !== username) {
+          filteredChats[key] = chat;
+        }
+      });
+      localStorage.setItem("vastradoChats", JSON.stringify(filteredChats));
+      
+      // Clear user-specific notifications (only notifications for/to this buyer)
+      const allNotifications = JSON.parse(localStorage.getItem("vastradoNotifications") || "[]");
+      const filteredNotifications = allNotifications.filter(n => n.to !== username && n.from !== username);
+      localStorage.setItem("vastradoNotifications", JSON.stringify(filteredNotifications));
+    }
+    
     window.location.href = "/";
   };
   

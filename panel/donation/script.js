@@ -798,14 +798,48 @@ if (logoutBtn) {
 // Handle logout confirmation
 if (confirmLogoutBtn) {
   confirmLogoutBtn.addEventListener('click', () => {
-    // Clear all localStorage data
+    const username = localStorage.getItem('username');
+    
+    // Clear user credentials
     localStorage.removeItem('username');
     localStorage.removeItem('email');
     localStorage.removeItem('role');
     localStorage.removeItem('loggedIn');
+    
+    // Clear donation panel data
     localStorage.removeItem('donationListings');
+    localStorage.removeItem('donationListings_sync');
     localStorage.removeItem('donationTheme');
     localStorage.removeItem('donationNotify');
+    
+    // Clear NGO orders related to this user's donations
+    const ngoOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
+    // Filter out orders that match this user's donation IDs
+    const donationListings = JSON.parse(localStorage.getItem('donationListings') || '[]');
+    const userDonationIds = donationListings.map(item => item.id?.toString()).filter(Boolean);
+    const filteredNgoOrders = ngoOrders.filter(order => 
+      !userDonationIds.includes(order.donationId?.toString())
+    );
+    if (filteredNgoOrders.length !== ngoOrders.length) {
+      localStorage.setItem('ngoOrders', JSON.stringify(filteredNgoOrders));
+    }
+    
+    // Clear user-specific payments
+    if (username) {
+      const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+      const filteredPayments = allPayments.filter(p => p.seller !== username && p.buyer !== username);
+      localStorage.setItem('vastradoPayments', JSON.stringify(filteredPayments));
+      
+      // Clear user-specific chats
+      const allChats = JSON.parse(localStorage.getItem('vastradoChats') || '[]');
+      const filteredChats = allChats.filter(c => c.seller !== username && c.buyer !== username);
+      localStorage.setItem('vastradoChats', JSON.stringify(filteredChats));
+      
+      // Clear user-specific notifications
+      const allNotifications = JSON.parse(localStorage.getItem('vastradoNotifications') || '[]');
+      const filteredNotifications = allNotifications.filter(n => n.to !== username && n.from !== username);
+      localStorage.setItem('vastradoNotifications', JSON.stringify(filteredNotifications));
+    }
     
     // Redirect to main page
     window.location.href = 'https://vastrado-otp-production.up.railway.app/';
