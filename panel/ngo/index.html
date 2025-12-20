@@ -66,9 +66,9 @@
                             <p class="stat-sub">Total donations made</p>
                         </article>
                         <article class="card stat-card">
-                            <p class="stat-label">Amount</p>
-                            <h2 class="stat-value" id="amountCount">₹0</h2>
-                            <p class="stat-sub">Total amount donated</p>
+                            <p class="stat-label">Items</p>
+                            <h2 class="stat-value" id="amountCount">0</h2>
+                            <p class="stat-sub">Total items donated</p>
                         </article>
                         <article class="card stat-card">
                             <p class="stat-label">Pending</p>
@@ -100,43 +100,43 @@
                         </div>
                         <form class="upload-form" id="donateForm">
                             <div class="form-group">
-                                <label for="ngoName">NGO/Organization Name</label>
-                                <input type="text" id="ngoName" name="ngoName" class="form-input" placeholder="Enter NGO or organization name" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="donationType">Donation Type</label>
-                                <select id="donationType" name="donationType" class="form-input" required>
-                                    <option value="">Select donation type</option>
-                                    <option value="money">Money</option>
-                                    <option value="clothing">Clothing</option>
-                                    <option value="food">Food</option>
-                                    <option value="medical">Medical Supplies</option>
-                                    <option value="educational">Educational Materials</option>
-                                    <option value="other">Other</option>
-                                </select>
+                                <label for="photos">Upload Photos</label>
+                                <div class="file-upload-area" id="fileUploadArea">
+                                    <input type="file" id="photos" name="photos" accept="image/*" multiple style="display: none;">
+                                    <div class="file-upload-content">
+                                        <span class="upload-icon">📷</span>
+                                        <p class="upload-text">Click to browse or drag and drop</p>
+                                        <p class="upload-hint">Supports JPG, PNG, GIF (Max 10MB per image)</p>
+                                    </div>
+                                    <div class="file-preview" id="filePreview"></div>
+                                </div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="amount">Amount (₹) <span id="amountRequired" style="color: #e74c3c; display: none;">*</span></label>
-                                    <input type="number" id="amount" name="amount" class="form-input" placeholder="Enter amount" min="0" step="0.01">
+                                    <label for="donationType">Cloth Type</label>
+                                    <select id="donationType" name="donationType" class="form-input" required>
+                                        <option value="">Select cloth type</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="polyester">Polyester</option>
+                                        <option value="silk">Silk</option>
+                                        <option value="wool">Wool</option>
+                                        <option value="linen">Linen</option>
+                                        <option value="denim">Denim</option>
+                                        <option value="leather">Leather</option>
+                                        <option value="other">Other</option>
+                                    </select>
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="quantity">Quantity <span id="quantityRequired" style="color: #e74c3c; display: none;">*</span></label>
-                                    <input type="number" id="quantity" name="quantity" class="form-input" placeholder="Enter quantity" min="1">
+                                    <label for="quantity">Quantity</label>
+                                    <input type="number" id="quantity" name="quantity" class="form-input" placeholder="Enter quantity" min="1" required>
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label for="description">Description</label>
-                                <textarea id="description" name="description" class="form-input" rows="4" placeholder="Describe your donation (optional)"></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="phoneNumber">Contact Number</label>
-                                <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="Enter your contact number" required>
+                                <textarea id="description" name="description" class="form-input" rows="4" placeholder="Describe your donation" required></textarea>
                             </div>
 
                             <div class="form-actions">

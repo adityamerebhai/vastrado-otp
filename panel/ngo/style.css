@@ -605,6 +605,97 @@ textarea.form-input {
     min-height: 100px;
 }
 
+/* File Upload Area */
+.file-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--bg);
+}
+
+.file-upload-area:hover {
+    border-color: var(--primary);
+    background: rgba(247, 183, 49, 0.02);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.upload-text {
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 8px;
+    font-size: 1rem;
+}
+
+.upload-hint {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0;
+}
+
+.file-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.preview-item {
+    position: relative;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: var(--bg);
+}
+
+.preview-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+}
+
+.remove-preview {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.remove-preview:hover {
+    background: rgba(255, 0, 0, 0.8);
+    transform: scale(1.1);
+}
+
+.preview-name {
+    padding: 8px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
 /* Form Actions */
 .form-actions {
     display: flex;
@@ -1007,6 +1098,21 @@ textarea.form-input {
     margin: 0 0 24px;
     font-size: 1.75rem;
     color: var(--text);
+}
+
+.detail-photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.detail-photo {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
 }
 
 .detail-info {

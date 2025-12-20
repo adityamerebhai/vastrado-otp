@@ -71,6 +71,9 @@ const donateFormCard = document.getElementById('donateFormCard');
 const closeFormBtn = document.getElementById('closeFormBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const donateForm = document.getElementById('donateForm');
+const fileInput = document.getElementById('photos');
+const fileUploadArea = document.getElementById('fileUploadArea');
+const filePreview = document.getElementById('filePreview');
 
 // Open donate form when + button is clicked
 if (donateAction) {
@@ -95,6 +98,9 @@ function closeDonateForm() {
   if (donateForm) {
     donateForm.reset();
   }
+  if (filePreview) {
+    filePreview.innerHTML = '';
+  }
   const donateSection = document.querySelector('.content-section[data-section="donate"]');
   if (donateSection) {
     donateSection.style.display = 'none';
@@ -109,31 +115,76 @@ if (cancelBtn) {
   cancelBtn.addEventListener('click', closeDonateForm);
 }
 
-// Show/hide required indicators based on donation type
-const donationTypeSelect = document.getElementById('donationType');
-if (donationTypeSelect) {
-  donationTypeSelect.addEventListener('change', function() {
-    const type = this.value;
-    const amountRequired = document.getElementById('amountRequired');
-    const quantityRequired = document.getElementById('quantityRequired');
-    const amountInput = document.getElementById('amount');
-    const quantityInput = document.getElementById('quantity');
+// File upload handling
+if (fileUploadArea && fileInput) {
+  // Click to browse
+  fileUploadArea.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  // Drag and drop
+  fileUploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    fileUploadArea.style.borderColor = 'var(--primary)';
+    fileUploadArea.style.backgroundColor = 'rgba(247, 183, 49, 0.05)';
+  });
+
+  fileUploadArea.addEventListener('dragleave', () => {
+    fileUploadArea.style.borderColor = '';
+    fileUploadArea.style.backgroundColor = '';
+  });
+
+  fileUploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    fileUploadArea.style.borderColor = '';
+    fileUploadArea.style.backgroundColor = '';
     
-    if (type === 'money') {
-      if (amountRequired) amountRequired.style.display = 'inline';
-      if (quantityRequired) quantityRequired.style.display = 'none';
-      if (amountInput) amountInput.required = true;
-      if (quantityInput) quantityInput.required = false;
-    } else if (type && type !== '') {
-      if (amountRequired) amountRequired.style.display = 'none';
-      if (quantityRequired) quantityRequired.style.display = 'inline';
-      if (amountInput) amountInput.required = false;
-      if (quantityInput) quantityInput.required = true;
-    } else {
-      if (amountRequired) amountRequired.style.display = 'none';
-      if (quantityRequired) quantityRequired.style.display = 'none';
-      if (amountInput) amountInput.required = false;
-      if (quantityInput) quantityInput.required = false;
+    if (e.dataTransfer.files.length > 0) {
+      fileInput.files = e.dataTransfer.files;
+      handleFileSelection(e.dataTransfer.files);
+    }
+  });
+
+  // File input change
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleFileSelection(e.target.files);
+    }
+  });
+}
+
+function handleFileSelection(files) {
+  if (!filePreview) return;
+  
+  filePreview.innerHTML = '';
+  const fileArray = Array.from(files);
+  
+  fileArray.forEach((file, index) => {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'preview-item';
+        previewItem.innerHTML = `
+          <img src="${e.target.result}" alt="Preview ${index + 1}">
+          <button type="button" class="remove-preview" data-index="${index}">×</button>
+          <p class="preview-name">${file.name}</p>
+        `;
+        filePreview.appendChild(previewItem);
+
+        // Remove preview handler
+        const removeBtn = previewItem.querySelector('.remove-preview');
+        removeBtn.addEventListener('click', () => {
+          previewItem.remove();
+          // Create new FileList without this file
+          const dt = new DataTransfer();
+          fileArray.forEach((f, i) => {
+            if (i !== index) dt.items.add(f);
+          });
+          fileInput.files = dt.files;
+        });
+      };
+      reader.readAsDataURL(file);
     }
   });
 }
@@ -198,23 +249,6 @@ async function saveDonation(donation) {
   
   localStorage.setItem('ngoDonations', JSON.stringify(donations));
   
-  // Also create a payment entry for tracking
-  const payment = {
-    id: Date.now().toString(),
-    ngo: donation.ngoName,
-    donor: localStorage.getItem('username') || 'Donor',
-    amount: donation.amount || 0,
-    itemName: donation.donationType,
-    quantity: donation.quantity || 1,
-    status: 'pending',
-    date: new Date().toISOString(),
-    description: donation.description || ''
-  };
-  
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  allPayments.push(payment);
-  localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
-  
   try {
     const success = await syncToCloud(donations);
     if (success) {
@@ -234,13 +268,8 @@ async function saveDonation(donation) {
 function updateStats() {
   const donations = getStoredDonations();
   const donationsCount = donations.length;
-  const donorUsername = localStorage.getItem('username');
-  
-  // Get payments made by this donor
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  const donorPayments = allPayments.filter(p => p.donor === donorUsername);
-  const totalAmount = donorPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-  const pendingCount = donorPayments.filter(p => p.status === 'pending').length;
+  const totalQuantity = donations.reduce((sum, d) => sum + (parseInt(d.quantity) || 0), 0);
+  const pendingCount = 0; // No pending status for donations
   
   const donationsCountEl = document.getElementById('donationsCount');
   const amountCountEl = document.getElementById('amountCount');
@@ -250,7 +279,7 @@ function updateStats() {
     donationsCountEl.textContent = donationsCount;
   }
   if (amountCountEl) {
-    amountCountEl.textContent = `₹${totalAmount.toFixed(2)}`;
+    amountCountEl.textContent = totalQuantity;
   }
   if (pendingCountEl) {
     pendingCountEl.textContent = pendingCount;
@@ -274,29 +303,17 @@ function displayDonations() {
     card.className = 'listing-card';
     card.dataset.index = index;
     
-    // Create a placeholder image based on donation type
-    const donationTypeIcons = {
-      money: '💰',
-      clothing: '👕',
-      food: '🍽️',
-      medical: '🏥',
-      educational: '📚',
-      other: '📦'
-    };
-    const icon = donationTypeIcons[donation.donationType] || '📦';
-    
-    // Create SVG placeholder with icon
-    const placeholderImage = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f7b731' width='200' height='200'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='80' dy='.3em' x='50%25' y='50%25' text-anchor='middle'%3E${encodeURIComponent(icon)}%3C/text%3E%3C/svg%3E`;
+    const mainImage = donation.photos && donation.photos.length > 0 ? donation.photos[0] : '';
     
     card.innerHTML = `
       <button class="delete-listing-btn" data-index="${index}" aria-label="Delete donation">×</button>
       <div class="listing-image">
-        <img src="${placeholderImage}" alt="Donation ${index + 1}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'200\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'18\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+        <img src="${mainImage}" alt="Donation ${index + 1}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'200\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'18\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'">
       </div>
       <div class="listing-info">
-        <p class="listing-fabric"><strong>NGO:</strong> ${donation.ngoName || 'N/A'}</p>
-        <p class="listing-cost"><strong>Type:</strong> ${donation.donationType || 'N/A'}</p>
-        <p class="listing-condition"><strong>Amount:</strong> ₹${donation.amount || '0'}</p>
+        <p class="listing-fabric"><strong>Type:</strong> ${donation.donationType || 'N/A'}</p>
+        <p class="listing-cost"><strong>Quantity:</strong> ${donation.quantity || '0'}</p>
+        <p class="listing-condition"><strong>Description:</strong> ${donation.description ? (donation.description.substring(0, 30) + (donation.description.length > 30 ? '...' : '')) : 'N/A'}</p>
       </div>
     `;
 
@@ -374,40 +391,33 @@ function showDonationDetails(donation, index) {
   
   if (!modal || !modalBody) return;
 
+  const photosHtml = donation.photos && donation.photos.length > 0 
+    ? donation.photos.map(photo => `<img src="${photo}" alt="Photo" class="detail-photo">`).join('')
+    : '<p class="muted">No photos available</p>';
+
   modalBody.innerHTML = `
     <div class="detail-header">
       <h2>Donation Details</h2>
     </div>
+    <div class="detail-photos">
+      ${photosHtml}
+    </div>
     <div class="detail-info">
       <div class="detail-row">
-        <span class="detail-label">NGO/Organization:</span>
-        <span class="detail-value">${donation.ngoName || 'N/A'}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Donation Type:</span>
+        <span class="detail-label">Cloth Type:</span>
         <span class="detail-value">${donation.donationType || 'N/A'}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Amount:</span>
-        <span class="detail-value">₹${donation.amount || '0'}</span>
-      </div>
-      ${donation.quantity ? `
-      <div class="detail-row">
         <span class="detail-label">Quantity:</span>
-        <span class="detail-value">${donation.quantity}</span>
+        <span class="detail-value">${donation.quantity || '0'}</span>
       </div>
-      ` : ''}
       <div class="detail-row">
         <span class="detail-label">Description:</span>
         <span class="detail-value">${donation.description || 'N/A'}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Contact Number:</span>
-        <span class="detail-value">${donation.phoneNumber || 'N/A'}</span>
-      </div>
-      <div class="detail-row">
         <span class="detail-label">Date:</span>
-        <span class="detail-value">${new Date(donation.date || Date.now()).toLocaleDateString()}</span>
+        <span class="detail-value">${new Date(donation.dateAdded || Date.now()).toLocaleDateString()}</span>
       </div>
     </div>
   `;
@@ -436,48 +446,84 @@ if (detailModal) {
 }
 
 // Form submission
-if (donateForm) {
-  donateForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+async function handleDonateFormSubmit(e) {
+  if (e) e.preventDefault();
+  
+  if (!donateForm) return;
+  
+  const formData = new FormData(donateForm);
+  const photos = [];
+  
+  // Convert file inputs to base64
+  const filePromises = Array.from(fileInput.files).map(file => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  });
+
+  try {
+    const photoData = await Promise.all(filePromises);
+    const donorUsername = localStorage.getItem('username') || 'Unknown Donor';
+    const donationType = formData.get('donationType');
+    const quantity = formData.get('quantity');
+    const description = formData.get('description');
     
-    const ngoName = document.getElementById('ngoName').value;
-    const donationType = document.getElementById('donationType').value;
-    const amount = document.getElementById('amount').value;
-    const quantity = document.getElementById('quantity').value;
-    const description = document.getElementById('description').value;
-    const phoneNumber = document.getElementById('phoneNumber').value;
-    
-    if (!ngoName || !donationType || !phoneNumber) {
-      alert('Please fill in all required fields (NGO name, donation type, and contact number)');
+    // Validate data before saving
+    if (!donationType || !quantity || !description) {
+      alert('Please fill in all required fields');
       return;
     }
     
-    if (donationType === 'money') {
-      if (!amount || parseFloat(amount) <= 0) {
-        alert('Please enter a valid donation amount');
-        return;
-      }
-    } else {
-      // For non-money donations, quantity is recommended
-      if (!quantity || parseInt(quantity) <= 0) {
-        alert('Please enter the quantity of items you are donating');
-        return;
-      }
+    if (photoData.length === 0) {
+      alert('Please upload at least one photo');
+      return;
+    }
+
+    const donation = {
+      id: Date.now(),
+      donor: donorUsername,
+      photos: photoData.filter(p => p !== null),
+      donationType: donationType,
+      quantity: parseInt(quantity),
+      description: description,
+      dateAdded: new Date().toISOString()
+    };
+
+    // Save to localStorage and sync to cloud
+    console.log('📝 [FORM] Saving donation and syncing to cloud...');
+    await saveDonation(donation);
+    
+    // Verify it was saved
+    const savedDonations = getStoredDonations();
+    const wasSaved = savedDonations.some(d => d.id === donation.id);
+    
+    if (!wasSaved) {
+      console.error('❌ Failed to save donation to localStorage');
+      return;
     }
     
-    const donation = {
-      ngoName,
-      donationType,
-      amount: parseFloat(amount) || 0,
-      quantity: quantity ? parseInt(quantity) : null,
-      description,
-      phoneNumber,
-      date: new Date().toISOString(),
-      donor: localStorage.getItem('username') || 'Donor'
-    };
+    console.log('✅ [FORM] Donation saved and synced successfully');
     
-    await saveDonation(donation);
+    // Reset form and close
     closeDonateForm();
+    
+    // Hide donate section
+    const donateSection = document.querySelector('.content-section[data-section="donate"]');
+    if (donateSection) {
+      donateSection.style.display = 'none';
+    }
+    
+    // Switch to donations section
+    const donationsMenuItem = document.querySelector('.menu-item[data-section="donations"]');
+    if (donationsMenuItem) {
+      donationsMenuItem.click();
+    }
+    
+    // Display donations
+    displayDonations();
     
     // Show success modal
     const successModal = document.getElementById('successModal');
@@ -488,7 +534,29 @@ if (donateForm) {
       successMessage.textContent = 'Your donation has been submitted successfully. Thank you for your generosity!';
       successModal.style.display = 'flex';
     }
-  });
+  } catch (error) {
+    console.error('❌ Error saving donation:', error);
+    console.error('❌ Error details:', error.message, error.stack);
+  }
+}
+
+if (donateForm) {
+  donateForm.addEventListener('submit', handleDonateFormSubmit);
+  
+  // Also add direct handler to submit button for mobile compatibility
+  const submitBtn = donateForm.querySelector('.submit-btn');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleDonateFormSubmit(e);
+    });
+    submitBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleDonateFormSubmit(e);
+    });
+  }
 }
 
 // Success modal close
