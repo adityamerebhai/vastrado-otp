@@ -1197,9 +1197,9 @@ if (donorStatusModalOverlay) {
 
 // Fetch NGO orders from API for cross-device sync
 async function fetchNgoOrdersFromAPI() {
+  // Try to fetch from API, but handle 404 gracefully (endpoint might not exist yet)
   try {
     const url = `${API_BASE_URL}/ngo-orders`;
-    console.log(`🔄 [DONATION] Fetching NGO orders from: ${url}`);
     
     const res = await fetch(url, { 
       method: 'GET',
@@ -1211,9 +1211,9 @@ async function fetchNgoOrdersFromAPI() {
       },
       mode: 'cors',
       credentials: 'omit'
-    });
+    }).catch(() => null); // Catch network errors silently
     
-    if (res.ok) {
+    if (res && res.ok) {
       const contentType = res.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const responseText = await res.text();
@@ -1231,20 +1231,21 @@ async function fetchNgoOrdersFromAPI() {
           return [];
         }
       }
-    } else {
-      // API endpoint might not exist or returned error
-      const errorText = await res.text().catch(() => 'Unknown error');
-      console.log(`ℹ️ [DONATION] API endpoint returned ${res.status}, using localStorage fallback`);
+    }
+    
+    // If we get here, API endpoint doesn't exist or returned error
+    // Silently fallback to localStorage (404 is expected if endpoint doesn't exist)
+    if (res && res.status === 404) {
+      // Endpoint doesn't exist yet - this is expected, don't log as error
     }
   } catch (apiError) {
-    // API endpoint might not exist yet, fallback to localStorage
-    console.log('ℹ️ [DONATION] API endpoint not available, using localStorage');
+    // Network error or other issue - silently fallback
   }
   
-  // Fallback to localStorage if API fails
+  // Fallback to localStorage
   try {
     const ngoOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
-    console.log(`📦 [DONATION] Retrieved ${ngoOrders.length} NGO orders from localStorage (fallback)`);
+    console.log(`📦 [DONATION] Retrieved ${ngoOrders.length} NGO orders from localStorage`);
     return ngoOrders;
   } catch (error) {
     console.error('❌ [DONATION] Error reading NGO orders from localStorage:', error);
