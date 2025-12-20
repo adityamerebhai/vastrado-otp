@@ -1414,8 +1414,7 @@ function checkPaymentUpdates() {
   }
 }
 
-// Check payment updates every 500ms for faster response
-setInterval(checkPaymentUpdates, 500);
+// No automatic payment updates - use refresh button instead
 
 // =====================
 // Initialize: show profile section by default and load listings
@@ -1481,8 +1480,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Load chat list
   loadChatList();
-
-  // Check for payment updates
-  checkPaymentUpdates();
+  
+  // Refresh button for payments
+  const refreshSellerPaymentsBtn = document.getElementById('refreshSellerPaymentsBtn');
+  if (refreshSellerPaymentsBtn) {
+    refreshSellerPaymentsBtn.addEventListener('click', async () => {
+      refreshSellerPaymentsBtn.disabled = true;
+      refreshSellerPaymentsBtn.textContent = '🔄 Refreshing...';
+      await checkPaymentUpdates();
+      await displaySellerPayments();
+      refreshSellerPaymentsBtn.disabled = false;
+      refreshSellerPaymentsBtn.textContent = '🔄 Refresh';
+    });
+    
+    // Mobile touch support
+    refreshSellerPaymentsBtn.addEventListener('touchend', async (e) => {
+      e.preventDefault();
+      refreshSellerPaymentsBtn.disabled = true;
+      refreshSellerPaymentsBtn.textContent = '🔄 Refreshing...';
+      await checkPaymentUpdates();
+      await displaySellerPayments();
+      refreshSellerPaymentsBtn.disabled = false;
+      refreshSellerPaymentsBtn.textContent = '🔄 Refresh';
+    }, { passive: false });
+  }
 });
 

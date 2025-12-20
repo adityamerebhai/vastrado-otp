@@ -129,8 +129,13 @@
 
                 <div class="content-section" data-section="payments" style="display: none;">
                     <section class="card">
-                        <h3>My Payments</h3>
-                        <p class="muted">Track your payment status here.</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <div>
+                                <h3 style="margin: 0;">My Payments</h3>
+                                <p class="muted" style="margin: 4px 0 0 0;">Track your payment status here.</p>
+                            </div>
+                            <button id="refreshPaymentsBtn" class="refresh-btn" title="Refresh payments">🔄 Refresh</button>
+                        </div>
                         <div class="payments-list" id="buyerPaymentsList">
                             <p class="muted" style="padding: 20px; text-align: center;">No payments yet. Buy a product to see your payments here.</p>
                         </div>

@@ -1161,7 +1161,7 @@ async function checkPaymentUpdates() {
   }
 }
 
-setInterval(checkPaymentUpdates, 500);
+// No automatic payment updates - use refresh button instead
 
 /* ===============================
    PRODUCT UPDATES CHECK
@@ -1210,4 +1210,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loadChatList();
+  
+  // Refresh button for payments
+  const refreshPaymentsBtn = document.getElementById('refreshPaymentsBtn');
+  if (refreshPaymentsBtn) {
+    refreshPaymentsBtn.addEventListener('click', async () => {
+      refreshPaymentsBtn.disabled = true;
+      refreshPaymentsBtn.textContent = '🔄 Refreshing...';
+      await checkPaymentUpdates();
+      refreshPaymentsBtn.disabled = false;
+      refreshPaymentsBtn.textContent = '🔄 Refresh';
+    });
+    
+    // Mobile touch support
+    refreshPaymentsBtn.addEventListener('touchend', async (e) => {
+      e.preventDefault();
+      refreshPaymentsBtn.disabled = true;
+      refreshPaymentsBtn.textContent = '🔄 Refreshing...';
+      await checkPaymentUpdates();
+      refreshPaymentsBtn.disabled = false;
+      refreshPaymentsBtn.textContent = '🔄 Refresh';
+    }, { passive: false });
+  }
 });

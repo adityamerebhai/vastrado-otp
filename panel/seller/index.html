@@ -228,8 +228,13 @@
 
                 <div class="content-section" data-section="payments" style="display: none;">
                     <section class="card">
-                        <h3>Payment Requests</h3>
-                        <p class="muted">Review and confirm payments from buyers.</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <div>
+                                <h3 style="margin: 0;">Payment Requests</h3>
+                                <p class="muted" style="margin: 4px 0 0 0;">Review and confirm payments from buyers.</p>
+                            </div>
+                            <button id="refreshSellerPaymentsBtn" class="refresh-btn" title="Refresh payments">🔄 Refresh</button>
+                        </div>
                         <div class="payments-list" id="sellerPaymentsList">
                             <p class="muted" style="padding: 20px; text-align: center;">No pending payments.</p>
                         </div>
