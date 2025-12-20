@@ -1197,12 +1197,54 @@ if (donorStatusModalOverlay) {
 
 // Fetch NGO orders from API for cross-device sync
 async function fetchNgoOrdersFromAPI() {
-  // Since NGO orders are stored in localStorage by the NGO panel,
-  // we'll read directly from localStorage without making API calls
-  // This avoids errors when the API endpoint doesn't exist
+  try {
+    const url = `${API_BASE_URL}/ngo-orders`;
+    console.log(`🔄 [DONATION] Fetching NGO orders from: ${url}`);
+    
+    const res = await fetch(url, { 
+      method: 'GET',
+      cache: "no-cache",
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Accept': 'application/json'
+      },
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    if (res.ok) {
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const responseText = await res.text();
+        if (responseText && responseText.trim() !== '') {
+          const data = JSON.parse(responseText);
+          if (Array.isArray(data)) {
+            // Update localStorage with fetched data for offline access
+            localStorage.setItem('ngoOrders', JSON.stringify(data));
+            console.log(`✅ [DONATION] Fetched ${data.length} NGO orders from API`);
+            return data;
+          }
+        } else {
+          // Empty response is valid
+          console.log('ℹ️ [DONATION] API returned empty response (no orders yet)');
+          return [];
+        }
+      }
+    } else {
+      // API endpoint might not exist or returned error
+      const errorText = await res.text().catch(() => 'Unknown error');
+      console.log(`ℹ️ [DONATION] API endpoint returned ${res.status}, using localStorage fallback`);
+    }
+  } catch (apiError) {
+    // API endpoint might not exist yet, fallback to localStorage
+    console.log('ℹ️ [DONATION] API endpoint not available, using localStorage');
+  }
+  
+  // Fallback to localStorage if API fails
   try {
     const ngoOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
-    console.log(`📦 [DONATION] Retrieved ${ngoOrders.length} NGO orders from localStorage`);
+    console.log(`📦 [DONATION] Retrieved ${ngoOrders.length} NGO orders from localStorage (fallback)`);
     return ngoOrders;
   } catch (error) {
     console.error('❌ [DONATION] Error reading NGO orders from localStorage:', error);

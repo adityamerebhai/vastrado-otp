@@ -570,7 +570,37 @@ function getStoredOrders() {
   return [];
 }
 
-function saveOrder(order) {
+// Sync NGO orders to API
+async function syncNgoOrdersToAPI(orders) {
+  try {
+    const apiUrl = `${API_BASE_URL}/ngo-orders`;
+    console.log('🔄 [NGO] Syncing orders to API:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      },
+      body: JSON.stringify(orders),
+      cache: 'no-cache'
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success) {
+        console.log(`✅ [NGO] Synced ${orders.length} orders to API`);
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('❌ [NGO] Failed to sync orders to API:', error);
+    return false;
+  }
+}
+
+async function saveOrder(order) {
   const orders = getStoredOrders();
   // Check if order already exists
   const existingIndex = orders.findIndex(o => o.id === order.id);
@@ -581,8 +611,17 @@ function saveOrder(order) {
     // Add new order
     orders.push(order);
   }
+  
+  // Save to localStorage first
   localStorage.setItem('ngoOrders', JSON.stringify(orders));
-  console.log('✅ [NGO] Order saved:', order);
+  console.log('✅ [NGO] Order saved to localStorage:', order);
+  
+  // Sync to API for cross-device sync
+  try {
+    await syncNgoOrdersToAPI(orders);
+  } catch (error) {
+    console.error('⚠️ [NGO] Failed to sync to API, but saved locally:', error);
+  }
 }
 
 function confirmOrder(item, index) {
@@ -747,10 +786,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 [INIT] Donations available:', donations.length);
   console.log('💡 [INIT] Click refresh button to fetch latest donations from API');
   
+  // Sync existing orders to API on startup (for cross-device sync)
+  const existingOrders = getStoredOrders();
+  if (existingOrders.length > 0) {
+    console.log('🔄 [INIT] Syncing existing orders to API...');
+    try {
+      await syncNgoOrdersToAPI(existingOrders);
+    } catch (error) {
+      console.log('⚠️ [INIT] Failed to sync orders to API on startup:', error);
+    }
+  }
+  
   // Update stats
   updateStats();
   
   // Load and display listings
   displayListings();
+  
+  // Initialize theme
+  initializeTheme();
+  
+  // Initialize notifications toggle
+  initializeNotifications();
+  
+  // Load notifications
+  await loadNotifications();
 });
 
