@@ -51,6 +51,7 @@ function loadDashboard(role) {
 
   // ✅ STORE ROLE
   localStorage.setItem("role", role);
+  console.log("✅ Role stored in localStorage:", role);
 
   fetch(dashboardFile)
     .then(res => res.text())

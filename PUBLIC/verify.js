@@ -143,6 +143,7 @@
         const redirectRole = data.role || localStorage.getItem("role");
         console.log("Redirecting to role:", redirectRole);
         console.log("Role from localStorage:", localStorage.getItem("role"));
+        console.log("Role from server response:", data.role);
         
         const panelMap = {
           buyer: "../panel/buyer/index.html",
@@ -151,14 +152,19 @@
           donation: "../panel/donation/index.html"
         };
         
-        if (redirectRole && panelMap[redirectRole]) {
-          console.log("Redirecting to:", panelMap[redirectRole]);
-          window.location.href = panelMap[redirectRole];
-        } else if (redirectRole) {
-          console.log("Redirecting to dashboard:", `${redirectRole}-dashboard.html`);
-          window.location.href = `${redirectRole}-dashboard.html`;
+        // Normalize role to lowercase for case-insensitive matching
+        const normalizedRole = redirectRole ? redirectRole.toLowerCase().trim() : null;
+        
+        if (normalizedRole && panelMap[normalizedRole]) {
+          const redirectPath = panelMap[normalizedRole];
+          console.log("✅ Redirecting to:", redirectPath);
+          window.location.href = redirectPath;
+        } else if (normalizedRole) {
+          console.warn("⚠️ Role not found in panelMap, redirecting to dashboard:", `${normalizedRole}-dashboard.html`);
+          window.location.href = `${normalizedRole}-dashboard.html`;
         } else {
-          console.log("No role found, redirecting to index");
+          console.error("❌ No role found, redirecting to index");
+          alert("Role not found. Please select a role and try again.");
           window.location.href = "index.html";
         }
 

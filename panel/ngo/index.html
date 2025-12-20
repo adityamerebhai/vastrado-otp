@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Dashboard | Vastrado</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">Vastrado</div>
+            <div class="top-actions">
+                <button class="ghost-btn" aria-label="Notifications">
+                    <img src="images/notification.png" alt="Notifications" class="topbar-icon">
+                </button>
+                <div class="profile" id="profileDropdown">
+                    <span class="avatar" id="avatar">N</span>
+                    <span class="profile-name" id="profileName">NGO</span>
+                    <div class="profile-dropdown" id="profileDropdownMenu" style="display: none;">
+                        <button class="dropdown-item" id="logoutBtn">
+                            <span>🚪</span>
+                            <span>Log Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="layout">
+            <aside class="sidebar">
+                <nav class="menu">
+                    <button class="menu-item active" data-section="profile">
+                        <img src="images/profile.png" alt="Profile" class="menu-icon"> Profile
+                    </button>
+                    <button class="menu-item" data-section="donation">
+                        <img src="images/browse.png" alt="Donation" class="menu-icon"> Make a Donation
+                    </button>
+                    <button class="menu-item" data-section="listings">
+                        <img src="images/order.png" alt="Listings" class="menu-icon"> My Donations
+                    </button>
+                    <button class="menu-item" data-section="notifications">
+                        <img src="images/notification.png" alt="Notifications" class="menu-icon"> Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                    </button>
+                    <button class="menu-item" data-section="orders">
+                        <img src="images/order.png" alt="Orders" class="menu-icon"> Confirmed Donations
+                    </button>
+                    <button class="menu-item" data-section="settings">
+                        <img src="images/settings.png" alt="Settings" class="menu-icon"> Settings
+                    </button>
+                </nav>
+            </aside>
+
+            <main class="content">
+                <div class="content-section" data-section="profile">
+                    <section class="stats-grid">
+                        <article class="card stat-card">
+                            <p class="stat-label">Total Donations Made</p>
+                            <h2 class="stat-value" id="donationsCount">0</h2>
+                            <p class="stat-sub">Items donated</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">Total Amount Donated</p>
+                            <h2 class="stat-value" id="amountDonated">₹0</h2>
+                            <p class="stat-sub">Total value</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">New Items</p>
+                            <h2 class="stat-value" id="newItemsCount">0</h2>
+                            <p class="stat-sub">Quality: New</p>
+                        </article>
+                    </section>
+
+                    <section class="upload-highlight card">
+                        <div>
+                            <p class="muted">Quick action</p>
+                            <h3>Make a donation</h3>
+                            <p class="subtext">Donate quality clothing items to help those in need.</p>
+                        </div>
+                        <button class="upload-btn" id="donateAction" aria-label="Make a donation">+</button>
+                    </section>
+
+                    <section class="card list-placeholder">
+                        <h3>Recent Activity</h3>
+                        <p class="muted">No recent activity yet. Make your first donation to see your history here.</p>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="donation" style="display: none;">
+                    <section class="card upload-form-card" id="donateFormCard" style="display: none;">
+                        <div class="form-header">
+                            <h3>Make a Donation</h3>
+                            <button class="close-form-btn" id="closeFormBtn" aria-label="Close form">×</button>
+                        </div>
+                        <form class="upload-form" id="donateForm">
+                            <div class="form-group">
+                                <label for="photos">Upload Photos</label>
+                                <div class="file-upload-area" id="fileUploadArea">
+                                    <input type="file" id="photos" name="photos" accept="image/*" multiple style="display: none;">
+                                    <div class="file-upload-content">
+                                        <span class="upload-icon">📷</span>
+                                        <p class="upload-text">Click to browse or drag and drop</p>
+                                        <p class="upload-hint">Supports JPG, PNG, GIF (Max 10MB per image)</p>
+                                    </div>
+                                    <div class="file-preview" id="filePreview"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clothType">Cloth Type</label>
+                                    <select id="clothType" name="clothType" class="form-input" required>
+                                        <option value="">Select cloth type</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="polyester">Polyester</option>
+                                        <option value="silk">Silk</option>
+                                        <option value="wool">Wool</option>
+                                        <option value="linen">Linen</option>
+                                        <option value="denim">Denim</option>
+                                        <option value="leather">Leather</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="quality">Quality</label>
+                                    <select id="quality" name="quality" class="form-input" required>
+                                        <option value="">Select quality</option>
+                                        <option value="new">New</option>
+                                        <option value="like-new">Like New</option>
+                                        <option value="good">Good</option>
+                                        <option value="fair">Fair</option>
+                                        <option value="poor">Poor</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" name="description" class="form-input" rows="4" placeholder="Describe the item(s) you're donating..." required></textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
+                                <button type="submit" class="submit-btn">Submit Donation</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="listings" style="display: none;">
+                    <section class="card listings-container">
+                        <h3>My Donations</h3>
+                        <p class="muted">Manage your donation listings.</p>
+                        <div class="listings-grid" id="listingsGrid">
+                            <!-- Donation items will be displayed here -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Detail Modal -->
+                <div class="modal-overlay" id="detailModal" style="display: none;">
+                    <div class="modal-content">
+                        <button class="modal-close" id="closeModal">×</button>
+                        <div class="modal-body" id="modalBody">
+                            <!-- Details will be shown here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Confirmation Modal -->
+                <div class="modal-overlay" id="deleteConfirmModal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="confirm-icon">⚠️</div>
+                        <h3 class="confirm-title">Remove Donation</h3>
+                        <p class="confirm-message">Are you sure you want to remove this donation listing? This action cannot be undone.</p>
+                        <div class="confirm-actions">
+                            <button class="confirm-btn cancel-confirm-btn" id="cancelDeleteBtn">Cancel</button>
+                            <button class="confirm-btn delete-confirm-btn" id="confirmDeleteBtn">Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logout Confirmation Modal -->
+                <div class="modal-overlay" id="logoutConfirmModal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="confirm-icon">🚪</div>
+                        <h3 class="confirm-title">Log Out</h3>
+                        <p class="confirm-message">Are you sure you want to log out? All your session data will be cleared.</p>
+                        <div class="confirm-actions">
+                            <button class="confirm-btn cancel-confirm-btn" id="cancelLogoutBtn">Cancel</button>
+                            <button class="confirm-btn delete-confirm-btn" id="confirmLogoutBtn">Log Out</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section" data-section="notifications" style="display: none;">
+                    <section class="card">
+                        <h3>Notifications</h3>
+                        <p class="muted">Updates and messages about your donations.</p>
+                        <div class="notifications-list" id="notificationsList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No notifications yet</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="orders" style="display: none;">
+                    <section class="card">
+                        <h3>Confirmed Donations</h3>
+                        <p class="muted">Your confirmed donations will appear here.</p>
+                        <div class="orders-list" id="ngoOrdersList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No confirmed donations yet.</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="settings" style="display: none;">
+                    <section class="card settings-card">
+                        <div class="settings-header">
+                            <h3>Settings</h3>
+                            <p class="muted">Personalize your workspace.</p>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Theme</p>
+                                <p class="muted small">Choose your preferred look.</p>
+                            </div>
+                            <div class="theme-pills" id="themePills">
+                                <button class="pill" data-theme="light">Light</button>
+                                <button class="pill" data-theme="grey">Grey</button>
+                                <button class="pill" data-theme="dark">Dark</button>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Notifications</p>
+                                <p class="muted small">Get updates about your donations.</p>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="notifyToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
