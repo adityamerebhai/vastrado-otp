@@ -144,6 +144,20 @@ app.get("/api/chat/buyer/:buyer", (req, res) => {
   res.json([...users]);
 });
 
+// 👉 Seller chat list
+app.get("/api/chat/seller/:seller", (req, res) => {
+  const seller = req.params.seller;
+  const users = new Set();
+
+  Object.keys(chats).forEach(key => {
+    const [u1, u2] = key.split("_");
+    if (u1 === seller) users.add(u2);
+    if (u2 === seller) users.add(u1);
+  });
+
+  res.json([...users]);
+});
+
 // 👉 Load messages
 app.get("/api/chat/messages", (req, res) => {
   const { buyer, seller } = req.query;
