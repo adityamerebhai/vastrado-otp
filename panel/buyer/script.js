@@ -100,22 +100,52 @@ function saveWishlist(list) {
   updateStats();
 }
 
-function getBuyerPayments() {
-  const u = localStorage.getItem("username");
+async function getBuyerPayments() {
+  const buyerUsername = localStorage.getItem("username");
+  if (!buyerUsername) return [];
+  
+  try {
+    // Fetch payments from server API
+    const res = await fetch(`${API_BASE_URL}/payments?buyer=${encodeURIComponent(buyerUsername)}`);
+    if (res.ok) {
+      const serverPayments = await res.json();
+      // Also get from localStorage as fallback
+      const localPayments = JSON.parse(localStorage.getItem("vastradoPayments") || "[]");
+      const localFiltered = localPayments.filter(x => x.buyer === buyerUsername);
+      
+      // Merge and deduplicate (server takes priority)
+      const allPayments = [...serverPayments];
+      localFiltered.forEach(local => {
+        if (!allPayments.find(p => p.id === local.id)) {
+          allPayments.push(local);
+        }
+      });
+      
+      // Update localStorage with merged data
+      localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
+      
+      return allPayments;
+    }
+  } catch (err) {
+    console.error('💳 Failed to fetch payments from server:', err);
+  }
+  
+  // Fallback to localStorage only
   const p = JSON.parse(localStorage.getItem("vastradoPayments") || "[]");
-  return p.filter((x) => x.buyer === u);
+  return p.filter((x) => x.buyer === buyerUsername);
 }
 
-function getBuyerOrders() {
-  return getBuyerPayments().filter((p) => p.status === "confirmed");
+async function getBuyerOrders() {
+  const payments = await getBuyerPayments();
+  return payments.filter((p) => p.status === "confirmed");
 }
 
 /* ===============================
    PROFILE STATS
 ================================ */
-function updateStats() {
+async function updateStats() {
   const wishlist = getWishlist();
-  const payments = getBuyerPayments();
+  const payments = await getBuyerPayments();
 
   const confirmed = payments.filter((p) => p.status === "confirmed").length;
   const pending = payments.filter((p) => p.status === "pending").length;
@@ -573,11 +603,11 @@ if (submitPaymentBtn) {
 /* ===============================
    DISPLAY PAYMENTS
 ================================ */
-function displayBuyerPayments() {
+async function displayBuyerPayments() {
   const list = document.getElementById("buyerPaymentsList");
   if (!list) return;
 
-  const payments = getBuyerPayments();
+  const payments = await getBuyerPayments();
   if (payments.length === 0) {
     list.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No payments yet. Buy a product to see your payments here.</p>';
     return;
@@ -601,23 +631,37 @@ function displayBuyerPayments() {
 /* ===============================
    DISPLAY ORDERS
 ================================ */
-function displayBuyerOrders() {
+async function displayBuyerOrders() {
   const list = document.getElementById("buyerOrdersList");
   if (!list) return;
 
-  const orders = getBuyerOrders();
+  // Show loading state
+  list.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">Loading orders...</p>';
+
+  const orders = await getBuyerOrders();
   if (orders.length === 0) {
     list.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No orders yet. Once you make a purchase, you\'ll see them here.</p>';
     return;
   }
 
+  // Sort by newest first
+  orders.sort((a, b) => new Date(b.confirmedAt || b.createdAt || b.timestamp) - new Date(a.confirmedAt || a.createdAt || a.timestamp));
+
   list.innerHTML = orders.map((order) => {
+    // Handle both old format (order.product) and new format (direct properties)
+    const product = order.product || order;
+    const productName = product.fabricType || order.productName || 'Product';
+    const mainImage = product.photos && product.photos.length > 0 ? product.photos[0] : '';
+    const date = new Date(order.confirmedAt || order.createdAt || order.timestamp).toLocaleDateString();
+    
     return `
       <div class="order-item">
+        ${mainImage ? `<img src="${mainImage}" alt="Product" class="order-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'80\\' height=\\'80\\'/%3E%3C/svg%3E'">` : ''}
         <div class="order-info">
-          <h4>${order.productName}</h4>
+          <h4>${productName}</h4>
           <p>Seller: ${order.seller}</p>
           <p>Amount: ₹${order.amount}</p>
+          <p class="order-date">Confirmed: ${date}</p>
           <span class="order-confirmed-badge">✓ Confirmed</span>
         </div>
       </div>
@@ -1014,18 +1058,48 @@ themePills.forEach((p) => {
 ================================ */
 let lastPaymentHash = "";
 
-function getPaymentHash() {
-  const payments = getBuyerPayments();
+async function getPaymentHash() {
+  const payments = await getBuyerPayments();
   return payments.map((p) => `${p.id}:${p.status}`).sort().join(",");
 }
 
-function checkPaymentUpdates() {
-  const currentHash = getPaymentHash();
+async function checkPaymentUpdates() {
+  // Fetch fresh payments from server
+  try {
+    const buyerUsername = localStorage.getItem("username");
+    if (buyerUsername) {
+      const res = await fetch(`${API_BASE_URL}/payments?buyer=${encodeURIComponent(buyerUsername)}`);
+      if (res.ok) {
+        const serverPayments = await res.json();
+        const localPayments = JSON.parse(localStorage.getItem("vastradoPayments") || "[]");
+        const localFiltered = localPayments.filter(x => x.buyer === buyerUsername);
+        
+        // Merge and deduplicate
+        const allPayments = [...serverPayments];
+        localFiltered.forEach(local => {
+          if (!allPayments.find(p => p.id === local.id)) {
+            allPayments.push(local);
+          }
+        });
+        
+        // Update localStorage
+        localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
+      }
+    }
+  } catch (err) {
+    // Silently fail, use localStorage
+  }
+  
+  const currentHash = await getPaymentHash();
   if (currentHash !== lastPaymentHash) {
     lastPaymentHash = currentHash;
-    updateStats();
-    displayBuyerPayments();
-    displayBuyerOrders();
+    await updateStats();
+    await displayBuyerPayments();
+    // Also update orders if orders section is visible
+    const ordersSection = document.querySelector('.content-section[data-section="orders"]');
+    if (ordersSection && ordersSection.style.display !== 'none') {
+      await displayBuyerOrders();
+    }
   }
 }
 

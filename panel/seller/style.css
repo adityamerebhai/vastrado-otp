@@ -1643,7 +1643,8 @@ select.form-input {
 }
 
 .confirm-payment-btn:hover,
-.confirm-payment-btn:active {
+.confirm-payment-btn:active,
+.confirm-payment-btn:focus {
     background: #219a52;
     transform: translateY(-2px);
 }
@@ -1667,7 +1668,8 @@ select.form-input {
 }
 
 .reject-payment-btn:hover,
-.reject-payment-btn:active {
+.reject-payment-btn:active,
+.reject-payment-btn:focus {
     background: #e74c3c;
     color: white;
 }

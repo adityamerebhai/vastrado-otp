@@ -1215,16 +1215,35 @@ async function showPaymentDetails(paymentId) {
   modal.style.display = 'flex';
 }
 
-function confirmPayment(paymentId) {
-  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
+async function confirmPayment(paymentId) {
+  // Update on server first
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/${paymentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'confirmed',
+        confirmedAt: new Date().toISOString()
+      })
+    });
+    
+    if (res.ok) {
+      console.log('💳 Payment confirmed on server');
+    } else {
+      console.error('💳 Failed to confirm payment on server:', res.status);
+    }
+  } catch (err) {
+    console.error('💳 Failed to update payment on server:', err);
+  }
   
+  // Update localStorage
+  let allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
   allPayments = allPayments.map(p => {
     if (p.id === paymentId) {
       return { ...p, status: 'confirmed', confirmedAt: new Date().toISOString() };
     }
     return p;
   });
-  
   localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
   
   // Close modal
@@ -1232,7 +1251,7 @@ function confirmPayment(paymentId) {
   if (modal) modal.style.display = 'none';
   
   // Update display
-  displaySellerPayments();
+  await displaySellerPayments();
   updateStats();
   
   // Show success modal
