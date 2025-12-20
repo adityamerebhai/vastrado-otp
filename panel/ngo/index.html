@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Dashboard | Vastrado</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">Vastrado</div>
+            <div class="top-actions">
+                <button class="ghost-btn" aria-label="Notifications">
+                    <img src="images/notification.png" alt="Notifications" class="topbar-icon">
+                </button>
+                <div class="profile" id="profileDropdown">
+                    <span class="avatar" id="avatar">N</span>
+                    <span class="profile-name" id="profileName">NGO</span>
+                    <div class="profile-dropdown" id="profileDropdownMenu" style="display: none;">
+                        <button class="dropdown-item" id="logoutBtn">
+                            <span>🚪</span>
+                            <span>Log Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="layout">
+            <aside class="sidebar">
+                <nav class="menu">
+                    <button class="menu-item active" data-section="profile">
+                        <img src="images/profile.png" alt="Profile" class="menu-icon"> Profile
+                    </button>
+                    <button class="menu-item" data-section="listings">
+                        <img src="images/browse.png" alt="Listings" class="menu-icon"> My Donation
+                    </button>
+                    <button class="menu-item" data-section="notifications">
+                        <img src="images/notification.png" alt="Notifications" class="menu-icon"> Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                    </button>
+                    <button class="menu-item" data-section="orders">
+                        <img src="images/order.png" alt="Orders" class="menu-icon"> Orders
+                    </button>
+                    <button class="menu-item" data-section="settings">
+                        <img src="images/settings.png" alt="Settings" class="menu-icon"> Settings
+                    </button>
+                </nav>
+            </aside>
+
+            <main class="content">
+                <div class="content-section" data-section="profile">
+                    <section class="stats-grid">
+                        <article class="card stat-card">
+                            <p class="stat-label">Listings</p>
+                            <h2 class="stat-value" id="listingsCount">0</h2>
+                            <p class="stat-sub">Total items listed</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">Sales</p>
+                            <h2 class="stat-value" id="salesCount">0</h2>
+                            <p class="stat-sub">Total sales</p>
+                        </article>
+                        <article class="card stat-card">
+                            <p class="stat-label">Pending</p>
+                            <h2 class="stat-value" id="pendingCount">0</h2>
+                            <p class="stat-sub">Awaiting approval</p>
+                        </article>
+                    </section>
+
+                    <section class="upload-highlight card">
+                        <div>
+                            <p class="muted">Quick action</p>
+                            <h3>Upload your cloth for resell</h3>
+                            <p class="subtext">Add photos, set price, and publish to your storefront.</p>
+                        </div>
+                        <button class="upload-btn" id="uploadAction" aria-label="Upload cloth">+</button>
+                    </section>
+
+                    <section class="card list-placeholder">
+                        <h3>Recent Orders</h3>
+                        <p class="muted">No orders to show yet. Once customers buy, you'll see them here.</p>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="upload" style="display: none;">
+                    <section class="card upload-form-card" id="uploadFormCard" style="display: none;">
+                        <div class="form-header">
+                            <h3>Upload Your Cloth</h3>
+                            <button class="close-form-btn" id="closeFormBtn" aria-label="Close form">×</button>
+                        </div>
+                        <form class="upload-form" id="uploadForm">
+                            <div class="form-group">
+                                <label for="photos">Upload Photos</label>
+                                <div class="file-upload-area" id="fileUploadArea">
+                                    <input type="file" id="photos" name="photos" accept="image/*" multiple style="display: none;">
+                                    <div class="file-upload-content">
+                                        <span class="upload-icon">📷</span>
+                                        <p class="upload-text">Click to browse or drag and drop</p>
+                                        <p class="upload-hint">Supports JPG, PNG, GIF (Max 10MB per image)</p>
+                                    </div>
+                                    <div class="file-preview" id="filePreview"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="fabricType">Fabric Type</label>
+                                    <select id="fabricType" name="fabricType" class="form-input" required>
+                                        <option value="">Select fabric type</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="polyester">Polyester</option>
+                                        <option value="silk">Silk</option>
+                                        <option value="wool">Wool</option>
+                                        <option value="linen">Linen</option>
+                                        <option value="denim">Denim</option>
+                                        <option value="leather">Leather</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clothCondition">Cloth Condition</label>
+                                    <select id="clothCondition" name="clothCondition" class="form-input" required>
+                                        <option value="">Select condition</option>
+                                        <option value="new">New</option>
+                                        <option value="like-new">Like New</option>
+                                        <option value="good">Good</option>
+                                        <option value="fair">Fair</option>
+                                        <option value="poor">Poor</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="phoneNumber">Phone Number</label>
+                                    <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="Enter phone number" required>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
+                                <button type="submit" class="submit-btn">Submit</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="listings" style="display: none;">
+                    <section class="card listings-container">
+                        <h3>My Donation</h3>
+                        <p class="muted">Manage your clothing donations.</p>
+                        <div class="listings-grid" id="listingsGrid">
+                            <!-- Uploaded items will be displayed here -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Detail Modal -->
+                <div class="modal-overlay" id="detailModal" style="display: none;">
+                    <div class="modal-content">
+                        <button class="modal-close" id="closeModal">×</button>
+                        <div class="modal-body" id="modalBody">
+                            <!-- Details will be shown here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Confirmation Modal -->
+                <div class="modal-overlay" id="deleteConfirmModal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="confirm-icon">⚠️</div>
+                        <h3 class="confirm-title">Remove Listing</h3>
+                        <p class="confirm-message">Are you sure you want to remove this listing? This action cannot be undone.</p>
+                        <div class="confirm-actions">
+                            <button class="confirm-btn cancel-confirm-btn" id="cancelDeleteBtn">Cancel</button>
+                            <button class="confirm-btn delete-confirm-btn" id="confirmDeleteBtn">Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logout Confirmation Modal -->
+                <div class="modal-overlay" id="logoutConfirmModal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="confirm-icon">🚪</div>
+                        <h3 class="confirm-title">Log Out</h3>
+                        <p class="confirm-message">Are you sure you want to log out? All your session data will be cleared.</p>
+                        <div class="confirm-actions">
+                            <button class="confirm-btn cancel-confirm-btn" id="cancelLogoutBtn">Cancel</button>
+                            <button class="confirm-btn delete-confirm-btn" id="confirmLogoutBtn">Log Out</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section" data-section="notifications" style="display: none;">
+                    <section class="card">
+                        <h3>Notifications</h3>
+                        <p class="muted">Chat requests and updates from buyers.</p>
+                        <div class="notifications-list" id="notificationsList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No notifications yet</p>
+                        </div>
+                    </section>
+                </div>
+
+
+                <!-- Success Modal -->
+                <div class="modal-overlay" id="successModal" style="display: none;">
+                    <div class="modal-content success-modal">
+                        <div class="success-modal-body">
+                            <div class="success-icon">✓</div>
+                            <h2 id="successTitle">Success!</h2>
+                            <p id="successMessage">Your action was completed successfully.</p>
+                            <button class="success-ok-btn" id="successOkBtn">OK</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section" data-section="orders" style="display: none;">
+                    <section class="card">
+                        <h3>Completed Sales</h3>
+                        <p class="muted">Your confirmed sales will appear here.</p>
+                        <div class="orders-list" id="ngoOrdersList">
+                            <p class="muted" style="padding: 20px; text-align: center;">No completed sales yet.</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="content-section" data-section="settings" style="display: none;">
+                    <section class="card settings-card">
+                        <div class="settings-header">
+                            <h3>Settings</h3>
+                            <p class="muted">Personalize your workspace.</p>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Theme</p>
+                                <p class="muted small">Choose your preferred look.</p>
+                            </div>
+                            <div class="theme-pills" id="themePills">
+                                <button class="pill" data-theme="light">Light</button>
+                                <button class="pill" data-theme="grey">Grey</button>
+                                <button class="pill" data-theme="dark">Dark</button>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <p class="setting-label">Notifications</p>
+                                <p class="muted small">Stay updated about orders.</p>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="notifyToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
