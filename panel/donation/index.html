@@ -157,17 +157,8 @@
 
                 <div class="content-section" data-section="listings" style="display: none;">
                     <section class="card listings-container">
-                        <div class="browse-header">
-                            <div>
-                                <h3>My Donation</h3>
-                                <p class="muted">Manage your clothing donations.</p>
-                            </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button class="refresh-btn" id="refreshDonations" title="Refresh donations">
-                                    <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
-                                </button>
-                            </div>
-                        </div>
+                        <h3>My Donation</h3>
+                        <p class="muted">Manage your clothing donations.</p>
                         <div class="listings-grid" id="listingsGrid">
                             <!-- Uploaded items will be displayed here -->
                         </div>
@@ -245,8 +236,17 @@
 
                 <div class="content-section" data-section="orders" style="display: none;">
                     <section class="card">
-                        <h3>Completed Sales</h3>
-                        <p class="muted">Your confirmed sales will appear here.</p>
+                        <div class="browse-header">
+                            <div>
+                                <h3>Completed Sales</h3>
+                                <p class="muted">Your confirmed sales will appear here.</p>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="refresh-btn" id="refreshOrders" title="Refresh orders">
+                                    <img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh
+                                </button>
+                            </div>
+                        </div>
                         <div class="orders-list" id="donationOrdersList">
                             <p class="muted" style="padding: 20px; text-align: center;">No completed sales yet.</p>
                         </div>

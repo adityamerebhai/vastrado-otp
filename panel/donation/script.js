@@ -1194,53 +1194,103 @@ if (donorStatusModalOverlay) {
   });
 }
 
-// =====================
-// REFRESH BUTTON HANDLER
-// =====================
-const refreshDonationsBtn = document.getElementById('refreshDonations');
-if (refreshDonationsBtn) {
-  refreshDonationsBtn.addEventListener('click', async () => {
-    const originalContent = refreshDonationsBtn.innerHTML;
-    refreshDonationsBtn.innerHTML = '⏳ Fetching...';
-    refreshDonationsBtn.disabled = true;
+// Fetch NGO orders from API for cross-device sync
+async function fetchNgoOrdersFromAPI() {
+  try {
+    // Try to fetch from API endpoint (if it exists)
+    // Note: This assumes there's an API endpoint for NGO orders
+    // If not available, fallback to localStorage
+    const url = `${API_BASE_URL}/ngo-orders`;
+    console.log(`🔄 [DONATION] Fetching NGO orders from: ${url}`);
     
     try {
-      // Fetch donations from API
-      const donations = await fetchDonationsFromAPI();
+      const res = await fetch(url, { 
+        method: 'GET',
+        cache: "no-cache",
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'omit'
+      });
       
-      if (donations !== null) {
-        // API call succeeded (even if empty array)
-        displayListings();
-        updateStats();
-        refreshDonationsBtn.innerHTML = '✓ Refreshed!';
-        console.log('✅ [DONATION] Donations refreshed successfully');
+      if (res.ok) {
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const responseText = await res.text();
+          if (responseText && responseText.trim() !== '') {
+            const data = JSON.parse(responseText);
+            if (Array.isArray(data)) {
+              // Update localStorage with fetched data
+              localStorage.setItem('ngoOrders', JSON.stringify(data));
+              console.log(`✅ [DONATION] Fetched ${data.length} NGO orders from API`);
+              return data;
+            }
+          }
+        }
+      }
+    } catch (apiError) {
+      // API endpoint might not exist yet, fallback to localStorage
+      console.log('ℹ️ [DONATION] API endpoint not available, using localStorage');
+    }
+    
+    // Fallback to localStorage
+    const ngoOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
+    console.log(`📦 [DONATION] Retrieved ${ngoOrders.length} NGO orders from localStorage`);
+    return ngoOrders;
+  } catch (error) {
+    console.error('❌ [DONATION] Error fetching NGO orders:', error);
+    // Fallback to localStorage on error
+    const ngoOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
+    return ngoOrders;
+  }
+}
+
+// =====================
+// REFRESH BUTTON HANDLER FOR ORDERS
+// =====================
+const refreshOrdersBtn = document.getElementById('refreshOrders');
+if (refreshOrdersBtn) {
+  refreshOrdersBtn.addEventListener('click', async () => {
+    const originalContent = refreshOrdersBtn.innerHTML;
+    refreshOrdersBtn.innerHTML = '⏳ Fetching...';
+    refreshOrdersBtn.disabled = true;
+    
+    try {
+      // Fetch NGO orders
+      const orders = await fetchNgoOrdersFromAPI();
+      
+      if (orders !== null) {
+        // Update display with fetched orders
+        displayDonationOrders();
+        refreshOrdersBtn.innerHTML = '✓ Refreshed!';
+        console.log('✅ [DONATION] Orders refreshed successfully');
       } else {
-        // API call failed (network error, server error, etc.)
         // Fallback to localStorage
-        displayListings();
-        updateStats();
-        refreshDonationsBtn.innerHTML = originalContent;
-        console.warn('⚠️ [DONATION] API fetch failed, using localStorage');
+        displayDonationOrders();
+        refreshOrdersBtn.innerHTML = originalContent;
+        console.warn('⚠️ [DONATION] Orders fetch failed, using localStorage');
       }
     } catch (err) {
       console.error('❌ [DONATION] Refresh error:', err);
-      refreshDonationsBtn.innerHTML = '❌ Error';
+      refreshOrdersBtn.innerHTML = '❌ Error';
       // Still show localStorage data
-      displayListings();
-      updateStats();
+      displayDonationOrders();
     }
     
     // Reset button after 2 seconds
     setTimeout(() => {
-      refreshDonationsBtn.innerHTML = originalContent;
-      refreshDonationsBtn.disabled = false;
+      refreshOrdersBtn.innerHTML = originalContent;
+      refreshOrdersBtn.disabled = false;
     }, 2000);
   });
   
   // Also support touch events for mobile
-  refreshDonationsBtn.addEventListener('touchend', async (e) => {
+  refreshOrdersBtn.addEventListener('touchend', async (e) => {
     e.preventDefault();
-    refreshDonationsBtn.click();
+    refreshOrdersBtn.click();
   });
 }
 
