@@ -106,28 +106,48 @@ async function getBuyerPayments() {
   
   try {
     // Fetch payments from server API
-    const res = await fetch(`${API_BASE_URL}/payments?buyer=${encodeURIComponent(buyerUsername)}`);
+    const res = await fetch(`${API_BASE_URL}/payments?buyer=${encodeURIComponent(buyerUsername)}`, {
+      cache: 'no-cache',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
     if (res.ok) {
       const serverPayments = await res.json();
+      console.log('💳 [BUYER] Fetched payments from server:', serverPayments.length);
+      
       // Also get from localStorage as fallback
       const localPayments = JSON.parse(localStorage.getItem("vastradoPayments") || "[]");
       const localFiltered = localPayments.filter(x => x.buyer === buyerUsername);
       
-      // Merge and deduplicate (server takes priority)
-      const allPayments = [...serverPayments];
+      // Merge and deduplicate (SERVER TAKES PRIORITY for status updates)
+      const allPayments = [];
+      const paymentMap = new Map();
+      
+      // First, add all server payments (these have the latest status)
+      serverPayments.forEach(serverPayment => {
+        paymentMap.set(serverPayment.id, serverPayment);
+        allPayments.push(serverPayment);
+      });
+      
+      // Then, add local payments that aren't on server (newly created, not yet synced)
       localFiltered.forEach(local => {
-        if (!allPayments.find(p => p.id === local.id)) {
+        if (!paymentMap.has(local.id)) {
           allPayments.push(local);
         }
       });
       
-      // Update localStorage with merged data
+      // Update localStorage with merged data (server data overwrites local)
       localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
+      
+      console.log('💳 [BUYER] Total payments after merge:', allPayments.length);
+      console.log('💳 [BUYER] Payment statuses:', allPayments.map(p => `${p.id}:${p.status}`));
       
       return allPayments;
     }
   } catch (err) {
-    console.error('💳 Failed to fetch payments from server:', err);
+    console.error('💳 [BUYER] Failed to fetch payments from server:', err);
   }
   
   // Fallback to localStorage only
@@ -613,19 +633,30 @@ async function displayBuyerPayments() {
     return;
   }
 
+  // Sort by newest first
+  payments.sort((a, b) => new Date(b.createdAt || b.timestamp) - new Date(a.createdAt || a.timestamp));
+
   list.innerHTML = payments.map((p) => {
     const statusClass = p.status === "confirmed" ? "confirmed" : p.status === "rejected" ? "rejected" : "pending";
+    const statusText = p.status === "confirmed" ? "✓ Confirmed" : p.status === "rejected" ? "✕ Rejected" : "⏳ Pending";
+    
+    // Handle both old format (p.product) and new format (direct properties)
+    const product = p.product || p;
+    const productName = product.fabricType || p.productName || 'Product';
+    
     return `
-      <div class="payment-item">
+      <div class="payment-item ${statusClass}">
         <div class="payment-info">
-          <h4>${p.productName}</h4>
+          <h4>${productName}</h4>
           <p>Seller: ${p.seller}</p>
           <p>Amount: ₹${p.amount}</p>
-          <span class="payment-status ${statusClass}">${p.status}</span>
+          <span class="payment-status ${statusClass}">${statusText}</span>
         </div>
       </div>
     `;
   }).join("");
+  
+  console.log('💳 [DISPLAY] Displayed payments:', payments.map(p => `${p.id}:${p.status}`));
 }
 
 /* ===============================
@@ -1060,7 +1091,8 @@ let lastPaymentHash = "";
 
 async function getPaymentHash() {
   const payments = await getBuyerPayments();
-  return payments.map((p) => `${p.id}:${p.status}`).sort().join(",");
+  const hash = payments.map((p) => `${p.id}:${p.status}`).sort().join(",");
+  return hash;
 }
 
 async function checkPaymentUpdates() {
@@ -1068,38 +1100,64 @@ async function checkPaymentUpdates() {
   try {
     const buyerUsername = localStorage.getItem("username");
     if (buyerUsername) {
-      const res = await fetch(`${API_BASE_URL}/payments?buyer=${encodeURIComponent(buyerUsername)}`);
+      const res = await fetch(`${API_BASE_URL}/payments?buyer=${encodeURIComponent(buyerUsername)}`, {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (res.ok) {
         const serverPayments = await res.json();
+        console.log('💳 [UPDATE] Fetched payments from server:', serverPayments.length);
+        
         const localPayments = JSON.parse(localStorage.getItem("vastradoPayments") || "[]");
         const localFiltered = localPayments.filter(x => x.buyer === buyerUsername);
         
-        // Merge and deduplicate
-        const allPayments = [...serverPayments];
+        // Merge and deduplicate (SERVER TAKES PRIORITY)
+        const paymentMap = new Map();
+        const allPayments = [];
+        
+        // First, add all server payments (these have the latest status)
+        serverPayments.forEach(serverPayment => {
+          paymentMap.set(serverPayment.id, serverPayment);
+          allPayments.push(serverPayment);
+        });
+        
+        // Then, add local payments that aren't on server
         localFiltered.forEach(local => {
-          if (!allPayments.find(p => p.id === local.id)) {
+          if (!paymentMap.has(local.id)) {
             allPayments.push(local);
           }
         });
         
-        // Update localStorage
+        // Update localStorage with merged data
         localStorage.setItem('vastradoPayments', JSON.stringify(allPayments));
+        
+        // Check if status changed
+        const oldHash = lastPaymentHash;
+        const newHash = allPayments.map((p) => `${p.id}:${p.status}`).sort().join(",");
+        
+        if (newHash !== oldHash) {
+          console.log('💳 [UPDATE] Payment status changed!');
+          console.log('💳 [UPDATE] Old hash:', oldHash);
+          console.log('💳 [UPDATE] New hash:', newHash);
+          lastPaymentHash = newHash;
+          
+          // Force update all displays
+          await updateStats();
+          await displayBuyerPayments();
+          
+          // Also update orders if orders section is visible
+          const ordersSection = document.querySelector('.content-section[data-section="orders"]');
+          if (ordersSection && ordersSection.style.display !== 'none') {
+            await displayBuyerOrders();
+          }
+        }
       }
     }
   } catch (err) {
-    // Silently fail, use localStorage
-  }
-  
-  const currentHash = await getPaymentHash();
-  if (currentHash !== lastPaymentHash) {
-    lastPaymentHash = currentHash;
-    await updateStats();
-    await displayBuyerPayments();
-    // Also update orders if orders section is visible
-    const ordersSection = document.querySelector('.content-section[data-section="orders"]');
-    if (ordersSection && ordersSection.style.display !== 'none') {
-      await displayBuyerOrders();
-    }
+    console.error('💳 [UPDATE] Error fetching payments:', err);
   }
 }
 
