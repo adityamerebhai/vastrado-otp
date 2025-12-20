@@ -6,55 +6,37 @@ document.querySelectorAll('.menu-item').forEach((btn) => {
     // Update active menu item
     document.querySelectorAll('.menu-item').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
-    // Show/hide content sections
-    const targetSection = btn.dataset.section;
-    document.querySelectorAll('.content-section').forEach((section) => {
-      if (section.dataset.section === targetSection) {
-        // Chat section needs 'block' display, others use 'flex'
-        if (targetSection === 'chat') {
-          section.style.display = 'block';
-        } else {
-          section.style.display = 'flex';
-          section.style.flexDirection = 'column';
-          section.style.gap = '16px';
-        }
-        
-        // Refresh donations when donations section is shown
-        if (targetSection === 'donations') {
-          displayDonations();
-        }
-        
-        // Update stats when profile section is shown
-        if (targetSection === 'profile') {
-          updateStats();
-        }
-        
-        // Load chat list when chat section is shown
-        if (targetSection === 'chat') {
-          setTimeout(() => {
-            console.log('💬 Loading chat list for NGO...');
-            loadChatList();
-          }, 100);
-        }
-        
-        // Load notifications when notifications section is shown
-        if (targetSection === 'notifications') {
-          displayNotifications();
-        }
-        
-        // Load payments when payments section is shown
-        if (targetSection === 'payments') {
-          displayNgoPayments();
-        }
-        
-        // Load orders when orders section is shown
-        if (targetSection === 'orders') {
-          displayNgoOrders();
-        }
-      } else {
-        section.style.display = 'none';
-      }
-    });
+        // Show/hide content sections
+        const targetSection = btn.dataset.section;
+        document.querySelectorAll('.content-section').forEach((section) => {
+          if (section.dataset.section === targetSection) {
+            section.style.display = 'flex';
+            section.style.flexDirection = 'column';
+            section.style.gap = '16px';
+            
+            // Refresh donations when donations section is shown
+            if (targetSection === 'donations') {
+              displayDonations();
+            }
+            
+            // Update stats when profile section is shown
+            if (targetSection === 'profile') {
+              updateStats();
+            }
+            
+            // Load notifications when notifications section is shown
+            if (targetSection === 'notifications') {
+              displayNotifications();
+            }
+            
+            // Load orders when orders section is shown
+            if (targetSection === 'orders') {
+              displayNgoOrders();
+            }
+          } else {
+            section.style.display = 'none';
+          }
+        });
     
     // Hide donate form when switching sections
     if (donateFormCard && targetSection !== 'donate') {
@@ -268,7 +250,7 @@ async function saveDonation(donation) {
 function updateStats() {
   const donations = getStoredDonations();
   const donationsCount = donations.length;
-  const totalQuantity = donations.reduce((sum, d) => sum + (parseInt(d.quantity) || 0), 0);
+  const newItemsCount = donations.filter(d => d.clothCondition === 'new').length;
   const pendingCount = 0; // No pending status for donations
   
   const donationsCountEl = document.getElementById('donationsCount');
@@ -279,7 +261,7 @@ function updateStats() {
     donationsCountEl.textContent = donationsCount;
   }
   if (amountCountEl) {
-    amountCountEl.textContent = totalQuantity;
+    amountCountEl.textContent = newItemsCount;
   }
   if (pendingCountEl) {
     pendingCountEl.textContent = pendingCount;
@@ -312,7 +294,7 @@ function displayDonations() {
       </div>
       <div class="listing-info">
         <p class="listing-fabric"><strong>Type:</strong> ${donation.donationType || 'N/A'}</p>
-        <p class="listing-cost"><strong>Quantity:</strong> ${donation.quantity || '0'}</p>
+        <p class="listing-cost"><strong>Quality:</strong> ${donation.clothCondition || 'N/A'}</p>
         <p class="listing-condition"><strong>Description:</strong> ${donation.description ? (donation.description.substring(0, 30) + (donation.description.length > 30 ? '...' : '')) : 'N/A'}</p>
       </div>
     `;
@@ -408,8 +390,8 @@ function showDonationDetails(donation, index) {
         <span class="detail-value">${donation.donationType || 'N/A'}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Quantity:</span>
-        <span class="detail-value">${donation.quantity || '0'}</span>
+        <span class="detail-label">Quality:</span>
+        <span class="detail-value">${donation.clothCondition || 'N/A'}</span>
       </div>
       <div class="detail-row">
         <span class="detail-label">Description:</span>
@@ -468,11 +450,11 @@ async function handleDonateFormSubmit(e) {
     const photoData = await Promise.all(filePromises);
     const donorUsername = localStorage.getItem('username') || 'Unknown Donor';
     const donationType = formData.get('donationType');
-    const quantity = formData.get('quantity');
+    const clothCondition = formData.get('clothCondition');
     const description = formData.get('description');
     
     // Validate data before saving
-    if (!donationType || !quantity || !description) {
+    if (!donationType || !clothCondition || !description) {
       alert('Please fill in all required fields');
       return;
     }
@@ -487,7 +469,7 @@ async function handleDonateFormSubmit(e) {
       donor: donorUsername,
       photos: photoData.filter(p => p !== null),
       donationType: donationType,
-      quantity: parseInt(quantity),
+      clothCondition: clothCondition,
       description: description,
       dateAdded: new Date().toISOString()
     };
@@ -669,253 +651,26 @@ function displayNotifications() {
 }
 
 // =====================
-// Chat
-// =====================
-let currentChatUser = null;
-
-function loadChatList() {
-  const chatList = document.getElementById('chatList');
-  if (!chatList) return;
-  
-  const chats = JSON.parse(localStorage.getItem('ngoChats') || '[]');
-  
-  if (chats.length === 0) {
-    chatList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No conversations yet</p>';
-    return;
-  }
-  
-  chatList.innerHTML = chats.map(chat => `
-    <div class="chat-list-item" data-user="${chat.user}">
-      <div class="chat-avatar">${chat.user.charAt(0).toUpperCase()}</div>
-      <div class="chat-user-info">
-        <p class="chat-username">${chat.user}</p>
-        <p class="chat-preview">${chat.lastMessage || 'No messages'}</p>
-      </div>
-    </div>
-  `).join('');
-  
-  // Add click handlers
-  chatList.querySelectorAll('.chat-list-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const user = item.dataset.user;
-      openChat(user);
-    });
-  });
-}
-
-function openChat(user) {
-  currentChatUser = user;
-  const chatHeader = document.getElementById('chatHeader');
-  const chatMessages = document.getElementById('chatMessages');
-  const chatInputArea = document.getElementById('chatInputArea');
-  
-  if (chatHeader) {
-    chatHeader.innerHTML = `<h4>Chat with ${user}</h4>`;
-  }
-  
-  if (chatInputArea) {
-    chatInputArea.style.display = 'flex';
-  }
-  
-  // Load messages
-  const chats = JSON.parse(localStorage.getItem('ngoChats') || '[]');
-  const chat = chats.find(c => c.user === user);
-  
-  if (chatMessages) {
-    if (chat && chat.messages) {
-      chatMessages.innerHTML = chat.messages.map(msg => `
-        <div class="chat-message ${msg.sender === 'ngo' ? 'sent' : 'received'}">
-          ${msg.text}
-          <span class="message-time">${new Date(msg.time).toLocaleTimeString()}</span>
-        </div>
-      `).join('');
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    } else {
-      chatMessages.innerHTML = '<p class="muted" style="text-align: center; padding: 20px;">No messages yet</p>';
-    }
-  }
-  
-  // Update active chat
-  document.querySelectorAll('.chat-list-item').forEach(item => {
-    item.classList.remove('active');
-    if (item.dataset.user === user) {
-      item.classList.add('active');
-    }
-  });
-}
-
-const sendMessageBtn = document.getElementById('sendMessageBtn');
-const chatInput = document.getElementById('chatInput');
-
-if (sendMessageBtn && chatInput) {
-  sendMessageBtn.addEventListener('click', sendMessage);
-  chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      sendMessage();
-    }
-  });
-}
-
-function sendMessage() {
-  if (!currentChatUser || !chatInput.value.trim()) return;
-  
-  const chats = JSON.parse(localStorage.getItem('ngoChats') || '[]');
-  let chat = chats.find(c => c.user === currentChatUser);
-  
-  if (!chat) {
-    chat = { user: currentChatUser, messages: [] };
-    chats.push(chat);
-  }
-  
-  chat.messages.push({
-    text: chatInput.value,
-    sender: 'ngo',
-    time: new Date().toISOString()
-  });
-  
-  chat.lastMessage = chatInput.value;
-  
-  localStorage.setItem('ngoChats', JSON.stringify(chats));
-  chatInput.value = '';
-  openChat(currentChatUser);
-}
-
-// =====================
-// Payments
-// =====================
-function getNgoPayments() {
-  const allPayments = JSON.parse(localStorage.getItem('vastradoPayments') || '[]');
-  const donorUsername = localStorage.getItem('username');
-  return allPayments.filter(p => p.donor === donorUsername);
-}
-
-function displayNgoPayments() {
-  const paymentsList = document.getElementById('ngoPaymentsList');
-  if (!paymentsList) return;
-  
-  const payments = getNgoPayments();
-  
-  if (payments.length === 0) {
-    paymentsList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No pending payments.</p>';
-    return;
-  }
-  
-  paymentsList.innerHTML = payments.map(payment => `
-    <div class="payment-item ${payment.status}" onclick="showPaymentDetails('${payment.id}')">
-      <div class="payment-item-info">
-        <p class="payment-item-title">${payment.itemName || 'Donation'}</p>
-        <p class="payment-item-buyer">To: ${payment.ngo || 'NGO'}</p>
-      </div>
-      <div>
-        <p class="payment-item-amount">₹${payment.amount || '0'}</p>
-        <span class="payment-status ${payment.status}">${payment.status}</span>
-      </div>
-    </div>
-  `).join('');
-}
-
-function showPaymentDetails(paymentId) {
-  const payments = getNgoPayments();
-  const payment = payments.find(p => p.id === paymentId);
-  if (!payment) return;
-  
-  const modal = document.getElementById('paymentDetailModal');
-  const modalBody = document.getElementById('paymentDetailBody');
-  
-  if (!modal || !modalBody) return;
-  
-  modalBody.innerHTML = `
-    <h2>Payment Details</h2>
-    <div class="payment-detail-section">
-      <h4>Donation Information</h4>
-      <p><strong>Type:</strong> ${payment.itemName || 'N/A'}</p>
-      <p><strong>Amount:</strong> <span class="payment-amount-display">₹${payment.amount || '0'}</span></p>
-      <p><strong>NGO:</strong> ${payment.ngo || 'N/A'}</p>
-      ${payment.description ? `<p><strong>Description:</strong> ${payment.description}</p>` : ''}
-    </div>
-    <div class="payment-detail-section">
-      <h4>Status</h4>
-      <p><strong>Status:</strong> <span class="payment-status ${payment.status}">${payment.status}</span></p>
-      <p><strong>Date:</strong> ${new Date(payment.date || Date.now()).toLocaleString()}</p>
-    </div>
-  `;
-  
-  modal.style.display = 'flex';
-}
-
-// Payment confirmation is handled by the NGO receiving the donation, not the donor
-// Donors can only view their payment status
-
-const closePaymentDetailModal = document.getElementById('closePaymentDetailModal');
-const paymentDetailModal = document.getElementById('paymentDetailModal');
-
-if (closePaymentDetailModal) {
-  closePaymentDetailModal.addEventListener('click', () => {
-    if (paymentDetailModal) {
-      paymentDetailModal.style.display = 'none';
-    }
-  });
-}
-
-if (paymentDetailModal) {
-  paymentDetailModal.addEventListener('click', (e) => {
-    if (e.target === paymentDetailModal) {
-      paymentDetailModal.style.display = 'none';
-    }
-  });
-}
-
-// Refresh payments button
-const refreshNgoPaymentsBtn = document.getElementById('refreshNgoPaymentsBtn');
-if (refreshNgoPaymentsBtn) {
-  refreshNgoPaymentsBtn.addEventListener('click', async () => {
-    refreshNgoPaymentsBtn.disabled = true;
-    refreshNgoPaymentsBtn.innerHTML = '<img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> ⏳ Fetching...';
-    
-    try {
-      // Fetch from server if needed
-      displayNgoPayments();
-      refreshNgoPaymentsBtn.innerHTML = '<img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> ✓ Refreshed!';
-    } catch (error) {
-      refreshNgoPaymentsBtn.innerHTML = '<img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> ❌ Error';
-    }
-    
-    setTimeout(() => {
-      refreshNgoPaymentsBtn.disabled = false;
-      refreshNgoPaymentsBtn.innerHTML = '<img src="images/icons8-refresh-48.png" alt="Refresh" class="refresh-icon"> Refresh';
-    }, 2000);
-  });
-  
-  refreshNgoPaymentsBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    refreshNgoPaymentsBtn.click();
-  }, { passive: false });
-}
-
-// =====================
 // Orders
 // =====================
 function displayNgoOrders() {
   const ordersList = document.getElementById('ngoOrdersList');
   if (!ordersList) return;
   
-  const payments = getNgoPayments();
-  const confirmedPayments = payments.filter(p => p.status === 'confirmed');
+  const donations = getStoredDonations();
   
-  if (confirmedPayments.length === 0) {
-    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No confirmed donations yet.</p>';
+  if (donations.length === 0) {
+    ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No donations yet.</p>';
     return;
   }
   
-  ordersList.innerHTML = confirmedPayments.map(payment => `
+  ordersList.innerHTML = donations.map(donation => `
     <div class="order-item">
       <div class="order-item-info">
-        <p class="order-item-title">${payment.itemName || 'Donation'}</p>
-        <p class="order-item-buyer">To: ${payment.ngo || 'NGO'}</p>
-        <p class="order-item-date">${new Date(payment.date || Date.now()).toLocaleString()}</p>
-        <span class="sale-confirmed-badge">✓ Confirmed</span>
+        <p class="order-item-title">${donation.donationType || 'Donation'}</p>
+        <p class="order-item-buyer">Quality: ${donation.clothCondition || 'N/A'}</p>
+        <p class="order-item-date">${new Date(donation.dateAdded || Date.now()).toLocaleString()}</p>
       </div>
-      <div class="order-item-amount">₹${payment.amount || '0'}</div>
     </div>
   `).join('');
 }
