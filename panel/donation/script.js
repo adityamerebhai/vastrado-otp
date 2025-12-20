@@ -1040,7 +1040,7 @@ function displayDonationOrders() {
           <div class="order-item-condition">Condition: ${order.clothCondition || donationItem.clothCondition || 'N/A'}</div>
           ${order.phoneNumber ? `<div class="order-item-buyer">Phone: ${order.phoneNumber}</div>` : ''}
           <div class="order-item-date">Ordered: ${orderDate}</div>
-          <div style="margin-top: 8px; padding: 4px 8px; background: #27ae60; color: white; border-radius: 4px; display: inline-block; font-size: 0.75rem; font-weight: 600;">Confirmed by NGO</div>
+          <div style="margin-top: 8px; padding: 4px 8px; background: #27ae60; color: white; border-radius: 4px; display: inline-block; font-size: 0.75rem; font-weight: 600;">Confirmed by ${order.confirmedBy || 'NGO'}</div>
         </div>
       </div>
     `;

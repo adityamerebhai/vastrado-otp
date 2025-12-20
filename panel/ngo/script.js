@@ -631,6 +631,9 @@ async function saveOrder(order) {
 }
 
 function confirmOrder(item, index) {
+  // Get NGO name from localStorage
+  const ngoName = localStorage.getItem('username') || 'NGO';
+  
   const order = {
     id: item.id || `order_${Date.now()}_${index}`,
     donationId: item.id || index,
@@ -639,7 +642,8 @@ function confirmOrder(item, index) {
     clothCondition: item.clothCondition || 'N/A',
     phoneNumber: item.phoneNumber || 'N/A',
     dateOrdered: new Date().toISOString(),
-    status: 'confirmed'
+    status: 'confirmed',
+    confirmedBy: ngoName // Store the NGO name that confirmed this order
   };
   
   saveOrder(order);
