@@ -999,6 +999,7 @@ function displayDonationOrders() {
   
   // Get NGO orders from localStorage
   const ngoOrders = JSON.parse(localStorage.getItem('ngoOrders') || '[]');
+  console.log('📦 [ORDERS] Displaying orders, count:', ngoOrders.length);
   
   if (ngoOrders.length === 0) {
     ordersList.innerHTML = '<p class="muted" style="padding: 20px; text-align: center;">No completed orders yet.</p>';
